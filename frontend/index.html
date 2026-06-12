@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QassaPos — Кассовая система</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F5F5F0; color: #1a1a1a; font-size: 14px; }
+
+    /* Layout */
+    .app { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+    .sidebar { background: #fff; border-right: 1px solid #E8E8E3; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; }
+    .main { overflow: auto; }
+    .page { display: none; padding: 24px; flex-direction: column; gap: 20px; }
+    .page.active { display: flex; }
+
+    /* Sidebar */
+    .sidebar-logo { padding: 18px 16px; border-bottom: 1px solid #E8E8E3; display: flex; align-items: center; gap: 10px; }
+    .logo-icon { width: 32px; height: 32px; background: #1D9E75; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; }
+    .logo-name { font-size: 16px; font-weight: 600; color: #1a1a1a; }
+    .nav { padding: 10px 8px; flex: 1; overflow-y: auto; }
+    .nav-group-label { font-size: 11px; color: #999; padding: 8px 10px 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; cursor: pointer; color: #555; font-size: 13px; margin-bottom: 2px; transition: background 0.15s; }
+    .nav-item:hover { background: #F5F5F0; color: #1a1a1a; }
+    .nav-item.active { background: #E8F7F1; color: #0F6E56; font-weight: 500; }
+    .nav-item .icon { font-size: 17px; width: 20px; text-align: center; }
+    .sidebar-bottom { padding: 12px; border-top: 1px solid #E8E8E3; }
+    .user-card { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 8px; cursor: pointer; }
+    .user-card:hover { background: #F5F5F0; }
+    .avatar { width: 34px; height: 34px; border-radius: 50%; background: #E8F7F1; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #0F6E56; flex-shrink: 0; }
+    .user-info { flex: 1; min-width: 0; }
+    .user-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-role { font-size: 11px; color: #999; }
+
+    /* Page header */
+    .page-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+    .page-title { font-size: 20px; font-weight: 600; color: #1a1a1a; }
+
+    /* Buttons */
+    .btn { padding: 9px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; border: none; font-weight: 500; transition: background 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-primary { background: #1D9E75; color: #fff; }
+    .btn-primary:hover { background: #0F6E56; }
+    .btn-secondary { background: #fff; color: #1a1a1a; border: 1px solid #E0E0DB; }
+    .btn-secondary:hover { background: #F5F5F0; }
+    .btn-danger { background: #FEE8E8; color: #C0392B; }
+    .btn-danger:hover { background: #FDD; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn-icon { width: 30px; height: 30px; padding: 0; border-radius: 6px; justify-content: center; background: #fff; border: 1px solid #E0E0DB; color: #555; }
+    .btn-icon:hover { background: #F5F5F0; }
+
+    /* Cards */
+    .card { background: #fff; border-radius: 12px; border: 1px solid #E8E8E3; padding: 16px; }
+    .card-title { font-size: 14px; font-weight: 600; margin-bottom: 14px; }
+
+    /* Metrics */
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+    .metric { background: #fff; border-radius: 10px; border: 1px solid #E8E8E3; padding: 14px 16px; }
+    .metric-label { font-size: 12px; color: #888; margin-bottom: 5px; }
+    .metric-value { font-size: 24px; font-weight: 600; color: #1a1a1a; }
+    .metric-value.green { color: #0F6E56; }
+    .metric-value.amber { color: #B45309; }
+    .metric-value.red { color: #C0392B; }
+
+    /* Table */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; font-size: 11px; font-weight: 500; color: #999; padding: 0 10px 10px; border-bottom: 1px solid #E8E8E3; text-transform: uppercase; letter-spacing: 0.3px; }
+    td { padding: 11px 10px; border-bottom: 1px solid #F0F0EB; color: #1a1a1a; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #FAFAFA; }
+
+    /* Badges */
+    .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 500; }
+    .badge-green { background: #E8F7F1; color: #0F6E56; }
+    .badge-amber { background: #FEF3C7; color: #92400E; }
+    .badge-red { background: #FEE8E8; color: #9B1C1C; }
+    .badge-blue { background: #EFF6FF; color: #1E40AF; }
+    .badge-purple { background: #F3F0FF; color: #5B21B6; }
+    .badge-gray { background: #F0F0EB; color: #666; }
+
+    /* Progress bar */
+    .progress-wrap { width: 80px; height: 6px; background: #F0F0EB; border-radius: 3px; overflow: hidden; }
+    .progress-bar { height: 100%; border-radius: 3px; }
+
+    /* POS */
+    .pos-layout { display: grid; grid-template-columns: 1fr 300px; border: 1px solid #E8E8E3; border-radius: 12px; overflow: hidden; background: #fff; min-height: 520px; }
+    .pos-left { padding: 14px; background: #FAFAF8; }
+    .pos-right { border-left: 1px solid #E8E8E3; display: flex; flex-direction: column; }
+    .cat-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    .cat-tab { padding: 5px 12px; border-radius: 20px; border: 1px solid #E0E0DB; background: #fff; font-size: 12px; cursor: pointer; color: #555; transition: all 0.15s; }
+    .cat-tab.active { background: #1D9E75; border-color: #1D9E75; color: #fff; }
+    .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+    .menu-card { background: #fff; border: 1px solid #E8E8E3; border-radius: 10px; padding: 11px; cursor: pointer; transition: border-color 0.15s; }
+    .menu-card:hover { border-color: #1D9E75; }
+    .menu-card.no-stock { opacity: 0.4; cursor: not-allowed; }
+    .menu-card-name { font-size: 12px; font-weight: 500; margin-bottom: 3px; }
+    .menu-card-price { font-size: 12px; color: #1D9E75; font-weight: 500; }
+    .pos-cart-header { padding: 14px; border-bottom: 1px solid #E8E8E3; }
+    .pos-cart-title { font-size: 14px; font-weight: 600; }
+    .pos-cart-num { font-size: 12px; color: #999; margin-top: 1px; }
+    .pos-cart-body { flex: 1; overflow-y: auto; padding: 8px 14px; }
+    .cart-empty { text-align: center; padding: 40px 0; color: #bbb; font-size: 13px; }
+    .cart-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid #F0F0EB; }
+    .cart-row:last-child { border-bottom: none; }
+    .cart-name { flex: 1; font-size: 12px; }
+    .qty-btn { width: 22px; height: 22px; border-radius: 50%; border: 1px solid #E0E0DB; background: #fff; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; }
+    .qty-num { font-size: 12px; font-weight: 500; min-width: 16px; text-align: center; }
+    .cart-price { font-size: 12px; font-weight: 500; min-width: 58px; text-align: right; }
+    .pos-cart-footer { padding: 12px 14px; border-top: 1px solid #E8E8E3; }
+    .total-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; color: #555; }
+    .total-row.big { font-size: 17px; font-weight: 600; color: #1a1a1a; margin-bottom: 12px; }
+    .pay-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+    .pay-btn { padding: 8px; border-radius: 8px; border: 1px solid #E0E0DB; background: #fff; font-size: 12px; cursor: pointer; text-align: center; transition: all 0.15s; }
+    .pay-btn.active { border-color: #1D9E75; background: #E8F7F1; color: #0F6E56; font-weight: 500; }
+    .shift-bar { padding: 10px 14px; border-radius: 8px; font-size: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .shift-bar.open { background: #E8F7F1; color: #0F6E56; }
+    .shift-bar.closed { background: #F5F5F0; color: #888; }
+
+    /* Form / Modal */
+    .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; align-items: center; justify-content: center; }
+    .modal-bg.open { display: flex; }
+    .modal { background: #fff; border-radius: 14px; padding: 22px; width: 360px; max-height: 90vh; overflow-y: auto; }
+    .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+    .field { margin-bottom: 13px; }
+    .field label { display: block; font-size: 12px; color: #666; margin-bottom: 5px; font-weight: 500; }
+    .field input, .field select, .field textarea { width: 100%; padding: 9px 12px; border: 1px solid #E0E0DB; border-radius: 8px; font-size: 13px; font-family: inherit; background: #fff; color: #1a1a1a; outline: none; transition: border-color 0.15s; }
+    .field input:focus, .field select:focus { border-color: #1D9E75; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; margin-bottom: 12px; }
+    .toggle { width: 38px; height: 22px; background: #E0E0DB; border-radius: 11px; cursor: pointer; position: relative; transition: background 0.2s; flex-shrink: 0; }
+    .toggle.on { background: #1D9E75; }
+    .toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; background: #fff; border-radius: 50%; transition: transform 0.2s; }
+    .toggle.on::after { transform: translateX(16px); }
+
+    /* Recipe rows */
+    .recipe-card { background: #fff; border: 1px solid #E8E8E3; border-radius: 10px; margin-bottom: 8px; overflow: hidden; }
+    .recipe-head { padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+    .recipe-head:hover { background: #FAFAFA; }
+    .recipe-body { display: none; padding: 0 16px 14px; border-top: 1px solid #F0F0EB; }
+    .recipe-body.open { display: block; }
+    .recipe-row { display: grid; grid-template-columns: 1fr 80px 30px; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid #F0F0EB; font-size: 13px; }
+    .recipe-row:last-child { border-bottom: none; }
+    .gram-input { width: 70px; padding: 5px 8px; border: 1px solid #E0E0DB; border-radius: 6px; font-size: 12px; }
+
+    /* Analytics */
+    .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 13px; }
+    .bar-label { min-width: 120px; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bar-track { flex: 1; height: 8px; background: #F0F0EB; border-radius: 4px; overflow: hidden; }
+    .bar-fill { height: 100%; background: #1D9E75; border-radius: 4px; }
+    .bar-count { min-width: 30px; text-align: right; font-weight: 500; color: #1a1a1a; }
+
+    /* Toast */
+    #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 13px; display: none; z-index: 999; white-space: nowrap; }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🏪</div>
+      <span class="logo-name" id="brand-name">QassaPos</span>
+    </div>
+    <nav class="nav">
+      <div class="nav-group-label">Основное</div>
+      <div class="nav-item active" onclick="nav('pos',this)"><span class="icon">🧾</span>Касса</div>
+      <div class="nav-item" onclick="nav('menu',this)"><span class="icon">🍔</span>Меню</div>
+      <div class="nav-group-label">Склад</div>
+      <div class="nav-item" onclick="nav('stock',this)"><span class="icon">📦</span>Остатки</div>
+      <div class="nav-item" onclick="nav('recipes',this)"><span class="icon">📋</span>Тех.карты</div>
+      <div class="nav-group-label">Бизнес</div>
+      <div class="nav-item" onclick="nav('clients',this)"><span class="icon">👥</span>Клиенты</div>
+      <div class="nav-item" onclick="nav('staff',this)"><span class="icon">👤</span>Сотрудники</div>
+      <div class="nav-item" onclick="nav('analytics',this)"><span class="icon">📊</span>Аналитика</div>
+      <div class="nav-group-label">Система</div>
+      <div class="nav-item" onclick="nav('settings',this)"><span class="icon">⚙️</span>Настройки</div>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="user-card" onclick="nav('settings',null)">
+        <div class="avatar" id="user-avatar">ВЛ</div>
+        <div class="user-info">
+          <div class="user-name" id="user-name-display">Владелец</div>
+          <div class="user-role" id="user-role-display">Владелец</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main" id="main">
+
+    <!-- КАССА -->
+    <div class="page active" id="page-pos">
+      <div class="page-header">
+        <div class="page-title">Касса</div>
+        <div id="shift-info-top"></div>
+      </div>
+      <div id="shift-bar-block"></div>
+      <div class="pos-layout">
+        <div class="pos-left">
+          <div class="cat-tabs" id="pos-cats"></div>
+          <div class="menu-grid" id="pos-menu"></div>
+        </div>
+        <div class="pos-right">
+          <div class="pos-cart-header">
+            <div class="pos-cart-title">Заказ <span id="order-num">#001</span></div>
+            <div class="pos-cart-num" id="cart-client-name"></div>
+          </div>
+          <div class="pos-cart-body" id="cart-body">
+            <div class="cart-empty">Добавьте позиции из меню</div>
+          </div>
+          <div class="pos-cart-footer">
+            <div class="total-row"><span>Позиций</span><span id="cart-count">0</span></div>
+            <div class="total-row big"><span>Итого</span><span id="cart-total">0 сум</span></div>
+            <select id="cart-client-sel" style="width:100%;margin-bottom:8px;padding:8px;border:1px solid #E0E0DB;border-radius:8px;font-size:12px;" onchange="selectClient(this.value)">
+              <option value="">— Клиент не выбран —</option>
+            </select>
+            <div class="pay-methods">
+              <button class="pay-btn" id="pay-cash" onclick="setPay('cash')">💵 Наличные</button>
+              <button class="pay-btn" id="pay-card" onclick="setPay('card')">💳 Карта</button>
+            </div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;" id="checkout-btn" onclick="checkout()" disabled>Оформить заказ</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- МЕНЮ -->
+    <div class="page" id="page-menu">
+      <div class="page-header">
+        <div class="page-title">Редактор меню</div>
+        <button class="btn btn-primary" onclick="openMenuModal(null)">+ Добавить блюдо</button>
+      </div>
+      <div style="display:grid;grid-template-columns:180px 1fr;gap:14px;">
+        <div class="card" style="padding:12px;">
+          <div style="font-size:12px;color:#999;margin-bottom:8px;font-weight:500;">КАТЕГОРИИ</div>
+          <div id="menu-cats-list"></div>
+          <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px;justify-content:center;" onclick="addMenuCat()">+ Добавить</button>
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <div style="font-size:14px;font-weight:600;" id="menu-cat-title">Все блюда</div>
+            <div style="font-size:12px;color:#999;" id="menu-count-label"></div>
+          </div>
+          <div class="table-wrap">
+            <table id="menu-table">
+              <thead><tr><th>Блюдо</th><th>Цена</th><th>Категория</th><th>Статус</th><th></th></tr></thead>
+              <tbody id="menu-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- СКЛАД -->
+    <div class="page" id="page-stock">
+      <div class="page-header">
+        <div class="page-title">Склад</div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-secondary" onclick="openIncomeModal()">📥 Приход</button>
+          <button class="btn btn-primary" onclick="openIngModal(null)">+ Добавить</button>
+        </div>
+      </div>
+      <div class="metrics" id="stock-metrics"></div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Ингредиент</th><th>Остаток</th><th>Минимум</th><th>Уровень</th><th>Статус</th><th></th></tr></thead>
+            <tbody id="stock-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ТЕХ.КАРТЫ -->
+    <div class="page" id="page-recipes">
+      <div class="page-header">
+        <div class="page-title">Технологические карты</div>
+      </div>
+      <p style="font-size:13px;color:#888;">Нажмите на блюдо чтобы настроить состав. При каждой продаже ингредиенты списываются автоматически.</p>
+      <div id="recipes-list"></div>
+    </div>
+
+    <!-- КЛИЕНТЫ -->
+    <div class="page" id="page-clients">
+      <div class="page-header">
+        <div class="page-title">База клиентов</div>
+        <button class="btn btn-primary" onclick="openClientModal(null)">+ Добавить клиента</button>
+      </div>
+      <div class="metrics" id="client-metrics"></div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Клиент</th><th>Телефон</th><th>Визитов</th><th>Бонусы</th><th>Сумма покупок</th><th></th></tr></thead>
+            <tbody id="clients-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- СОТРУДНИКИ -->
+    <div class="page" id="page-staff">
+      <div class="page-header">
+        <div class="page-title">Сотрудники</div>
+        <button class="btn btn-primary" onclick="openStaffModal(null)">+ Добавить</button>
+      </div>
+      <div class="metrics" id="staff-metrics"></div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Сотрудник</th><th>Телефон</th><th>Роль</th><th>PIN</th><th>Статус</th><th></th></tr></thead>
+            <tbody id="staff-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- АНАЛИТИКА -->
+    <div class="page" id="page-analytics">
+      <div class="page-header">
+        <div class="page-title">Аналитика</div>
+      </div>
+      <div class="metrics" id="analytics-metrics"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="card"><div class="card-title">Топ блюд</div><div id="top-dishes"></div></div>
+        <div class="card"><div class="card-title">Оплата</div><div id="pay-stats"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">История заказов</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>№</th><th>Состав</th><th>Сумма</th><th>Оплата</th><th>Клиент</th><th>Время</th></tr></thead>
+            <tbody id="orders-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- НАСТРОЙКИ -->
+    <div class="page" id="page-settings">
+      <div class="page-header"><div class="page-title">Настройки</div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="card">
+          <div class="card-title">Заведение</div>
+          <div class="field"><label>Название</label><input type="text" id="set-name" value="QassaPos" oninput="applySettings()"></div>
+          <div class="field"><label>Валюта</label>
+            <select id="set-currency" onchange="applySettings()">
+              <option value="сум">Узбекский сум</option>
+              <option value="₽">Российский рубль</option>
+              <option value="$">Доллар США</option>
+            </select>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Смена</div>
+          <div style="font-size:13px;color:#555;margin-bottom:12px;" id="shift-settings-status"></div>
+          <button class="btn" id="shift-toggle-btn" onclick="toggleShift()" style="width:100%;justify-content:center;">Открыть смену</button>
+        </div>
+        <div class="card">
+          <div class="card-title">Программа лояльности</div>
+          <div class="toggle-row"><span>Начислять бонусы</span><div class="toggle on" id="tog-loyalty" onclick="this.classList.toggle('on')"></div></div>
+          <div class="field"><label>Процент начисления (%)</label><input type="number" id="set-bonus-pct" value="5" min="1" max="30"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Профиль (демо)</div>
+          <p style="font-size:12px;color:#888;margin-bottom:10px;">Переключите роль для демонстрации прав доступа</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-secondary btn-sm" onclick="switchRole('owner')">Владелец</button>
+            <button class="btn btn-secondary btn-sm" onclick="switchRole('admin')">Администратор</button>
+            <button class="btn btn-secondary btn-sm" onclick="switchRole('cashier')">Кассир</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal" id="modal-body"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────
+let currency = 'сум';
+let shiftOpen = false;
+let shiftRevenue = 0;
+let orderNum = 1;
+let currentRole = 'owner';
+let cart = {};
+let cartClientId = null;
+let payMethod = null;
+let activePoscat = 'all';
+let activeMenuCat = 'all';
+let nextId = 200;
+
+let menuCats = ['Бургеры', 'Шаурма', 'Хот-доги', 'Напитки'];
+let menuItems = [
+  {id:1,name:'Классик бургер',price:18000,cat:'Бургеры',active:true},
+  {id:2,name:'Двойной бургер',price:26000,cat:'Бургеры',active:true},
+  {id:3,name:'Чизбургер',price:22000,cat:'Бургеры',active:true},
+  {id:4,name:'Шаурма классик',price:20000,cat:'Шаурма',active:true},
+  {id:5,name:'Шаурма с сыром',price:24000,cat:'Шаурма',active:true},
+  {id:6,name:'Хот-дог классик',price:12000,cat:'Хот-доги',active:true},
+  {id:7,name:'Кола 0.5л',price:8000,cat:'Напитки',active:true},
+  {id:8,name:'Чай',price:5000,cat:'Напитки',active:true},
+  {id:9,name:'Вода',price:4000,cat:'Напитки',active:true},
+];
+let ingredients = [
+  {id:1,name:'Булочка',stock:4800,min:500},
+  {id:2,name:'Котлета',stock:3600,min:600},
+  {id:3,name:'Помидор',stock:2800,min:300},
+  {id:4,name:'Лист салата',stock:1200,min:200},
+  {id:5,name:'Сыр',stock:900,min:300},
+  {id:6,name:'Лаваш',stock:5000,min:500},
+  {id:7,name:'Куриное мясо',stock:4200,min:600},
+  {id:8,name:'Сосиска',stock:2400,min:400},
+  {id:9,name:'Хлеб хот-дог',stock:3000,min:400},
+];
+let recipes = [
+  {id:1,name:'Классик бургер',items:[{ingId:1,grams:80},{ingId:2,grams:120},{ingId:3,grams:40},{ingId:4,grams:20}]},
+  {id:2,name:'Двойной бургер',items:[{ingId:1,grams:80},{ingId:2,grams:200},{ingId:3,grams:40}]},
+  {id:3,name:'Чизбургер',items:[{ingId:1,grams:80},{ingId:2,grams:120},{ingId:5,grams:30},{ingId:3,grams:40}]},
+  {id:4,name:'Шаурма классик',items:[{ingId:6,grams:120},{ingId:7,grams:150},{ingId:3,grams:50},{ingId:4,grams:30}]},
+  {id:5,name:'Шаурма с сыром',items:[{ingId:6,grams:120},{ingId:7,grams:150},{ingId:5,grams:40}]},
+  {id:6,name:'Хот-дог классик',items:[{ingId:9,grams:90},{ingId:8,grams:80}]},
+];
+let clients = [
+  {id:1,name:'Алишер Каримов',phone:'+998901234567',visits:12,bonus:3200,total:240000},
+  {id:2,name:'Малика Юсупова',phone:'+998901234568',visits:7,bonus:1800,total:140000},
+  {id:3,name:'Бобур Рашидов',phone:'+998901234569',visits:3,bonus:600,total:60000},
+];
+let staff = [
+  {id:1,name:'Владелец',phone:'+998901111111',role:'owner',active:true,pin:'1111'},
+  {id:2,name:'Санжар Холиков',phone:'+998902222222',role:'admin',active:true,pin:'2222'},
+  {id:3,name:'Нилуфар Тошева',phone:'+998903333333',role:'cashier',active:true,pin:'3333'},
+];
+let orders = [];
+
+// ─── HELPERS ────────────────────────────────────────────────
+const fmt = n => Math.round(n).toLocaleString('ru-RU') + ' ' + currency;
+const getIng = id => ingredients.find(i => i.id === id);
+const getItem = id => menuItems.find(i => i.id === id);
+const getClient = id => clients.find(c => c.id === id);
+const getRecipe = name => recipes.find(r => r.name === name);
+
+function stockStatus(ing) {
+  if (ing.stock <= 0) return 'out';
+  if (ing.stock < ing.min) return 'low';
+  return 'ok';
+}
+function canMake(item) {
+  const r = getRecipe(item.name);
+  if (!r) return true;
+  return r.items.every(ri => { const ing = getIng(ri.ingId); return ing && ing.stock >= ri.grams; });
+}
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 2500);
+}
+function applySettings() {
+  const n = document.getElementById('set-name').value;
+  document.getElementById('brand-name').textContent = n || 'QassaPos';
+  currency = document.getElementById('set-currency').value;
+}
+function switchRole(role) {
+  currentRole = role;
+  const map = {owner:'Владелец',admin:'Администратор',cashier:'Кассир'};
+  const initials = {owner:'ВЛ',admin:'АД',cashier:'КС'};
+  document.getElementById('user-name-display').textContent = map[role];
+  document.getElementById('user-role-display').textContent = map[role];
+  document.getElementById('user-avatar').textContent = initials[role];
+  toast('Роль: ' + map[role]);
+}
+
+// ─── NAVIGATION ─────────────────────────────────────────────
+function nav(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  if (el) el.classList.add('active');
+  const renders = {pos:renderPos,menu:renderMenu,stock:renderStock,recipes:renderRecipes,clients:renderClients,staff:renderStaff,analytics:renderAnalytics,settings:renderSettings};
+  if (renders[page]) renders[page]();
+}
+
+// ─── MODAL ──────────────────────────────────────────────────
+function showModal(html) { document.getElementById('modal-body').innerHTML = html; document.getElementById('modal-bg').classList.add('open'); }
+function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
+document.getElementById('modal-bg').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+// ─── SHIFT ──────────────────────────────────────────────────
+function toggleShift() {
+  shiftOpen = !shiftOpen;
+  if (!shiftOpen) { toast('Смена закрыта. Выручка: ' + fmt(shiftRevenue)); shiftRevenue = 0; }
+  else toast('Смена открыта!');
+  renderPos(); renderSettings();
+}
+function renderShiftBar() {
+  const el = document.getElementById('shift-bar-block');
+  el.innerHTML = `<div class="shift-bar ${shiftOpen ? 'open' : 'closed'}">
+    <span>${shiftOpen ? '✅ Смена открыта' : '⛔ Смена закрыта — продажи недоступны'}</span>
+    ${shiftOpen ? '<span style="font-weight:600;">Выручка: ' + fmt(shiftRevenue) + '</span>' : ''}
+  </div>`;
+}
+
+// ─── POS ────────────────────────────────────────────────────
+function renderPos() {
+  renderShiftBar();
+  const cats = ['all', ...menuCats];
+  document.getElementById('pos-cats').innerHTML = cats.map(c =>
+    `<button class="cat-tab ${activePoscat===c?'active':''}" onclick="setPoscat('${c}')">${c==='all'?'Все':c}</button>`).join('');
+  const items = (activePoscat === 'all' ? menuItems : menuItems.filter(i => i.cat === activePoscat)).filter(i => i.active);
+  document.getElementById('pos-menu').innerHTML = items.map(item => {
+    const ok = canMake(item);
+    return `<div class="menu-card ${ok?'':'no-stock'}" ${ok?`onclick="addToCart(${item.id})"`:''}>
+      <div class="menu-card-name">${item.name}</div>
+      <div class="menu-card-price">${ok ? fmt(item.price) : 'Нет остатка'}</div>
+    </div>`;}).join('');
+  const sel = document.getElementById('cart-client-sel');
+  sel.innerHTML = '<option value="">— Клиент не выбран —</option>' + clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  if (cartClientId) sel.value = cartClientId;
+  renderCart();
+}
+function setPoscat(c) { activePoscat = c; renderPos(); }
+function addToCart(id) {
+  if (!shiftOpen) { toast('Сначала откройте смену в настройках!'); return; }
+  cart[id] = (cart[id] || 0) + 1; renderCart();
+}
+function changeQty(id, d) { cart[id] = (cart[id] || 0) + d; if (cart[id] <= 0) delete cart[id]; renderCart(); }
+function selectClient(id) { cartClientId = id || null; renderCart(); }
+function setPay(m) {
+  payMethod = m;
+  document.getElementById('pay-cash').className = 'pay-btn' + (m==='cash'?' active':'');
+  document.getElementById('pay-card').className = 'pay-btn' + (m==='card'?' active':'');
+  document.getElementById('checkout-btn').disabled = Object.keys(cart).length === 0;
+}
+function renderCart() {
+  const keys = Object.keys(cart);
+  const body = document.getElementById('cart-body');
+  if (!keys.length) {
+    body.innerHTML = '<div class="cart-empty">Добавьте позиции из меню</div>';
+    document.getElementById('cart-total').textContent = '0 ' + currency;
+    document.getElementById('cart-count').textContent = '0';
+    document.getElementById('checkout-btn').disabled = true;
+    return;
+  }
+  let total = 0, count = 0;
+  body.innerHTML = keys.map(id => {
+    const item = getItem(+id); const qty = cart[id]; const sub = item.price * qty;
+    total += sub; count += qty;
+    return `<div class="cart-row">
+      <span class="cart-name">${item.name}</span>
+      <button class="qty-btn" onclick="changeQty(${id},-1)">−</button>
+      <span class="qty-num">${qty}</span>
+      <button class="qty-btn" onclick="changeQty(${id},+1)">+</button>
+      <span class="cart-price">${fmt(sub)}</span>
+    </div>`;}).join('');
+  document.getElementById('cart-total').textContent = fmt(total);
+  document.getElementById('cart-count').textContent = count;
+  document.getElementById('checkout-btn').disabled = !payMethod;
+}
+function checkout() {
+  const keys = Object.keys(cart);
+  if (!keys.length) return;
+  let total = 0;
+  keys.forEach(id => {
+    const item = getItem(+id); const qty = cart[id];
+    total += item.price * qty;
+    const r = getRecipe(item.name);
+    if (r) r.items.forEach(ri => { const ing = getIng(ri.ingId); if (ing) ing.stock = Math.max(0, ing.stock - ri.grams * qty); });
+  });
+  const pct = +(document.getElementById('set-bonus-pct') || {value:5}).value || 5;
+  if (cartClientId) {
+    const cl = getClient(+cartClientId);
+    if (cl) { cl.bonus += Math.round(total * pct / 100); cl.visits++; cl.total += total; }
+  }
+  shiftRevenue += total;
+  orders.unshift({num:String(orderNum).padStart(3,'0'), items:keys.map(id=>getItem(+id).name+' ×'+cart[id]).join(', '), total, pay:payMethod, client:cartClientId?getClient(+cartClientId).name:'—', time:new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})});
+  orderNum++;
+  cart = {}; cartClientId = null; payMethod = null;
+  document.getElementById('pay-cash').className = 'pay-btn';
+  document.getElementById('pay-card').className = 'pay-btn';
+  document.getElementById('order-num').textContent = '#' + String(orderNum).padStart(3,'0');
+  toast('✅ Заказ оформлен! ' + fmt(total));
+  renderPos();
+}
+
+// ─── MENU ───────────────────────────────────────────────────
+function renderMenu() {
+  const cats = ['all', ...menuCats];
+  document.getElementById('menu-cats-list').innerHTML = cats.map(c => `
+    <div style="padding:7px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:${activeMenuCat===c?'#0F6E56':'#555'};background:${activeMenuCat===c?'#E8F7F1':'transparent'};" onclick="setMenuCat('${c}')">${c==='all'?'Все блюда':c}</div>`).join('');
+  const items = activeMenuCat === 'all' ? menuItems : menuItems.filter(i => i.cat === activeMenuCat);
+  document.getElementById('menu-cat-title').textContent = activeMenuCat === 'all' ? 'Все блюда' : activeMenuCat;
+  document.getElementById('menu-count-label').textContent = items.length + ' позиций';
+  document.getElementById('menu-tbody').innerHTML = items.map(item => `<tr>
+    <td><strong>${item.name}</strong></td>
+    <td>${fmt(item.price)}</td>
+    <td>${item.cat}</td>
+    <td><span class="badge ${item.active?'badge-green':'badge-gray'}">${item.active?'Активно':'Скрыто'}</span></td>
+    <td style="text-align:right;white-space:nowrap;display:flex;gap:4px;justify-content:flex-end;">
+      <button class="btn btn-icon btn-sm" onclick="toggleMenuItem(${item.id})" title="${item.active?'Скрыть':'Показать'}">${item.active?'👁️':'🚫'}</button>
+      <button class="btn btn-icon btn-sm" onclick="openMenuModal(${item.id})">✏️</button>
+      <button class="btn btn-icon btn-sm" onclick="deleteMenuItem(${item.id})">🗑️</button>
+    </td>
+  </tr>`).join('');
+}
+function setMenuCat(c) { activeMenuCat = c; renderMenu(); }
+function toggleMenuItem(id) { const item = getItem(id); if (item) item.active = !item.active; renderMenu(); }
+function deleteMenuItem(id) { if (confirm('Удалить блюдо?')) { menuItems = menuItems.filter(i => i.id !== id); renderMenu(); } }
+function addMenuCat() { const n = prompt('Название категории:'); if (n && n.trim() && !menuCats.includes(n.trim())) { menuCats.push(n.trim()); renderMenu(); } }
+function openMenuModal(id) {
+  const item = id ? getItem(id) : null;
+  const catOpts = menuCats.map(c => `<option${item&&item.cat===c?' selected':''}>${c}</option>`).join('');
+  showModal(`<div class="modal-title">${id ? 'Редактировать блюдо' : 'Новое блюдо'}</div>
+    <div class="field"><label>Название</label><input type="text" id="mf-name" value="${item?item.name:''}"></div>
+    <div class="field-row">
+      <div class="field"><label>Цена (${currency})</label><input type="number" id="mf-price" value="${item?item.price:''}"></div>
+      <div class="field"><label>Категория</label><select id="mf-cat">${catOpts}</select></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="saveMenuItem(${id||0})">Сохранить</button>
+    </div>`);
+}
+function saveMenuItem(id) {
+  const name = document.getElementById('mf-name').value.trim();
+  const price = +document.getElementById('mf-price').value || 0;
+  const cat = document.getElementById('mf-cat').value;
+  if (!name) return;
+  if (id) { const item = getItem(id); Object.assign(item, {name, price, cat}); }
+  else menuItems.push({id:nextId++, name, price, cat, active:true});
+  closeModal(); renderMenu();
+}
+
+// ─── STOCK ──────────────────────────────────────────────────
+function renderStock() {
+  const low = ingredients.filter(i => stockStatus(i) === 'low').length;
+  const out = ingredients.filter(i => stockStatus(i) === 'out').length;
+  document.getElementById('stock-metrics').innerHTML = `
+    <div class="metric"><div class="metric-label">Всего позиций</div><div class="metric-value">${ingredients.length}</div></div>
+    <div class="metric"><div class="metric-label">Заканчивается</div><div class="metric-value amber">${low}</div></div>
+    <div class="metric"><div class="metric-label">Нет на складе</div><div class="metric-value red">${out}</div></div>`;
+  document.getElementById('stock-tbody').innerHTML = ingredients.map(ing => {
+    const s = stockStatus(ing);
+    const pct = Math.min(100, Math.round(ing.stock / (ing.min * 4) * 100));
+    const col = s==='ok'?'#1D9E75':s==='low'?'#D97706':'#C0392B';
+    const badge = s==='ok'?'badge-green':s==='low'?'badge-amber':'badge-red';
+    const label = s==='ok'?'Норма':s==='low'?'Мало':'Нет';
+    return `<tr>
+      <td><strong>${ing.name}</strong></td>
+      <td>${ing.stock.toLocaleString('ru-RU')} г</td>
+      <td style="color:#888;">${ing.min.toLocaleString('ru-RU')} г</td>
+      <td><div class="progress-wrap"><div class="progress-bar" style="width:${pct}%;background:${col};"></div></div></td>
+      <td><span class="badge ${badge}">${label}</span></td>
+      <td style="text-align:right;white-space:nowrap;display:flex;gap:4px;justify-content:flex-end;">
+        <button class="btn btn-icon btn-sm" onclick="openIngModal(${ing.id})">✏️</button>
+        <button class="btn btn-icon btn-sm" onclick="deleteIng(${ing.id})">🗑️</button>
+      </td>
+    </tr>`;}).join('');
+}
+function deleteIng(id) { if (confirm('Удалить?')) { ingredients = ingredients.filter(i => i.id !== id); renderStock(); } }
+function openIngModal(id) {
+  const ing = id ? getIng(id) : null;
+  showModal(`<div class="modal-title">${id ? 'Редактировать ингредиент' : 'Новый ингредиент'}</div>
+    <div class="field"><label>Название</label><input type="text" id="if-name" value="${ing?ing.name:''}"></div>
+    <div class="field-row">
+      <div class="field"><label>Остаток (г)</label><input type="number" id="if-stock" value="${ing?ing.stock:''}"></div>
+      <div class="field"><label>Мин. остаток (г)</label><input type="number" id="if-min" value="${ing?ing.min:300}"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="saveIng(${id||0})">Сохранить</button>
+    </div>`);
+}
+function saveIng(id) {
+  const name = document.getElementById('if-name').value.trim();
+  const stock = +document.getElementById('if-stock').value || 0;
+  const min = +document.getElementById('if-min').value || 300;
+  if (!name) return;
+  if (id) { const ing = getIng(id); Object.assign(ing, {name, stock, min}); }
+  else ingredients.push({id:nextId++, name, stock, min});
+  closeModal(); renderStock();
+}
+function openIncomeModal() {
+  const opts = ingredients.map(i => `<option value="${i.id}">${i.name}</option>`).join('');
+  showModal(`<div class="modal-title">Приход товара</div>
+    <div class="field"><label>Ингредиент</label><select id="inc-ing">${opts}</select></div>
+    <div class="field"><label>Количество (г)</label><input type="number" id="inc-qty" value="1000"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="doIncome()">Принять</button>
+    </div>`);
+}
+function doIncome() {
+  const id = +document.getElementById('inc-ing').value;
+  const qty = +document.getElementById('inc-qty').value || 0;
+  const ing = getIng(id); if (ing) ing.stock += qty;
+  closeModal(); renderStock(); toast('Принято: +' + qty.toLocaleString('ru-RU') + ' г');
+}
+
+// ─── RECIPES ────────────────────────────────────────────────
+function renderRecipes() {
+  document.getElementById('recipes-list').innerHTML = recipes.map(r => `
+    <div class="recipe-card">
+      <div class="recipe-head" onclick="toggleRecipe(${r.id})">
+        <strong>${r.name}</strong>
+        <span style="font-size:12px;color:#888;">${r.items.length} ингр. ▾</span>
+      </div>
+      <div class="recipe-body" id="rb-${r.id}">
+        <div style="padding-top:10px;">
+        ${r.items.map((ri,idx) => {
+          const ing = getIng(ri.ingId);
+          return `<div class="recipe-row">
+            <span>${ing ? ing.name : '—'}</span>
+            <div><input class="gram-input" type="number" value="${ri.grams}" onchange="updRec(${r.id},${idx},this.value)"> г</div>
+            <button class="btn btn-icon btn-sm" onclick="remRec(${r.id},${idx})">✕</button>
+          </div>`;}).join('')}
+        <div style="display:flex;gap:8px;margin-top:10px;align-items:center;">
+          <select id="rs-${r.id}" style="flex:1;padding:7px;border:1px solid #E0E0DB;border-radius:8px;font-size:12px;">${ingredients.map(i=>`<option value="${i.id}">${i.name}</option>`).join('')}</select>
+          <input type="number" id="rg-${r.id}" value="50" style="width:60px;padding:7px;border:1px solid #E0E0DB;border-radius:8px;font-size:12px;"> г
+          <button class="btn btn-primary btn-sm" onclick="addRecItem(${r.id})">+ Добавить</button>
+        </div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+function toggleRecipe(id) { const el = document.getElementById('rb-'+id); el.classList.toggle('open'); }
+function updRec(rId,idx,val) { const r = recipes.find(r=>r.id===rId); if(r) r.items[idx].grams=+val||1; renderRecipes(); }
+function remRec(rId,idx) { const r = recipes.find(r=>r.id===rId); if(r) r.items.splice(idx,1); renderRecipes(); }
+function addRecItem(rId) {
+  const r = recipes.find(r=>r.id===rId);
+  const ingId = +document.getElementById('rs-'+rId).value;
+  const grams = +document.getElementById('rg-'+rId).value || 50;
+  if (r && !r.items.find(i=>i.ingId===ingId)) r.items.push({ingId,grams});
+  renderRecipes();
+}
+
+// ─── CLIENTS ────────────────────────────────────────────────
+function renderClients() {
+  document.getElementById('client-metrics').innerHTML = `
+    <div class="metric"><div class="metric-label">Всего клиентов</div><div class="metric-value">${clients.length}</div></div>
+    <div class="metric"><div class="metric-label">Всего визитов</div><div class="metric-value">${clients.reduce((a,c)=>a+c.visits,0)}</div></div>
+    <div class="metric"><div class="metric-label">Бонусов выдано</div><div class="metric-value green">${fmt(clients.reduce((a,c)=>a+c.bonus,0))}</div></div>`;
+  document.getElementById('clients-tbody').innerHTML = clients.map(c => `<tr>
+    <td><strong>${c.name}</strong></td>
+    <td style="color:#888;">${c.phone}</td>
+    <td>${c.visits}</td>
+    <td style="color:#0F6E56;font-weight:600;">${fmt(c.bonus)}</td>
+    <td>${fmt(c.total)}</td>
+    <td style="text-align:right;display:flex;gap:4px;justify-content:flex-end;">
+      <button class="btn btn-icon btn-sm" onclick="openClientModal(${c.id})">✏️</button>
+      <button class="btn btn-icon btn-sm" onclick="deleteClient(${c.id})">🗑️</button>
+    </td>
+  </tr>`).join('');
+}
+function deleteClient(id) { if (confirm('Удалить клиента?')) { clients = clients.filter(c=>c.id!==id); renderClients(); } }
+function openClientModal(id) {
+  const c = id ? getClient(id) : null;
+  showModal(`<div class="modal-title">${id?'Редактировать клиента':'Новый клиент'}</div>
+    <div class="field"><label>Имя</label><input type="text" id="cf-name" value="${c?c.name:''}"></div>
+    <div class="field"><label>Телефон</label><input type="text" id="cf-phone" value="${c?c.phone:''}"></div>
+    <div class="field"><label>Бонусы</label><input type="number" id="cf-bonus" value="${c?c.bonus:0}"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="saveClient(${id||0})">Сохранить</button>
+    </div>`);
+}
+function saveClient(id) {
+  const name = document.getElementById('cf-name').value.trim();
+  const phone = document.getElementById('cf-phone').value.trim();
+  const bonus = +document.getElementById('cf-bonus').value || 0;
+  if (!name) return;
+  if (id) { const c = getClient(id); Object.assign(c, {name, phone, bonus}); }
+  else clients.push({id:nextId++, name, phone, visits:0, bonus, total:0});
+  closeModal(); renderClients();
+}
+
+// ─── STAFF ──────────────────────────────────────────────────
+function renderStaff() {
+  const active = staff.filter(s=>s.active).length;
+  document.getElementById('staff-metrics').innerHTML = `
+    <div class="metric"><div class="metric-label">Всего</div><div class="metric-value">${staff.length}</div></div>
+    <div class="metric"><div class="metric-label">Активных</div><div class="metric-value green">${active}</div></div>
+    <div class="metric"><div class="metric-label">Неактивных</div><div class="metric-value amber">${staff.length-active}</div></div>`;
+  const roleMap = {owner:'Владелец',admin:'Администратор',cashier:'Кассир'};
+  const roleBadge = {owner:'badge-purple',admin:'badge-blue',cashier:'badge-green'};
+  document.getElementById('staff-tbody').innerHTML = staff.map(s => `<tr>
+    <td><strong>${s.name}</strong></td>
+    <td style="color:#888;">${s.phone}</td>
+    <td><span class="badge ${roleBadge[s.role]}">${roleMap[s.role]}</span></td>
+    <td style="font-family:monospace;color:#888;">${s.pin}</td>
+    <td><span class="badge ${s.active?'badge-green':'badge-gray'}">${s.active?'Активен':'Неактивен'}</span></td>
+    <td style="text-align:right;display:flex;gap:4px;justify-content:flex-end;">
+      <button class="btn btn-icon btn-sm" onclick="openStaffModal(${s.id})">✏️</button>
+      <button class="btn btn-icon btn-sm" onclick="deleteStaff(${s.id})">🗑️</button>
+    </td>
+  </tr>`).join('');
+}
+function deleteStaff(id) { if (confirm('Удалить сотрудника?')) { staff = staff.filter(s=>s.id!==id); renderStaff(); } }
+function openStaffModal(id) {
+  const s = id ? staff.find(s=>s.id===id) : null;
+  showModal(`<div class="modal-title">${id?'Редактировать':'Новый сотрудник'}</div>
+    <div class="field"><label>Имя</label><input type="text" id="sf-name" value="${s?s.name:''}"></div>
+    <div class="field"><label>Телефон</label><input type="text" id="sf-phone" value="${s?s.phone:''}"></div>
+    <div class="field-row">
+      <div class="field"><label>Роль</label><select id="sf-role">
+        <option value="cashier"${s&&s.role==='cashier'?' selected':''}>Кассир</option>
+        <option value="admin"${s&&s.role==='admin'?' selected':''}>Администратор</option>
+        <option value="owner"${s&&s.role==='owner'?' selected':''}>Владелец</option>
+      </select></div>
+      <div class="field"><label>PIN (4 цифры)</label><input type="text" id="sf-pin" value="${s?s.pin:''}" maxlength="4"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="saveStaff(${id||0})">Сохранить</button>
+    </div>`);
+}
+function saveStaff(id) {
+  const name = document.getElementById('sf-name').value.trim();
+  const phone = document.getElementById('sf-phone').value.trim();
+  const role = document.getElementById('sf-role').value;
+  const pin = document.getElementById('sf-pin').value.trim();
+  if (!name) return;
+  if (id) { const s = staff.find(s=>s.id===id); Object.assign(s, {name, phone, role, pin, active:true}); }
+  else staff.push({id:nextId++, name, phone, role, pin, active:true});
+  closeModal(); renderStaff();
+}
+
+// ─── ANALYTICS ──────────────────────────────────────────────
+function renderAnalytics() {
+  const totalRev = orders.reduce((a,o)=>a+o.total,0);
+  const avg = orders.length ? Math.round(totalRev/orders.length) : 0;
+  document.getElementById('analytics-metrics').innerHTML = `
+    <div class="metric"><div class="metric-label">Выручка</div><div class="metric-value green">${fmt(totalRev)}</div></div>
+    <div class="metric"><div class="metric-label">Заказов</div><div class="metric-value">${orders.length}</div></div>
+    <div class="metric"><div class="metric-label">Средний чек</div><div class="metric-value">${fmt(avg)}</div></div>
+    <div class="metric"><div class="metric-label">Клиентов</div><div class="metric-value">${clients.length}</div></div>`;
+  const dishCount = {};
+  orders.forEach(o => o.items.split(', ').forEach(i => { const m = i.match(/(.+) ×(\d+)/); if(m) dishCount[m[1]]=(dishCount[m[1]]||0)+(+m[2]); }));
+  const top = Object.entries(dishCount).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const maxD = top[0]?top[0][1]:1;
+  document.getElementById('top-dishes').innerHTML = top.length
+    ? top.map(([n,c]) => `<div class="bar-row"><span class="bar-label">${n}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(c/maxD*100)}%"></div></div><span class="bar-count">${c}</span></div>`).join('')
+    : '<p style="color:#bbb;font-size:13px;">Продаж пока нет</p>';
+  const cash = orders.filter(o=>o.pay==='cash').length;
+  const card = orders.filter(o=>o.pay==='card').length;
+  document.getElementById('pay-stats').innerHTML = `
+    <div class="bar-row"><span class="bar-label">Наличные</span><div class="bar-track"><div class="bar-fill" style="width:${orders.length?Math.round(cash/orders.length*100):0}%"></div></div><span class="bar-count">${cash}</span></div>
+    <div class="bar-row"><span class="bar-label">Карта</span><div class="bar-track"><div class="bar-fill" style="width:${orders.length?Math.round(card/orders.length*100):0}%;background:#378ADD"></div></div><span class="bar-count">${card}</span></div>`;
+  document.getElementById('orders-tbody').innerHTML = orders.length
+    ? orders.slice(0,20).map(o=>`<tr><td>#${o.num}</td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#888;">${o.items}</td><td style="font-weight:600;">${fmt(o.total)}</td><td>${o.pay==='cash'?'Нал.':'Карта'}</td><td>${o.client}</td><td style="color:#888;">${o.time}</td></tr>`).join('')
+    : '<tr><td colspan="6" style="text-align:center;color:#bbb;padding:24px;">Заказов ещё нет — оформите первый на кассе</td></tr>';
+}
+
+// ─── SETTINGS ───────────────────────────────────────────────
+function renderSettings() {
+  const btn = document.getElementById('shift-toggle-btn');
+  btn.textContent = shiftOpen ? '⛔ Закрыть смену' : '✅ Открыть смену';
+  btn.className = 'btn ' + (shiftOpen ? 'btn-danger' : 'btn-primary');
+  document.getElementById('shift-settings-status').innerHTML = `Статус: <strong style="color:${shiftOpen?'#0F6E56':'#888'}">${shiftOpen?'Открыта':'Закрыта'}</strong>${shiftOpen?'<br>Выручка за смену: <strong>'+fmt(shiftRevenue)+'</strong>':''}`;
+}
+
+// ─── INIT ───────────────────────────────────────────────────
+renderPos();
+</script>
+</body>
+</html>
