@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 
 const authRoutes = require('./routes/auth');
 const menuRoutes = require('./routes/menu');
@@ -12,8 +13,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Раздача статических файлов фронтенда (касса и админка)
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Проверка что сервер живой (Railway health check)
-app.get('/', (req, res) => {
+app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'QassaPos API', version: '1.0.0' });
 });
 
