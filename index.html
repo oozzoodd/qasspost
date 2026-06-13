@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QassaPos — Кассовая система</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F5F5F0; color: #1a1a1a; font-size: 14px; }
+
+    /* ── AUTH SCREENS ──────────────────────────────────────── */
+    .auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #F5F5F0; }
+    .auth-box { background: #fff; border-radius: 16px; padding: 32px; width: 340px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); }
+    .auth-logo { display: flex; align-items: center; gap: 10px; justify-content: center; margin-bottom: 24px; }
+    .auth-logo .icon { width: 40px; height: 40px; background: #1D9E75; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .auth-logo .name { font-size: 18px; font-weight: 700; }
+    .auth-title { font-size: 16px; font-weight: 600; text-align: center; margin-bottom: 20px; color: #1a1a1a; }
+    .auth-field { margin-bottom: 14px; }
+    .auth-field label { display: block; font-size: 12px; color: #666; margin-bottom: 5px; font-weight: 500; }
+    .auth-field input { width: 100%; padding: 11px 14px; border: 1px solid #E0E0DB; border-radius: 10px; font-size: 14px; outline: none; }
+    .auth-field input:focus { border-color: #1D9E75; }
+    .auth-btn { width: 100%; padding: 12px; border-radius: 10px; border: none; background: #1D9E75; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 6px; }
+    .auth-btn:hover { background: #0F6E56; }
+    .auth-btn:disabled { background: #ccc; cursor: default; }
+    .auth-error { background: #FEE8E8; color: #C0392B; padding: 10px 12px; border-radius: 8px; font-size: 12px; margin-bottom: 14px; display: none; }
+    .auth-switch { text-align: center; margin-top: 16px; font-size: 12px; color: #888; }
+    .auth-switch a { color: #1D9E75; cursor: pointer; font-weight: 500; text-decoration: none; }
+    .pin-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 16px; }
+    .pin-btn { padding: 16px; border-radius: 10px; border: 1px solid #E0E0DB; background: #fff; font-size: 18px; font-weight: 600; cursor: pointer; }
+    .pin-btn:hover { background: #F5F5F0; }
+    .pin-display { display: flex; gap: 10px; justify-content: center; margin: 16px 0; }
+    .pin-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #E0E0DB; }
+    .pin-dot.filled { background: #1D9E75; border-color: #1D9E75; }
+    .auth-loading { text-align: center; padding: 60px 0; color: #888; font-size: 13px; }
+    .expired-box { text-align: center; }
+    .expired-icon { font-size: 40px; margin-bottom: 12px; }
+
+    /* ── APP LAYOUT ────────────────────────────────────────── */
+    .app { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+    .sidebar { background: #fff; border-right: 1px solid #E8E8E3; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; }
+    .main { overflow: auto; }
+    .page { display: none; padding: 24px; flex-direction: column; gap: 20px; }
+    .page.active { display: flex; }
+
+    .sidebar-logo { padding: 18px 16px; border-bottom: 1px solid #E8E8E3; display: flex; align-items: center; gap: 10px; }
+    .logo-icon { width: 32px; height: 32px; background: #1D9E75; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; }
+    .logo-name { font-size: 16px; font-weight: 600; color: #1a1a1a; }
+    .nav { padding: 10px 8px; flex: 1; overflow-y: auto; }
+    .nav-group-label { font-size: 11px; color: #999; padding: 8px 10px 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; cursor: pointer; color: #555; font-size: 13px; margin-bottom: 2px; transition: background 0.15s; }
+    .nav-item:hover { background: #F5F5F0; color: #1a1a1a; }
+    .nav-item.active { background: #E8F7F1; color: #0F6E56; font-weight: 500; }
+    .nav-item .icon { font-size: 17px; width: 20px; text-align: center; }
+    .nav-item.locked { opacity: 0.4; cursor: not-allowed; }
+    .sidebar-bottom { padding: 12px; border-top: 1px solid #E8E8E3; }
+    .user-card { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 8px; cursor: pointer; }
+    .user-card:hover { background: #F5F5F0; }
+    .avatar { width: 34px; height: 34px; border-radius: 50%; background: #E8F7F1; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #0F6E56; flex-shrink: 0; }
+    .user-info { flex: 1; min-width: 0; }
+    .user-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-role { font-size: 11px; color: #999; }
+    .logout-btn { font-size: 11px; color: #C0392B; cursor: pointer; text-align: center; padding: 6px; }
+    .logout-btn:hover { text-decoration: underline; }
+
+    .page-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+    .page-title { font-size: 20px; font-weight: 600; color: #1a1a1a; }
+
+    .btn { padding: 9px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; border: none; font-weight: 500; transition: background 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-primary { background: #1D9E75; color: #fff; }
+    .btn-primary:hover { background: #0F6E56; }
+    .btn-secondary { background: #fff; color: #1a1a1a; border: 1px solid #E0E0DB; }
+    .btn-secondary:hover { background: #F5F5F0; }
+    .btn-danger { background: #FEE8E8; color: #C0392B; }
+    .btn-danger:hover { background: #FDD; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn-icon { width: 30px; height: 30px; padding: 0; border-radius: 6px; justify-content: center; background: #fff; border: 1px solid #E0E0DB; color: #555; }
+    .btn-icon:hover { background: #F5F5F0; }
+    .btn:disabled { opacity: 0.5; cursor: default; }
+
+    .card { background: #fff; border-radius: 12px; border: 1px solid #E8E8E3; padding: 16px; }
+    .card-title { font-size: 14px; font-weight: 600; margin-bottom: 14px; }
+
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+    .metric { background: #fff; border-radius: 10px; border: 1px solid #E8E8E3; padding: 14px 16px; }
+    .metric-label { font-size: 12px; color: #888; margin-bottom: 5px; }
+    .metric-value { font-size: 24px; font-weight: 600; color: #1a1a1a; }
+    .metric-value.green { color: #0F6E56; }
+    .metric-value.amber { color: #B45309; }
+    .metric-value.red { color: #C0392B; }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; font-size: 11px; font-weight: 500; color: #999; padding: 0 10px 10px; border-bottom: 1px solid #E8E8E3; text-transform: uppercase; letter-spacing: 0.3px; }
+    td { padding: 11px 10px; border-bottom: 1px solid #F0F0EB; color: #1a1a1a; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #FAFAFA; }
+
+    .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 500; }
+    .badge-green { background: #E8F7F1; color: #0F6E56; }
+    .badge-amber { background: #FEF3C7; color: #92400E; }
+    .badge-red { background: #FEE8E8; color: #9B1C1C; }
+    .badge-blue { background: #EFF6FF; color: #1E40AF; }
+    .badge-purple { background: #F3F0FF; color: #5B21B6; }
+    .badge-gray { background: #F0F0EB; color: #666; }
+
+    .progress-wrap { width: 80px; height: 6px; background: #F0F0EB; border-radius: 3px; overflow: hidden; }
+    .progress-bar { height: 100%; border-radius: 3px; }
+
+    .pos-layout { display: grid; grid-template-columns: 1fr 300px; border: 1px solid #E8E8E3; border-radius: 12px; overflow: hidden; background: #fff; min-height: 520px; }
+    .pos-left { padding: 14px; background: #FAFAF8; }
+    .pos-right { border-left: 1px solid #E8E8E3; display: flex; flex-direction: column; }
+    .cat-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    .cat-tab { padding: 5px 12px; border-radius: 20px; border: 1px solid #E0E0DB; background: #fff; font-size: 12px; cursor: pointer; color: #555; transition: all 0.15s; }
+    .cat-tab.active { background: #1D9E75; border-color: #1D9E75; color: #fff; }
+    .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+    .menu-card { background: #fff; border: 1px solid #E8E8E3; border-radius: 10px; padding: 11px; cursor: pointer; transition: border-color 0.15s; }
+    .menu-card:hover { border-color: #1D9E75; }
+    .menu-card.no-stock { opacity: 0.4; cursor: not-allowed; }
+    .menu-card-name { font-size: 12px; font-weight: 500; margin-bottom: 3px; }
+    .menu-card-price { font-size: 12px; color: #1D9E75; font-weight: 500; }
+    .pos-cart-header { padding: 14px; border-bottom: 1px solid #E8E8E3; }
+    .pos-cart-title { font-size: 14px; font-weight: 600; }
+    .pos-cart-num { font-size: 12px; color: #999; margin-top: 1px; }
+    .pos-cart-body { flex: 1; overflow-y: auto; padding: 8px 14px; }
+    .cart-empty { text-align: center; padding: 40px 0; color: #bbb; font-size: 13px; }
+    .cart-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid #F0F0EB; }
+    .cart-row:last-child { border-bottom: none; }
+    .cart-name { flex: 1; font-size: 12px; }
+    .qty-btn { width: 22px; height: 22px; border-radius: 50%; border: 1px solid #E0E0DB; background: #fff; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; }
+    .qty-num { font-size: 12px; font-weight: 500; min-width: 16px; text-align: center; }
+    .cart-price { font-size: 12px; font-weight: 500; min-width: 58px; text-align: right; }
+    .pos-cart-footer { padding: 12px 14px; border-top: 1px solid #E8E8E3; }
+    .total-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; color: #555; }
+    .total-row.big { font-size: 17px; font-weight: 600; color: #1a1a1a; margin-bottom: 12px; }
+    .pay-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+    .pay-btn { padding: 8px; border-radius: 8px; border: 1px solid #E0E0DB; background: #fff; font-size: 12px; cursor: pointer; text-align: center; transition: all 0.15s; }
+    .pay-btn.active { border-color: #1D9E75; background: #E8F7F1; color: #0F6E56; font-weight: 500; }
+    .shift-bar { padding: 10px 14px; border-radius: 8px; font-size: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .shift-bar.open { background: #E8F7F1; color: #0F6E56; }
+    .shift-bar.closed { background: #F5F5F0; color: #888; }
+
+    .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; align-items: center; justify-content: center; }
+    .modal-bg.open { display: flex; }
+    .modal { background: #fff; border-radius: 14px; padding: 22px; width: 360px; max-height: 90vh; overflow-y: auto; }
+    .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+    .field { margin-bottom: 13px; }
+    .field label { display: block; font-size: 12px; color: #666; margin-bottom: 5px; font-weight: 500; }
+    .field input, .field select, .field textarea { width: 100%; padding: 9px 12px; border: 1px solid #E0E0DB; border-radius: 8px; font-size: 13px; font-family: inherit; background: #fff; color: #1a1a1a; outline: none; transition: border-color 0.15s; }
+    .field input:focus, .field select:focus { border-color: #1D9E75; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+
+    .recipe-card { background: #fff; border: 1px solid #E8E8E3; border-radius: 10px; margin-bottom: 8px; overflow: hidden; }
+    .recipe-head { padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+    .recipe-head:hover { background: #FAFAFA; }
+    .recipe-body { display: none; padding: 0 16px 14px; border-top: 1px solid #F0F0EB; }
+    .recipe-body.open { display: block; }
+    .recipe-row { display: grid; grid-template-columns: 1fr 80px 30px; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid #F0F0EB; font-size: 13px; }
+    .recipe-row:last-child { border-bottom: none; }
+    .gram-input { width: 70px; padding: 5px 8px; border: 1px solid #E0E0DB; border-radius: 6px; font-size: 12px; }
+
+    .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 13px; }
+    .bar-label { min-width: 120px; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bar-track { flex: 1; height: 8px; background: #F0F0EB; border-radius: 4px; overflow: hidden; }
+    .bar-fill { height: 100%; background: #1D9E75; border-radius: 4px; }
+    .bar-count { min-width: 30px; text-align: right; font-weight: 500; color: #1a1a1a; }
+
+    #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 13px; display: none; z-index: 999; white-space: nowrap; max-width: 80vw; text-align: center; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════ AUTH: OWNER LOGIN ═══════════════ -->
+<div class="auth-screen" id="screen-login">
+  <div class="auth-box">
+    <div class="auth-logo"><div class="icon">🏪</div><div class="name">QassaPos</div></div>
+    <div class="auth-title">Вход в систему</div>
+    <div class="auth-error" id="login-error"></div>
+    <div class="auth-field"><label>Email</label><input type="email" id="login-email" placeholder="demo@qassapos.uz"></div>
+    <div class="auth-field"><label>Пароль</label><input type="password" id="login-password" placeholder="••••••••"></div>
+    <button class="auth-btn" id="login-btn" onclick="doLogin()">Войти</button>
+    <div class="auth-switch">Demo доступ: demo@qassapos.uz / demo1234</div>
+  </div>
+</div>
+
+<!-- ═══════════════ AUTH: PIN LOGIN (staff) ═══════════════ -->
+<div class="auth-screen" id="screen-pin" style="display:none;">
+  <div class="auth-box">
+    <div class="auth-logo"><div class="icon">🏪</div><div class="name" id="pin-venue-name">QassaPos</div></div>
+    <div class="auth-title">Введите PIN-код</div>
+    <div class="auth-error" id="pin-error"></div>
+    <div class="pin-display" id="pin-display"></div>
+    <div class="pin-grid" id="pin-grid"></div>
+    <div class="auth-switch"><a onclick="logout()">← Выйти из заведения</a></div>
+  </div>
+</div>
+
+<!-- ═══════════════ SUBSCRIPTION EXPIRED ═══════════════ -->
+<div class="auth-screen" id="screen-expired" style="display:none;">
+  <div class="auth-box expired-box">
+    <div class="expired-icon">⏰</div>
+    <div class="auth-title">Подписка истекла</div>
+    <p style="font-size:13px;color:#666;margin-bottom:16px;line-height:1.6;">Доступ к системе временно ограничен. Свяжитесь с поддержкой для продления тарифа.</p>
+    <button class="auth-btn" onclick="logout()">Выйти</button>
+  </div>
+</div>
+
+<!-- ═══════════════ LOADING ═══════════════ -->
+<div class="auth-screen" id="screen-loading">
+  <div class="auth-loading">Загрузка...</div>
+</div>
+
+<!-- ═══════════════ MAIN APP ═══════════════ -->
+<div class="app" id="app" style="display:none;">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🏪</div>
+      <span class="logo-name" id="brand-name">QassaPos</span>
+    </div>
+    <nav class="nav">
+      <div class="nav-group-label">Основное</div>
+      <div class="nav-item active" onclick="nav('pos',this)"><span class="icon">🧾</span>Касса</div>
+      <div class="nav-item" data-roles="owner,admin" onclick="nav('menu',this)"><span class="icon">🍔</span>Меню</div>
+      <div class="nav-group-label">Склад</div>
+      <div class="nav-item" data-roles="owner,admin" onclick="nav('stock',this)"><span class="icon">📦</span>Остатки</div>
+      <div class="nav-item" data-roles="owner,admin" onclick="nav('recipes',this)"><span class="icon">📋</span>Тех.карты</div>
+      <div class="nav-group-label">Бизнес</div>
+      <div class="nav-item" data-roles="owner,admin" onclick="nav('clients',this)"><span class="icon">👥</span>Клиенты</div>
+      <div class="nav-item" data-roles="owner" onclick="nav('staff',this)"><span class="icon">👤</span>Сотрудники</div>
+      <div class="nav-item" data-roles="owner,admin" onclick="nav('analytics',this)"><span class="icon">📊</span>Аналитика</div>
+      <div class="nav-group-label">Система</div>
+      <div class="nav-item" onclick="nav('settings',this)"><span class="icon">⚙️</span>Настройки</div>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="user-card" onclick="nav('settings',null)">
+        <div class="avatar" id="user-avatar">--</div>
+        <div class="user-info">
+          <div class="user-name" id="user-name-display">—</div>
+          <div class="user-role" id="user-role-display">—</div>
+        </div>
+      </div>
+      <div class="logout-btn" onclick="staffLogout()">Сменить сотрудника</div>
+    </div>
+  </aside>
+
+  <main class="main" id="main">
+
+    <!-- КАССА -->
+    <div class="page active" id="page-pos">
+      <div class="page-header">
+        <div class="page-title">Касса</div>
+      </div>
+      <div id="shift-bar-block"></div>
+      <div class="pos-layout">
+        <div class="pos-left">
+          <div class="cat-tabs" id="pos-cats"></div>
+          <div class="menu-grid" id="pos-menu"></div>
+        </div>
+        <div class="pos-right">
+          <div class="pos-cart-header">
+            <div class="pos-cart-title">Текущий заказ</div>
+            <div class="pos-cart-num" id="cart-client-name"></div>
+          </div>
+          <div class="pos-cart-body" id="cart-body">
+            <div class="cart-empty">Добавьте позиции из меню</div>
+          </div>
+          <div class="pos-cart-footer">
+            <div class="total-row"><span>Позиций</span><span id="cart-count">0</span></div>
+            <div class="total-row big"><span>Итого</span><span id="cart-total">0 сум</span></div>
+            <select id="cart-client-sel" style="width:100%;margin-bottom:8px;padding:8px;border:1px solid #E0E0DB;border-radius:8px;font-size:12px;" onchange="selectClient(this.value)">
+              <option value="">— Клиент не выбран —</option>
+            </select>
+            <div class="pay-methods">
+              <button class="pay-btn" id="pay-cash" onclick="setPay('cash')">💵 Наличные</button>
+              <button class="pay-btn" id="pay-card" onclick="setPay('card')">💳 Карта</button>
+            </div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;" id="checkout-btn" onclick="checkout()" disabled>Оформить заказ</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- МЕНЮ -->
+    <div class="page" id="page-menu">
+      <div class="page-header">
+        <div class="page-title">Редактор меню</div>
+        <button class="btn btn-primary" onclick="openMenuModal(null)">+ Добавить блюдо</button>
+      </div>
+      <div style="display:grid;grid-template-columns:180px 1fr;gap:14px;">
+        <div class="card" style="padding:12px;">
+          <div style="font-size:12px;color:#999;margin-bottom:8px;font-weight:500;">КАТЕГОРИИ</div>
+          <div id="menu-cats-list"></div>
+          <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px;justify-content:center;" onclick="addMenuCat()">+ Добавить</button>
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <div style="font-size:14px;font-weight:600;" id="menu-cat-title">Все блюда</div>
+            <div style="font-size:12px;color:#999;" id="menu-count-label"></div>
+          </div>
+          <div class="table-wrap">
+            <table id="menu-table">
+              <thead><tr><th>Блюдо</th><th>Цена</th><th>Категория</th><th>Статус</th><th></th></tr></thead>
+              <tbody id="menu-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- СКЛАД -->
+    <div class="page" id="page-stock">
+      <div class="page-header">
+        <div class="page-title">Склад</div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-secondary" onclick="openIncomeModal()">📥 Приход</button>
+          <button class="btn btn-primary" onclick="openIngModal(null)">+ Добавить</button>
+        </div>
+      </div>
+      <div class="metrics" id="stock-metrics"></div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Ингредиент</th><th>Остаток</th><th>Минимум</th><th>Уровень</th><th>Статус</th><th></th></tr></thead>
+            <tbody id="stock-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ТЕХ.КАРТЫ -->
+    <div class="page" id="page-recipes">
+      <div class="page-header">
+        <div class="page-title">Технологические карты</div>
+      </div>
+      <p style="font-size:13px;color:#888;">Нажмите на блюдо чтобы настроить состав. При каждой продаже ингредиенты списываются автоматически.</p>
+      <div id="recipes-list"></div>
+    </div>
+
+    <!-- КЛИЕНТЫ -->
+    <div class="page" id="page-clients">
+      <div class="page-header">
+        <div class="page-title">База клиентов</div>
+        <button class="btn btn-primary" onclick="openClientModal(null)">+ Добавить клиента</button>
+      </div>
+      <div class="metrics" id="client-metrics"></div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Клиент</th><th>Телефон</th><th>Визитов</th><th>Бонусы</th><th>Сумма покупок</th><th></th></tr></thead>
+            <tbody id="clients-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- СОТРУДНИКИ -->
+    <div class="page" id="page-staff">
+      <div class="page-header">
+        <div class="page-title">Сотрудники</div>
+        <button class="btn btn-primary" onclick="openStaffModal(null)">+ Добавить</button>
+      </div>
+      <div class="metrics" id="staff-metrics"></div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Сотрудник</th><th>Телефон</th><th>Роль</th><th>PIN</th><th>Статус</th><th></th></tr></thead>
+            <tbody id="staff-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- АНАЛИТИКА -->
+    <div class="page" id="page-analytics">
+      <div class="page-header">
+        <div class="page-title">Аналитика</div>
+      </div>
+      <div class="metrics" id="analytics-metrics"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="card"><div class="card-title">Топ блюд</div><div id="top-dishes"></div></div>
+        <div class="card"><div class="card-title">Оплата</div><div id="pay-stats"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">История заказов</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>№</th><th>Состав</th><th>Сумма</th><th>Оплата</th><th>Клиент</th><th>Время</th></tr></thead>
+            <tbody id="orders-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- НАСТРОЙКИ -->
+    <div class="page" id="page-settings">
+      <div class="page-header"><div class="page-title">Настройки</div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="card">
+          <div class="card-title">Аккаунт</div>
+          <div id="account-info" style="font-size:13px;color:#555;line-height:1.8;"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Смена</div>
+          <div style="font-size:13px;color:#555;margin-bottom:12px;" id="shift-settings-status"></div>
+          <button class="btn" id="shift-toggle-btn" onclick="toggleShift()" style="width:100%;justify-content:center;">Открыть смену</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal" id="modal-body"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// КОНФИГУРАЦИЯ
+// ═══════════════════════════════════════════════════════════
+const API_URL = 'https://qasspost-production.up.railway.app';
+
+// ═══════════════════════════════════════════════════════════
+// СОСТОЯНИЕ
+// ═══════════════════════════════════════════════════════════
+let ownerToken = localStorage.getItem('qp_owner_token') || null;
+let staffToken = localStorage.getItem('qp_staff_token') || null;
+let venueInfo = JSON.parse(localStorage.getItem('qp_venue') || 'null');
+let accountInfo = JSON.parse(localStorage.getItem('qp_account') || 'null');
+let currentUser = null;
+
+let menuCats = [];
+let menuItems = [];
+let menuCatsData = [];
+let ingredients = [];
+let recipesData = {};
+let clients = [];
+let staff = [];
+let orders = [];
+let currentShift = null;
+
+let cart = {};
+let cartClientId = null;
+let payMethod = null;
+let activePoscat = 'all';
+let activeMenuCat = 'all';
+let pinInput = '';
+let currency = 'сум';
+
+// ═══════════════════════════════════════════════════════════
+// API HELPER
+// ═══════════════════════════════════════════════════════════
+async function api(path, { method = 'GET', body, token } = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  const useToken = token || staffToken || ownerToken;
+  if (useToken) headers['Authorization'] = 'Bearer ' + useToken;
+
+  const res = await fetch(API_URL + path, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  let data;
+  try { data = await res.json(); } catch { data = {}; }
+
+  if (res.status === 402 && data.code === 'SUBSCRIPTION_EXPIRED') {
+    showScreen('expired');
+    throw new Error('Подписка истекла');
+  }
+  if (!res.ok) throw new Error(data.error || 'Ошибка сервера (' + res.status + ')');
+  return data;
+}
+
+// ═══════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════
+const fmt = n => Math.round(n).toLocaleString('ru-RU') + ' ' + currency;
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 2800);
+}
+function showScreen(name) {
+  ['login','pin','expired','loading'].forEach(s => {
+    document.getElementById('screen-'+s).style.display = (s===name) ? 'flex' : 'none';
+  });
+  document.getElementById('app').style.display = (name==='app') ? 'grid' : 'none';
+}
+
+// ═══════════════════════════════════════════════════════════
+// AUTH FLOW
+// ═══════════════════════════════════════════════════════════
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+  if (!email || !password) { errEl.textContent = 'Заполните email и пароль'; errEl.style.display = 'block'; return; }
+
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true; btn.textContent = 'Входим...';
+
+  try {
+    const data = await api('/auth/login', { method: 'POST', body: { email, password } });
+    ownerToken = data.token;
+    venueInfo = data.venue;
+    accountInfo = data.account;
+    localStorage.setItem('qp_owner_token', ownerToken);
+    localStorage.setItem('qp_venue', JSON.stringify(venueInfo));
+    localStorage.setItem('qp_account', JSON.stringify(accountInfo));
+    showPinScreen();
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Войти';
+  }
+}
+
+function showPinScreen() {
+  document.getElementById('pin-venue-name').textContent = venueInfo?.name || 'QassaPos';
+  pinInput = '';
+  renderPinDisplay();
+  showScreen('pin');
+}
+
+function renderPinGrid() {
+  const grid = document.getElementById('pin-grid');
+  const keys = ['1','2','3','4','5','6','7','8','9','←','0','✓'];
+  grid.innerHTML = keys.map(k => `<button class="pin-btn" onclick="pinPress('${k}')">${k}</button>`).join('');
+}
+function renderPinDisplay() {
+  document.getElementById('pin-display').innerHTML = [0,1,2,3].map(i =>
+    `<div class="pin-dot ${i < pinInput.length ? 'filled':''}"></div>`).join('');
+}
+async function pinPress(key) {
+  const errEl = document.getElementById('pin-error');
+  errEl.style.display = 'none';
+  if (key === '←') { pinInput = pinInput.slice(0,-1); renderPinDisplay(); return; }
+  if (key === '✓') { return submitPin(); }
+  if (pinInput.length < 4) { pinInput += key; renderPinDisplay(); }
+  if (pinInput.length === 4) setTimeout(submitPin, 150);
+}
+async function submitPin() {
+  const errEl = document.getElementById('pin-error');
+  if (pinInput.length !== 4) { errEl.textContent = 'Введите 4 цифры'; errEl.style.display = 'block'; return; }
+  try {
+    const data = await api('/auth/pin-login', { method: 'POST', body: { venueId: venueInfo.id, pin: pinInput }, token: ownerToken });
+    staffToken = data.token;
+    currentUser = data.staff;
+    localStorage.setItem('qp_staff_token', staffToken);
+    localStorage.setItem('qp_user', JSON.stringify(currentUser));
+    await startApp();
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.display = 'block';
+    pinInput = ''; renderPinDisplay();
+  }
+}
+
+function staffLogout() {
+  staffToken = null; currentUser = null;
+  localStorage.removeItem('qp_staff_token');
+  localStorage.removeItem('qp_user');
+  showPinScreen();
+  renderPinGrid();
+}
+
+function logout() {
+  ownerToken = null; staffToken = null; venueInfo = null; accountInfo = null; currentUser = null;
+  localStorage.clear();
+  document.getElementById('login-email').value = '';
+  document.getElementById('login-password').value = '';
+  showScreen('login');
+}
+
+// ═══════════════════════════════════════════════════════════
+// APP STARTUP
+// ═══════════════════════════════════════════════════════════
+async function startApp() {
+  showScreen('loading');
+  try {
+    const [menuData, stockData, clientsData, shiftData] = await Promise.all([
+      api('/menu'),
+      api('/stock'),
+      api('/orders/clients/all'),
+      api('/orders/shift/current'),
+    ]);
+    menuCatsData = menuData.categories;
+    menuCats = menuData.categories.map(c => c.name);
+    menuItems = menuData.items;
+    ingredients = stockData;
+    clients = clientsData;
+    currentShift = shiftData;
+
+    document.getElementById('brand-name').textContent = venueInfo?.name || 'QassaPos';
+
+    applyRolePermissions();
+    setupUserCard();
+    showScreen('app');
+    nav('pos', document.querySelector('.nav-item'));
+  } catch (err) {
+    if (err.message !== 'Подписка истекла') {
+      toast('Ошибка загрузки: ' + err.message);
+      showScreen('login');
+    }
+  }
+}
+
+function setupUserCard() {
+  const roleMap = {owner:'Владелец',admin:'Администратор',cashier:'Кассир'};
+  const initials = {owner:'ВЛ',admin:'АД',cashier:'КС'};
+  document.getElementById('user-name-display').textContent = currentUser.name;
+  document.getElementById('user-role-display').textContent = roleMap[currentUser.role] || currentUser.role;
+  document.getElementById('user-avatar').textContent = initials[currentUser.role] || '??';
+}
+
+function applyRolePermissions() {
+  document.querySelectorAll('.nav-item[data-roles]').forEach(el => {
+    const roles = el.dataset.roles.split(',');
+    if (!roles.includes(currentUser.role)) {
+      el.classList.add('locked');
+      el.onclick = () => toast('Недостаточно прав для этого раздела');
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════
+function nav(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  if (el) el.classList.add('active');
+  const renders = {pos:renderPos,menu:renderMenu,stock:renderStock,recipes:renderRecipes,clients:renderClients,staff:renderStaff,analytics:renderAnalytics,settings:renderSettings};
+  if (renders[page]) renders[page]();
+}
+
+// ═══════════════════════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════════════════════
+function showModal(html) { document.getElementById('modal-body').innerHTML = html; document.getElementById('modal-bg').classList.add('open'); }
+function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
+document.getElementById('modal-bg').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+// ═══════════════════════════════════════════════════════════
+// SHIFT
+// ═══════════════════════════════════════════════════════════
+async function toggleShift() {
+  try {
+    if (currentShift && !currentShift.closed_at) {
+      currentShift = await api('/orders/shift/close', { method: 'POST' });
+      toast('Смена закрыта. Выручка: ' + fmt(currentShift.revenue));
+      currentShift = null;
+    } else {
+      currentShift = await api('/orders/shift/open', { method: 'POST' });
+      toast('Смена открыта!');
+    }
+    renderPos(); renderSettings();
+  } catch (err) { toast(err.message); }
+}
+function renderShiftBar() {
+  const el = document.getElementById('shift-bar-block');
+  const open = currentShift && !currentShift.closed_at;
+  el.innerHTML = `<div class="shift-bar ${open ? 'open' : 'closed'}">
+    <span>${open ? '✅ Смена открыта' : '⛔ Смена закрыта — продажи недоступны'}</span>
+    ${open ? '<span style="font-weight:600;">Выручка: ' + fmt(currentShift.revenue || 0) + '</span>' : ''}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// POS
+// ═══════════════════════════════════════════════════════════
+function getIng(id) { return ingredients.find(i => i.id === id); }
+function getItem(id) { return menuItems.find(i => i.id === id); }
+function getClient(id) { return clients.find(c => c.id === id); }
+function stockStatus(ing) { if (ing.stock_grams <= 0) return 'out'; if (ing.stock_grams < ing.min_grams) return 'low'; return 'ok'; }
+function canMake(item) {
+  const r = recipesData[item.id];
+  if (!r) return true;
+  return r.every(ri => { const ing = getIng(ri.ingredient_id); return ing && ing.stock_grams >= ri.grams; });
+}
+function catNameOf(item) {
+  const c = menuCatsData.find(c => c.id === item.category_id);
+  return c ? c.name : '';
+}
+
+async function loadRecipeFor(itemId) {
+  if (recipesData[itemId]) return recipesData[itemId];
+  const data = await api('/stock/recipes/' + itemId);
+  recipesData[itemId] = data;
+  return data;
+}
+async function preloadAllRecipes() {
+  await Promise.all(menuItems.map(item => loadRecipeFor(item.id)));
+}
+
+function renderPos() {
+  renderShiftBar();
+  const cats = ['all', ...menuCats];
+  document.getElementById('pos-cats').innerHTML = cats.map(c =>
+    `<button class="cat-tab ${activePoscat===c?'active':''}" onclick="setPoscat('${c}')">${c==='all'?'Все':c}</button>`).join('');
+
+  renderPosMenu();
+  const sel = document.getElementById('cart-client-sel');
+  sel.innerHTML = '<option value="">— Клиент не выбран —</option>' + clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  if (cartClientId) sel.value = cartClientId;
+  renderCart();
+
+  preloadAllRecipes().then(() => renderPosMenu());
+}
+function renderPosMenu() {
+  const items = (activePoscat === 'all' ? menuItems : menuItems.filter(i => catNameOf(i) === activePoscat)).filter(i => i.active);
+  document.getElementById('pos-menu').innerHTML = items.map(item => {
+    const ok = canMake(item);
+    return `<div class="menu-card ${ok?'':'no-stock'}" ${ok?`onclick="addToCart(${item.id})"`:''}>
+      <div class="menu-card-name">${item.name}</div>
+      <div class="menu-card-price">${ok ? fmt(item.price) : 'Нет остатка'}</div>
+    </div>`;}).join('');
+}
+
+function setPoscat(c) { activePoscat = c; renderPos(); }
+function addToCart(id) {
+  const open = currentShift && !currentShift.closed_at;
+  if (!open) { toast('Сначала откройте смену в настройках!'); return; }
+  cart[id] = (cart[id] || 0) + 1; renderCart();
+}
+function changeQty(id, d) { cart[id] = (cart[id] || 0) + d; if (cart[id] <= 0) delete cart[id]; renderCart(); }
+function selectClient(id) { cartClientId = id || null; renderCart(); }
+function setPay(m) {
+  payMethod = m;
+  document.getElementById('pay-cash').className = 'pay-btn' + (m==='cash'?' active':'');
+  document.getElementById('pay-card').className = 'pay-btn' + (m==='card'?' active':'');
+  document.getElementById('checkout-btn').disabled = Object.keys(cart).length === 0;
+}
+function renderCart() {
+  const keys = Object.keys(cart);
+  const body = document.getElementById('cart-body');
+  if (!keys.length) {
+    body.innerHTML = '<div class="cart-empty">Добавьте позиции из меню</div>';
+    document.getElementById('cart-total').textContent = '0 ' + currency;
+    document.getElementById('cart-count').textContent = '0';
+    document.getElementById('checkout-btn').disabled = true;
+    return;
+  }
+  let total = 0, count = 0;
+  body.innerHTML = keys.map(id => {
+    const item = getItem(+id); const qty = cart[id]; const sub = item.price * qty;
+    total += sub; count += qty;
+    return `<div class="cart-row">
+      <span class="cart-name">${item.name}</span>
+      <button class="qty-btn" onclick="changeQty(${id},-1)">−</button>
+      <span class="qty-num">${qty}</span>
+      <button class="qty-btn" onclick="changeQty(${id},+1)">+</button>
+      <span class="cart-price">${fmt(sub)}</span>
+    </div>`;}).join('');
+  document.getElementById('cart-total').textContent = fmt(total);
+  document.getElementById('cart-count').textContent = count;
+  document.getElementById('checkout-btn').disabled = !payMethod;
+}
+async function checkout() {
+  const keys = Object.keys(cart);
+  if (!keys.length || !payMethod) return;
+  const items = keys.map(id => ({ id: +id, qty: cart[id] }));
+  try {
+    const order = await api('/orders', { method: 'POST', body: { items, pay_method: payMethod, client_id: cartClientId ? +cartClientId : null } });
+    toast('✅ Заказ оформлен! ' + fmt(order.total));
+    ingredients = await api('/stock');
+    currentShift = await api('/orders/shift/current');
+    if (cartClientId) clients = await api('/orders/clients/all');
+    cart = {}; cartClientId = null; payMethod = null;
+    document.getElementById('pay-cash').className = 'pay-btn';
+    document.getElementById('pay-card').className = 'pay-btn';
+    renderPos();
+  } catch (err) {
+    toast('Ошибка: ' + err.message);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// MENU
+// ═══════════════════════════════════════════════════════════
+async function reloadMenu() {
+  const data = await api('/menu');
+  menuCatsData = data.categories;
+  menuCats = data.categories.map(c => c.name);
+  menuItems = data.items;
+}
+function renderMenu() {
+  document.getElementById('menu-cats-list').innerHTML = ['all',...menuCatsData.map(c=>c.id)].map((c) => {
+    const isAll = c === 'all';
+    const name = isAll ? 'Все блюда' : menuCatsData.find(x=>x.id===c)?.name;
+    const active = activeMenuCat === c;
+    return `<div style="padding:7px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:${active?'#0F6E56':'#555'};background:${active?'#E8F7F1':'transparent'};" onclick="setMenuCat('${c}')">${name}</div>`;
+  }).join('');
+
+  const items = activeMenuCat === 'all' ? menuItems : menuItems.filter(i => i.category_id === activeMenuCat);
+  const catTitle = activeMenuCat === 'all' ? 'Все блюда' : (menuCatsData.find(c=>c.id===activeMenuCat)?.name || '');
+  document.getElementById('menu-cat-title').textContent = catTitle;
+  document.getElementById('menu-count-label').textContent = items.length + ' позиций';
+  document.getElementById('menu-tbody').innerHTML = items.map(item => `<tr>
+    <td><strong>${item.name}</strong></td>
+    <td>${fmt(item.price)}</td>
+    <td>${catNameOf(item)}</td>
+    <td><span class="badge ${item.active?'badge-green':'badge-gray'}">${item.active?'Активно':'Скрыто'}</span></td>
+    <td style="text-align:right;white-space:nowrap;display:flex;gap:4px;justify-content:flex-end;">
+      <button class="btn btn-icon btn-sm" onclick="toggleMenuItem(${item.id})" title="${item.active?'Скрыть':'Показать'}">${item.active?'👁️':'🚫'}</button>
+      <button class="btn btn-icon btn-sm" onclick="openMenuModal(${item.id})">✏️</button>
+      <button class="btn btn-icon btn-sm" onclick="deleteMenuItem(${item.id})">🗑️</button>
+    </td>
+  </tr>`).join('');
+}
+function setMenuCat(c) { activeMenuCat = c === 'all' ? 'all' : +c; renderMenu(); }
+async function toggleMenuItem(id) {
+  const item = getItem(id);
+  try { await api('/menu/items/'+id, { method:'PUT', body:{ active: !item.active } }); await reloadMenu(); renderMenu(); }
+  catch(err){ toast(err.message); }
+}
+async function deleteMenuItem(id) {
+  if (!confirm('Удалить блюдо?')) return;
+  try { await api('/menu/items/'+id, { method:'DELETE' }); await reloadMenu(); renderMenu(); }
+  catch(err){ toast(err.message); }
+}
+async function addMenuCat() {
+  const n = prompt('Название категории:');
+  if (!n || !n.trim()) return;
+  try { await api('/menu/categories', { method:'POST', body:{ name:n.trim() } }); await reloadMenu(); renderMenu(); }
+  catch(err){ toast(err.message); }
+}
+function openMenuModal(id) {
+  const item = id ? getItem(id) : null;
+  const catOpts = menuCatsData.map(c => `<option value="${c.id}"${item&&item.category_id===c.id?' selected':''}>${c.name}</option>`).join('');
+  showModal(`<div class="modal-title">${id ? 'Редактировать блюдо' : 'Новое блюдо'}</div>
+    <div class="field"><label>Название</label><input type="text" id="mf-name" value="${item?item.name:''}"></div>
+    <div class="field-row">
+      <div class="field"><label>Цена (${currency})</label><input type="number" id="mf-price" value="${item?item.price:''}"></div>
+      <div class="field"><label>Категория</label><select id="mf-cat">${catOpts}</select></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="saveMenuItem(${id||0})">Сохранить</button>
+    </div>`);
+}
+async function saveMenuItem(id) {
+  const name = document.getElementById('mf-name').value.trim();
+  const price = +document.getElementById('mf-price').value || 0;
+  const category_id = +document.getElementById('mf-cat').value;
+  if (!name) return;
+  try {
+    if (id) await api('/menu/items/'+id, { method:'PUT', body:{ name, price, category_id } });
+    else await api('/menu/items', { method:'POST', body:{ name, price, category_id } });
+    await reloadMenu(); closeModal(); renderMenu();
+  } catch(err) { toast(err.message); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// STOCK
+// ═══════════════════════════════════════════════════════════
+async function reloadStock() { ingredients = await api('/stock'); }
+function renderStock() {
+  const low = ingredients.filter(i => stockStatus(i) === 'low').length;
+  const out = ingredients.filter(i => stockStatus(i) === 'out').length;
+  document.getElementById('stock-metrics').innerHTML = `
+    <div class="metric"><div class="metric-label">Всего позиций</div><div class="metric-value">${ingredients.length}</div></div>
+    <div class="metric"><div class="metric-label">Заканчивается</div><div class="metric-value amber">${low}</div></div>
+    <div class="metric"><div class="metric-label">Нет на складе</div><div class="metric-value red">${out}</div></div>`;
+  document.getElementById('stock-tbody').innerHTML = ingredients.map(ing => {
+    const s = stockStatus(ing);
+    const pct = Math.min(100, Math.round(ing.stock_grams / (ing.min_grams * 4) * 100));
+    const col = s==='ok'?'#1D9E75':s==='low'?'#D97706':'#C0392B';
+    const badge = s==='ok'?'badge-green':s==='low'?'badge-amber':'badge-red';
+    const label = s==='ok'?'Норма':s==='low'?'Мало':'Нет';
+    return `<tr>
+      <td><strong>${ing.name}</strong></td>
+      <td>${ing.stock_grams.toLocaleString('ru-RU')} г</td>
+      <td style="color:#888;">${ing.min_grams.toLocaleString('ru-RU')} г</td>
+      <td><div class="progress-wrap"><div class="progress-bar" style="width:${pct}%;background:${col};"></div></div></td>
+      <td><span class="badge ${badge}">${label}</span></td>
+      <td style="text-align:right;white-space:nowrap;display:flex;gap:4px;justify-content:flex-end;">
+        <button class="btn btn-icon btn-sm" onclick="openIngModal(${ing.id})">✏️</button>
+        <button class="btn btn-icon btn-sm" onclick="deleteIng(${ing.id})">🗑️</button>
+      </td>
+    </tr>`;}).join('');
+}
+async function deleteIng(id) {
+  if (!confirm('Удалить?')) return;
+  try { await api('/stock/'+id, { method:'DELETE' }); await reloadStock(); renderStock(); }
+  catch(err){ toast(err.message); }
+}
+function openIngModal(id) {
+  const ing = id ? getIng(id) : null;
+  showModal(`<div class="modal-title">${id ? 'Редактировать ингредиент' : 'Новый ингредиент'}</div>
+    <div class="field"><label>Название</label><input type="text" id="if-name" value="${ing?ing.name:''}"></div>
+    <div class="field-row">
+      <div class="field"><label>Остаток (г)</label><input type="number" id="if-stock" value="${ing?ing.stock_grams:''}"></div>
+      <div class="field"><label>Мин. остаток (г)</label><input type="number" id="if-min" value="${ing?ing.min_grams:300}"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="saveIng(${id||0})">Сохранить</button>
+    </div>`);
+}
+async function saveIng(id) {
+  const name = document.getElementById('if-name').value.trim();
+  const stock_grams = +document.getElementById('if-stock').value || 0;
+  const min_grams = +document.getElementById('if-min').value || 300;
+  if (!name) return;
+  try {
+    if (id) await api('/stock/'+id, { method:'PUT', body:{ name, stock_grams, min_grams } });
+    else await api('/stock', { method:'POST', body:{ name, stock_grams, min_grams } });
+    await reloadStock(); closeModal(); renderStock();
+  } catch(err) { toast(err.message); }
+}
+function openIncomeModal() {
+  const opts = ingredients.map(i => `<option value="${i.id}">${i.name}</option>`).join('');
+  showModal(`<div class="modal-title">Приход товара</div>
+    <div class="field"><label>Ингредиент</label><select id="inc-ing">${opts}</select></div>
+    <div class="field"><label>Количество (г)</label><input type="number" id="inc-qty" value="1000"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="doIncome()">Принять</button>
+    </div>`);
+}
+async function doIncome() {
+  const id = +document.getElementById('inc-ing').value;
+  const grams = +document.getElementById('inc-qty').value || 0;
+  try { await api('/stock/'+id+'/income', { method:'POST', body:{ grams } }); await reloadStock(); closeModal(); renderStock(); toast('Принято: +' + grams.toLocaleString('ru-RU') + ' г'); }
+  catch(err){ toast(err.message); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// RECIPES
+// ═══════════════════════════════════════════════════════════
+async function renderRecipes() {
+  await preloadAllRecipes();
+  document.getElementById('recipes-list').innerHTML = menuItems.map(item => {
+    const items = recipesData[item.id] || [];
+    return `<div class="recipe-card">
+      <div class="recipe-head" onclick="toggleRecipe(${item.id})">
+        <strong>${item.name}</strong>
+        <span style="font-size:12px;color:#888;">${items.length} ингр. ▾</span>
+      </div>
+      <div class="recipe-body" id="rb-${item.id}">
+        <div style="padding-top:10px;">
+        ${items.map(ri => `<div class="recipe-row">
+            <span>${ri.ingredient_name}</span>
+            <div><input class="gram-input" type="number" value="${ri.grams}" onchange="updRec(${ri.id},${item.id},this.value)"> г</div>
+            <button class="btn btn-icon btn-sm" onclick="remRec(${ri.id},${item.id})">✕</button>
+          </div>`).join('')}
+        <div style="display:flex;gap:8px;margin-top:10px;align-items:center;">
+          <select id="rs-${item.id}" style="flex:1;padding:7px;border:1px solid #E0E0DB;border-radius:8px;font-size:12px;">${ingredients.map(i=>`<option value="${i.id}">${i.name}</option>`).join('')}</select>
+          <input type="number" id="rg-${item.id}" value="50" style="width:60px;padding:7px;border:1px solid #E0E0DB;border-radius:8px;font-size:12px;"> г
+          <button class="btn btn-primary btn-sm" onclick="addRecItem(${item.id})">+ Добавить</button>
+        </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function toggleRecipe(id) { const el = document.getElementById('rb-'+id); el.classList.toggle('open'); }
+async function updRec(recipeId, itemId, val) {
+  try { await api('/stock/recipes/'+recipeId, { method:'PUT', body:{ grams: +val||1 } }); delete recipesData[itemId]; await loadRecipeFor(itemId); renderRecipes(); }
+  catch(err){ toast(err.message); }
+}
+async function remRec(recipeId, itemId) {
+  try { await api('/stock/recipes/'+recipeId, { method:'DELETE' }); delete recipesData[itemId]; await loadRecipeFor(itemId); renderRecipes(); }
+  catch(err){ toast(err.message); }
+}
+async function addRecItem(itemId) {
+  const ingredient_id = +document.getElementById('rs-'+itemId).value;
+  const grams = +document.getElementById('rg-'+itemId).value || 50;
+  try { await api('/stock/recipes', { method:'POST', body:{ menu_item_id:itemId, ingredient_id, grams } }); delete recipesData[itemId]; await loadRecipeFor(itemId); renderRecipes(); }
+  catch(err){ toast(err.message); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// CLIENTS
+// ═══════════════════════════════════════════════════════════
+async function reloadClients() { clients = await api('/orders/clients/all'); }
+function renderClients() {
+  document.getElementById('client-metrics').innerHTML = `
+    <div class="metric"><div class="metric-label">Всего клиентов</div><div class="metric-value">${clients.length}</div></div>
+    <div class="metric"><div class="metric-label">Всего визитов</div><div class="metric-value">${clients.reduce((a,c)=>a+c.visits,0)}</div></div>
+    <div class="metric"><div class="metric-label">Бонусов выдано</div><div class="metric-value green">${fmt(clients.reduce((a,c)=>a+c.bonus,0))}</div></div>`;
+  document.getElementById('clients-tbody').innerHTML = clients.map(c => `<tr>
+    <td><strong>${c.name}</strong></td>
+    <td style="color:#888;">${c.phone||'—'}</td>
+    <td>${c.visits}</td>
+    <td style="color:#0F6E56;font-weight:600;">${fmt(c.bonus)}</td>
+    <td>${fmt(c.total_spent)}</td>
+    <td style="text-align:right;display:flex;gap:4px;justify-content:flex-end;">
+      <button class="btn btn-icon btn-sm" onclick="openClientModal(${c.id})">✏️</button>
+      <button class="btn btn-icon btn-sm" onclick="deleteClient(${c.id})">🗑️</button>
+    </td>
+  </tr>`).join('');
+}
+async function deleteClient(id) {
+  if (!confirm('Удалить клиента?')) return;
+  try { await api('/orders/clients/'+id, { method:'DELETE' }); await reloadClients(); renderClients(); }
+  catch(err){ toast(err.message); }
+}
+function openClientModal(id) {
+  const c = id ? getClient(id) : null;
+  showModal(`<div class="modal-title">${id?'Редактировать клиента':'Новый клиент'}</div>
+    <div class="field"><label>Имя</label><input type="text" id="cf-name" value="${c?c.name:''}"></div>
+    <div class="field"><label>Телефон</label><input type="text" id="cf-phone" value="${c?(c.phone||''):''}"></div>
+    ${c?`<div class="field"><label>Бонусы</label><input type="number" id="cf-bonus" value="${c.bonus}"></div>`:''}
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="saveClient(${id||0})">Сохранить</button>
+    </div>`);
+}
+async function saveClient(id) {
+  const name = document.getElementById('cf-name').value.trim();
+  const phone = document.getElementById('cf-phone').value.trim();
+  if (!name) return;
+  try {
+    if (id) {
+      const bonus = +document.getElementById('cf-bonus').value || 0;
+      await api('/orders/clients/'+id, { method:'PUT', body:{ name, phone, bonus } });
+    } else {
+      await api('/orders/clients', { method:'POST', body:{ name, phone } });
+    }
+    await reloadClients(); closeModal(); renderClients();
+  } catch(err) { toast(err.message); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// STAFF
+// ═══════════════════════════════════════════════════════════
+async function reloadStaff() { staff = await api('/orders/staff/all'); }
+async function renderStaff() {
+  try { await reloadStaff(); } catch(err) { toast(err.message); return; }
+  const active = staff.filter(s=>s.active).length;
+  document.getElementById('staff-metrics').innerHTML = `
+    <div class="metric"><div class="metric-label">Всего</div><div class="metric-value">${staff.length}</div></div>
+    <div class="metric"><div class="metric-label">Активных</div><div class="metric-value green">${active}</div></div>
+    <div class="metric"><div class="metric-label">Неактивных</div><div class="metric-value amber">${staff.length-active}</div></div>`;
+  const roleMap = {owner:'Владелец',admin:'Администратор',cashier:'Кассир'};
+  const roleBadge = {owner:'badge-purple',admin:'badge-blue',cashier:'badge-green'};
+  document.getElementById('staff-tbody').innerHTML = staff.map(s => `<tr>
+    <td><strong>${s.name}</strong></td>
+    <td style="color:#888;">${s.phone||'—'}</td>
+    <td><span class="badge ${roleBadge[s.role]}">${roleMap[s.role]}</span></td>
+    <td style="font-family:monospace;color:#888;">${s.pin}</td>
+    <td><span class="badge ${s.active?'badge-green':'badge-gray'}">${s.active?'Активен':'Неактивен'}</span></td>
+    <td style="text-align:right;display:flex;gap:4px;justify-content:flex-end;">
+      <button class="btn btn-icon btn-sm" onclick="openStaffModal(${s.id})">✏️</button>
+      <button class="btn btn-icon btn-sm" onclick="deleteStaff(${s.id})">🗑️</button>
+    </td>
+  </tr>`).join('');
+}
+async function deleteStaff(id) {
+  if (!confirm('Удалить сотрудника?')) return;
+  try { await api('/orders/staff/'+id, { method:'DELETE' }); renderStaff(); }
+  catch(err){ toast(err.message); }
+}
+function openStaffModal(id) {
+  const s = id ? staff.find(s=>s.id===id) : null;
+  showModal(`<div class="modal-title">${id?'Редактировать':'Новый сотрудник'}</div>
+    <div class="field"><label>Имя</label><input type="text" id="sf-name" value="${s?s.name:''}"></div>
+    <div class="field"><label>Телефон</label><input type="text" id="sf-phone" value="${s?(s.phone||''):''}"></div>
+    <div class="field-row">
+      <div class="field"><label>Роль</label><select id="sf-role">
+        <option value="cashier"${s&&s.role==='cashier'?' selected':''}>Кассир</option>
+        <option value="admin"${s&&s.role==='admin'?' selected':''}>Администратор</option>
+        <option value="owner"${s&&s.role==='owner'?' selected':''}>Владелец</option>
+      </select></div>
+      <div class="field"><label>PIN (4 цифры)</label><input type="text" id="sf-pin" value="${s?s.pin:''}" maxlength="4"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="saveStaff(${id||0})">Сохранить</button>
+    </div>`);
+}
+async function saveStaff(id) {
+  const name = document.getElementById('sf-name').value.trim();
+  const phone = document.getElementById('sf-phone').value.trim();
+  const role = document.getElementById('sf-role').value;
+  const pin = document.getElementById('sf-pin').value.trim();
+  if (!name || pin.length !== 4) { toast('Укажите имя и 4-значный PIN'); return; }
+  try {
+    if (id) await api('/orders/staff/'+id, { method:'PUT', body:{ name, phone, role, pin } });
+    else await api('/orders/staff', { method:'POST', body:{ name, phone, role, pin } });
+    closeModal(); renderStaff();
+  } catch(err) { toast(err.message); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// ANALYTICS
+// ═══════════════════════════════════════════════════════════
+async function renderAnalytics() {
+  try { orders = await api('/orders'); } catch(err) { toast(err.message); return; }
+  const totalRev = orders.reduce((a,o)=>a+o.total,0);
+  const avg = orders.length ? Math.round(totalRev/orders.length) : 0;
+  document.getElementById('analytics-metrics').innerHTML = `
+    <div class="metric"><div class="metric-label">Выручка (всего)</div><div class="metric-value green">${fmt(totalRev)}</div></div>
+    <div class="metric"><div class="metric-label">Заказов</div><div class="metric-value">${orders.length}</div></div>
+    <div class="metric"><div class="metric-label">Средний чек</div><div class="metric-value">${fmt(avg)}</div></div>
+    <div class="metric"><div class="metric-label">Клиентов</div><div class="metric-value">${clients.length}</div></div>`;
+  const dishCount = {};
+  orders.forEach(o => (o.items_json||[]).forEach(i => { dishCount[i.name] = (dishCount[i.name]||0) + i.qty; }));
+  const top = Object.entries(dishCount).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const maxD = top[0]?top[0][1]:1;
+  document.getElementById('top-dishes').innerHTML = top.length
+    ? top.map(([n,c]) => `<div class="bar-row"><span class="bar-label">${n}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(c/maxD*100)}%"></div></div><span class="bar-count">${c}</span></div>`).join('')
+    : '<p style="color:#bbb;font-size:13px;">Продаж пока нет</p>';
+  const cash = orders.filter(o=>o.pay_method==='cash').length;
+  const card = orders.filter(o=>o.pay_method==='card').length;
+  document.getElementById('pay-stats').innerHTML = `
+    <div class="bar-row"><span class="bar-label">Наличные</span><div class="bar-track"><div class="bar-fill" style="width:${orders.length?Math.round(cash/orders.length*100):0}%"></div></div><span class="bar-count">${cash}</span></div>
+    <div class="bar-row"><span class="bar-label">Карта</span><div class="bar-track"><div class="bar-fill" style="width:${orders.length?Math.round(card/orders.length*100):0}%;background:#378ADD"></div></div><span class="bar-count">${card}</span></div>`;
+  document.getElementById('orders-tbody').innerHTML = orders.length
+    ? orders.slice(0,20).map(o=>{
+        const itemsStr = (o.items_json||[]).map(i=>i.name+' ×'+i.qty).join(', ');
+        const time = new Date(o.created_at).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+        return `<tr><td>#${o.id}</td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#888;">${itemsStr}</td><td style="font-weight:600;">${fmt(o.total)}</td><td>${o.pay_method==='cash'?'Нал.':'Карта'}</td><td>${o.client_name||'—'}</td><td style="color:#888;">${time}</td></tr>`;
+      }).join('')
+    : '<tr><td colspan="6" style="text-align:center;color:#bbb;padding:24px;">Заказов ещё нет — оформите первый на кассе</td></tr>';
+}
+
+// ═══════════════════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════════════════
+function renderSettings() {
+  const open = currentShift && !currentShift.closed_at;
+  const btn = document.getElementById('shift-toggle-btn');
+  btn.textContent = open ? '⛔ Закрыть смену' : '✅ Открыть смену';
+  btn.className = 'btn ' + (open ? 'btn-danger' : 'btn-primary');
+  document.getElementById('shift-settings-status').innerHTML = `Статус: <strong style="color:${open?'#0F6E56':'#888'}">${open?'Открыта':'Закрыта'}</strong>${open?'<br>Выручка за смену: <strong>'+fmt(currentShift.revenue||0)+'</strong>':''}`;
+
+  const planMap = {start:'Старт',business:'Бизнес',network:'Сеть'};
+  const statusMap = {trial:'Пробный период',active:'Активна',expired:'Истекла',blocked:'Заблокирована'};
+  const expires = accountInfo?.expires_at ? new Date(accountInfo.expires_at).toLocaleDateString('ru-RU') : '—';
+  document.getElementById('account-info').innerHTML = `
+    Заведение: <strong>${venueInfo?.name||'—'}</strong><br>
+    Тариф: <strong>${planMap[accountInfo?.plan]||accountInfo?.plan||'—'}</strong><br>
+    Статус: <strong>${statusMap[accountInfo?.status]||accountInfo?.status||'—'}</strong><br>
+    Доступ до: <strong>${expires}</strong>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+async function init() {
+  renderPinGrid();
+  if (staffToken && ownerToken && venueInfo) {
+    currentUser = JSON.parse(localStorage.getItem('qp_user') || 'null');
+    if (currentUser) { await startApp(); return; }
+  }
+  if (ownerToken && venueInfo) { showPinScreen(); return; }
+  showScreen('login');
+}
+init();
+</script>
+</body>
+</html>
