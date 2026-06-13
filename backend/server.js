@@ -1,6 +1,8 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
+const path = require('path');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
 const authRoutes = require('./routes/auth');
 const menuRoutes = require('./routes/menu');
@@ -9,11 +11,32 @@ const ordersRoutes = require('./routes/orders');
 const adminRoutes = require('./routes/admin');
 
 const app = express();
-app.use(cors());
+
+// Безопасность
+app.use(helmet({
+  contentSecurityPolicy: false // Разрешаем встроенные стили и скрипты фронтенда
+}));
+
+// Ограничение запросов
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 минут
+  max: 300, // Лимит 300 запросов с одного IP
+  message: { error: 'Слишком много запросов. Попробуйте позже.' }
+});
+app.use(limiter);
+
+const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*';
+app.use(cors({
+  origin: allowedOrigins
+}));
+
 app.use(express.json());
 
+// Раздача фронтенда
+app.use(express.static(path.join(__dirname, '../frontend')));
+
 // Проверка что сервер живой (Railway health check)
-app.get('/', (req, res) => {
+app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'QassaPos API', version: '1.0.0' });
 });
 

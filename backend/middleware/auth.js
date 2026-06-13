@@ -1,7 +1,11 @@
 const jwt = require('jsonwebtoken');
 const pool = require('../db/pool');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'change-this-secret-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error('❌ ОШИБКА: Переменная окружения JWT_SECRET не задана!');
+  process.exit(1);
+}
 
 // Проверяет JWT токен в заголовке Authorization: Bearer <token>
 async function requireAuth(req, res, next) {
