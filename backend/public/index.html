@@ -135,6 +135,14 @@
     .pay-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
     .pay-btn { padding: 8px; border-radius: 8px; border: 1px solid #E0E0DB; background: #fff; font-size: 12px; cursor: pointer; text-align: center; transition: all 0.15s; }
     .pay-btn.active { border-color: #1D9E75; background: #E8F7F1; color: #0F6E56; font-weight: 500; }
+    .client-picker { margin-bottom: 8px; display: grid; gap: 6px; }
+    .client-picker-row { display: grid; grid-template-columns: 1fr auto; gap: 6px; }
+    .client-picker input, .client-picker select { width: 100%; padding: 8px; border: 1px solid #E0E0DB; border-radius: 8px; font-size: 12px; background: #fff; }
+    .client-picker .btn { padding: 8px 10px; white-space: nowrap; justify-content: center; }
+    .daily-cash-bar { position: sticky; bottom: 0; z-index: 20; margin-top: 12px; background: #1a1a1a; color: #fff; border-radius: 10px; padding: 10px 14px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; box-shadow: 0 -4px 16px rgba(0,0,0,0.08); }
+    .daily-cash-item { min-width: 0; }
+    .daily-cash-label { font-size: 11px; color: rgba(255,255,255,0.65); margin-bottom: 2px; }
+    .daily-cash-value { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .shift-bar { padding: 10px 14px; border-radius: 8px; font-size: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
     .shift-bar.open { background: #E8F7F1; color: #0F6E56; }
     .shift-bar.closed { background: #F5F5F0; color: #888; }
@@ -166,6 +174,24 @@
     .bar-count { min-width: 30px; text-align: right; font-weight: 500; color: #1a1a1a; }
 
     #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 13px; display: none; z-index: 999; white-space: nowrap; max-width: 80vw; text-align: center; }
+
+    @media (max-width: 820px) {
+      .app { display: block; min-height: 100vh; }
+      .sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid #E8E8E3; }
+      .sidebar-logo, .sidebar-bottom { display: none; }
+      .nav { display: flex; gap: 6px; overflow-x: auto; padding: 8px; }
+      .nav-group-label { display: none; }
+      .nav-item { flex: 0 0 auto; margin-bottom: 0; white-space: nowrap; }
+      .page { padding: 12px; gap: 12px; }
+      .pos-layout { grid-template-columns: 1fr; min-height: auto; overflow: visible; }
+      .pos-left { max-height: none; }
+      .pos-right { border-left: none; border-top: 1px solid #E8E8E3; min-height: 420px; }
+      .menu-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .daily-cash-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); border-radius: 8px; }
+      .field-row, .client-picker-row { grid-template-columns: 1fr; }
+      .modal { width: calc(100vw - 24px); max-height: 88vh; }
+      .table-wrap { max-width: 100%; }
+    }
   </style>
 </head>
 <body>
@@ -270,6 +296,12 @@
             <select id="cart-client-sel" style="width:100%;margin-bottom:8px;padding:8px;border:1px solid #E0E0DB;border-radius:8px;font-size:12px;" onchange="selectClient(this.value)">
               <option value="">— Клиент не выбран —</option>
             </select>
+            <div class="client-picker">
+              <div class="client-picker-row">
+                <input id="cart-client-search" type="search" placeholder="Поиск клиента: имя или телефон" oninput="renderCartClientOptions(this.value)">
+                <button class="btn btn-secondary btn-sm" onclick="openClientModal(null)">+ Клиент</button>
+              </div>
+            </div>
             <div class="pay-methods">
               <button class="pay-btn" id="pay-cash" onclick="setPay('cash')">💵 Наличные</button>
               <button class="pay-btn" id="pay-card" onclick="setPay('card')">💳 Карта</button>
@@ -278,6 +310,7 @@
           </div>
         </div>
       </div>
+      <div class="daily-cash-bar" id="daily-cash-bar"></div>
     </div>
 
     <!-- МЕНЮ -->
@@ -452,6 +485,7 @@ let staff = [];
 let orders = [];
 let clientReceipts = JSON.parse(localStorage.getItem('qp_client_receipts') || '{}');
 let currentShift = null;
+let dailySummary = { total: 0, cash: 0, card: 0, orders_count: 0 };
 
 let cart = {};
 let cartClientId = null;
@@ -598,12 +632,13 @@ function logout() {
 async function startApp() {
   showScreen('loading');
   try {
-    const [menuData, stockData, clientsData, ordersData, shiftData] = await Promise.all([
+    const [menuData, stockData, clientsData, ordersData, shiftData, summaryData] = await Promise.all([
       api('/menu'),
       api('/stock'),
       api('/orders/clients/all'),
       api('/orders'),
       api('/orders/shift/current'),
+      api('/orders/today-summary'),
     ]);
     menuCatsData = menuData.categories;
     menuCats = menuData.categories.map(c => c.name);
@@ -612,6 +647,7 @@ async function startApp() {
     clients = clientsData;
     orders = ordersData;
     currentShift = shiftData;
+    dailySummary = summaryData;
 
     document.getElementById('brand-name').textContent = venueInfo?.name || 'QassaPos';
 
@@ -718,6 +754,7 @@ async function preloadAllRecipes() {
 
 function renderPos() {
   renderShiftBar();
+  renderDailyCashBar();
   const cats = ['all', ...menuCats];
   document.getElementById('pos-cats').innerHTML = cats.map(c =>
     `<button class="cat-tab ${activePoscat===c?'active':''}" onclick="setPoscat('${c}')">${c==='all'?'Все':c}</button>`).join('');
@@ -726,9 +763,29 @@ function renderPos() {
   const sel = document.getElementById('cart-client-sel');
   sel.innerHTML = '<option value="">— Клиент не выбран —</option>' + clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
   if (cartClientId) sel.value = cartClientId;
+  renderCartClientOptions(document.getElementById('cart-client-search')?.value || '');
   renderCart();
 
   preloadAllRecipes().then(() => renderPosMenu());
+}
+function renderDailyCashBar() {
+  const el = document.getElementById('daily-cash-bar');
+  if (!el) return;
+  el.innerHTML = `
+    <div class="daily-cash-item"><div class="daily-cash-label">Сегодня всего</div><div class="daily-cash-value">${fmt(dailySummary.total || 0)}</div></div>
+    <div class="daily-cash-item"><div class="daily-cash-label">Наличные</div><div class="daily-cash-value">${fmt(dailySummary.cash || 0)}</div></div>
+    <div class="daily-cash-item"><div class="daily-cash-label">Карта</div><div class="daily-cash-value">${fmt(dailySummary.card || 0)}</div></div>
+    <div class="daily-cash-item"><div class="daily-cash-label">Заказов</div><div class="daily-cash-value">${dailySummary.orders_count || 0}</div></div>`;
+}
+function renderCartClientOptions(query = '') {
+  const sel = document.getElementById('cart-client-sel');
+  if (!sel) return;
+  const q = query.trim().toLowerCase();
+  const filtered = clients
+    .filter(c => !q || (c.name || '').toLowerCase().includes(q) || (c.phone || '').toLowerCase().includes(q) || (c.email || '').toLowerCase().includes(q))
+    .slice(0, 30);
+  sel.innerHTML = '<option value="">— Клиент не выбран —</option>' + filtered.map(c => `<option value="${c.id}">${c.name}${c.phone ? ' · ' + c.phone : ''} · бонус ${fmt(c.bonus || 0)}</option>`).join('');
+  if (cartClientId && filtered.some(c => String(c.id) === String(cartClientId))) sel.value = cartClientId;
 }
 function renderPosMenu() {
   const items = (activePoscat === 'all' ? menuItems : menuItems.filter(i => catNameOf(i) === activePoscat)).filter(i => i.active);

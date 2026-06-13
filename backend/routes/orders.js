@@ -55,6 +55,22 @@ router.get('/', async (req, res) => {
   res.json(r.rows);
 });
 
+router.get('/today-summary', async (req, res) => {
+  const r = await pool.query(
+    `SELECT
+       COALESCE(SUM(total), 0)::int AS total,
+       COALESCE(SUM(total) FILTER (WHERE pay_method = 'cash'), 0)::int AS cash,
+       COALESCE(SUM(total) FILTER (WHERE pay_method = 'card'), 0)::int AS card,
+       COUNT(*)::int AS orders_count
+     FROM orders
+     WHERE venue_id = $1
+       AND created_at >= CURRENT_DATE
+       AND created_at < CURRENT_DATE + INTERVAL '1 day'`,
+    [req.user.venueId]
+  );
+  res.json(r.rows[0]);
+});
+
 // POST /orders — создать заказ. Списывает склад автоматически по тех.картам.
 // body: { items: [{ id: menu_item_id, qty }], pay_method, client_id }
 router.post('/', async (req, res) => {
@@ -62,6 +78,12 @@ router.post('/', async (req, res) => {
   const { items, pay_method, client_id } = req.body;
   if (!items || !items.length || !pay_method) {
     return res.status(400).json({ error: 'Укажите items и pay_method' });
+  }
+  if (!['cash', 'card'].includes(pay_method)) {
+    return res.status(400).json({ error: 'Неверный способ оплаты' });
+  }
+  if (!Array.isArray(items) || items.some(item => !Number.isInteger(+item.id) || !Number.isInteger(+item.qty) || +item.qty <= 0 || +item.qty > 99)) {
+    return res.status(400).json({ error: 'Проверьте позиции заказа' });
   }
 
   const client = await pool.connect();
@@ -82,7 +104,9 @@ router.post('/', async (req, res) => {
     let total = 0;
     const itemsSnapshot = [];
 
-    for (const { id, qty } of items) {
+    for (const rawItem of items) {
+      const id = +rawItem.id;
+      const qty = +rawItem.qty;
       const itemRes = await client.query('SELECT * FROM menu_items WHERE id = $1 AND venue_id = $2', [id, venueId]);
       if (!itemRes.rows.length) throw new Error('Блюдо не найдено: ' + id);
       const item = itemRes.rows[0];

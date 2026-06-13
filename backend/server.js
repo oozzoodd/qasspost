@@ -1,6 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
 
 const authRoutes = require('./routes/auth');
@@ -10,8 +12,21 @@ const ordersRoutes = require('./routes/orders');
 const adminRoutes = require('./routes/admin');
 
 const app = express();
-app.use(cors());
-app.use(express.json());
+app.use(helmet({
+  contentSecurityPolicy: false,
+}));
+app.use(cors({
+  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : true,
+}));
+app.use(express.json({ limit: '1mb' }));
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 80,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(['/auth/login', '/auth/pin-login', '/auth/register', '/admin'], authLimiter);
 
 // Раздача статических файлов фронтенда (касса и админка)
 app.use(express.static(path.join(__dirname, 'public')));
