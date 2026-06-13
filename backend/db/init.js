@@ -117,10 +117,10 @@ async function init() {
 
   // Клиенты
   await pool.query(
-    `INSERT INTO clients (venue_id, name, phone, visits, bonus, total_spent) VALUES
-     ($1,'Алишер Каримов','+998901234567',12,3200,240000),
-     ($1,'Малика Юсупова','+998901234568',7,1800,140000),
-     ($1,'Бобур Рашидов','+998901234569',3,600,60000)`,
+    `INSERT INTO clients (venue_id, name, email, phone, status, last_payment_at, expires_at, visits, bonus, total_spent) VALUES
+     ($1,'Алишер Каримов','alisher@example.com','+998901234567','active', NOW() - INTERVAL '3 days', NOW() + INTERVAL '30 days',12,3200,240000),
+     ($1,'Малика Юсупова','malika@example.com','+998901234568','active', NOW() - INTERVAL '10 days', NOW() + INTERVAL '20 days',7,1800,140000),
+     ($1,'Бобур Рашидов','bobur@example.com','+998901234569','new', NULL, NULL,3,600,60000)`,
     [venueId]
   );
 

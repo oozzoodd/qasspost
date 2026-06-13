@@ -141,26 +141,36 @@ router.post('/', async (req, res) => {
 // ── КЛИЕНТЫ ──────────────────────────────────────────────────
 
 router.get('/clients/all', async (req, res) => {
-  const r = await pool.query('SELECT * FROM clients WHERE venue_id = $1 ORDER BY id DESC', [req.user.venueId]);
+  const search = (req.query.search || '').trim();
+  const params = [req.user.venueId];
+  let sql = 'SELECT * FROM clients WHERE venue_id = $1';
+  if (search) {
+    params.push(`%${search}%`);
+    sql += ' AND (name ILIKE $2 OR phone ILIKE $2 OR email ILIKE $2)';
+  }
+  sql += ' ORDER BY id DESC';
+  const r = await pool.query(sql, params);
   res.json(r.rows);
 });
 
 router.post('/clients', requireRole('owner', 'admin'), async (req, res) => {
-  const { name, phone } = req.body;
+  const { name, phone, email, status, last_payment_at, expires_at } = req.body;
   if (!name) return res.status(400).json({ error: 'Укажите имя' });
   const r = await pool.query(
-    'INSERT INTO clients (venue_id, name, phone) VALUES ($1,$2,$3) RETURNING *',
-    [req.user.venueId, name, phone || null]
+    `INSERT INTO clients (venue_id, name, phone, email, status, last_payment_at, expires_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+    [req.user.venueId, name, phone || null, email || null, status || 'new', last_payment_at || null, expires_at || null]
   );
   res.json(r.rows[0]);
 });
 
 router.put('/clients/:id', requireRole('owner', 'admin'), async (req, res) => {
-  const { name, phone, bonus } = req.body;
+  const { name, phone, email, status, last_payment_at, expires_at, bonus } = req.body;
   const r = await pool.query(
-    `UPDATE clients SET name=COALESCE($1,name), phone=COALESCE($2,phone), bonus=COALESCE($3,bonus)
-     WHERE id=$4 AND venue_id=$5 RETURNING *`,
-    [name, phone, bonus, req.params.id, req.user.venueId]
+    `UPDATE clients SET name=COALESCE($1,name), phone=COALESCE($2,phone), email=COALESCE($3,email),
+       status=COALESCE($4,status), last_payment_at=COALESCE($5,last_payment_at), expires_at=COALESCE($6,expires_at), bonus=COALESCE($7,bonus)
+     WHERE id=$8 AND venue_id=$9 RETURNING *`,
+    [name, phone, email, status, last_payment_at, expires_at, bonus, req.params.id, req.user.venueId]
   );
   if (!r.rows.length) return res.status(404).json({ error: 'Не найдено' });
   res.json(r.rows[0]);

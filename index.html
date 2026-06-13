@@ -342,15 +342,23 @@
         <div class="page-title">База клиентов</div>
         <button class="btn btn-primary" onclick="openClientModal(null)">+ Добавить клиента</button>
       </div>
+      <div class="client-tools">
+        <input class="search-input" id="client-search" placeholder="Поиск по имени или телефону" oninput="searchClients(this.value)">
+        <div class="view-switch">
+          <button id="view-table" class="active" onclick="setClientView('table')">Таблица</button>
+          <button id="view-kanban" onclick="setClientView('kanban')">Kanban</button>
+        </div>
+      </div>
       <div class="metrics" id="client-metrics"></div>
-      <div class="card">
+      <div class="card" id="clients-table-card">
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Клиент</th><th>Телефон</th><th>Визитов</th><th>Бонусы</th><th>Сумма покупок</th><th></th></tr></thead>
+            <thead><tr><th>Клиент</th><th>Email / Телефон</th><th>Визитов</th><th>Бонусы</th><th>Сумма покупок</th><th></th></tr></thead>
             <tbody id="clients-tbody"></tbody>
           </table>
         </div>
       </div>
+      <div id="clients-kanban" class="kanban-board" style="display:none;"></div>
     </div>
 
     <!-- СОТРУДНИКИ -->
@@ -440,6 +448,7 @@ let recipesData = {};
 let clients = [];
 let staff = [];
 let orders = [];
+let clientReceipts = JSON.parse(localStorage.getItem('qp_client_receipts') || '{}');
 let currentShift = null;
 
 let cart = {};
@@ -447,6 +456,8 @@ let cartClientId = null;
 let payMethod = null;
 let activePoscat = 'all';
 let activeMenuCat = 'all';
+let clientViewMode = 'table';
+let clientSearchQuery = '';
 let pinInput = '';
 let currency = 'сум';
 
@@ -585,10 +596,11 @@ function logout() {
 async function startApp() {
   showScreen('loading');
   try {
-    const [menuData, stockData, clientsData, shiftData] = await Promise.all([
+    const [menuData, stockData, clientsData, ordersData, shiftData] = await Promise.all([
       api('/menu'),
       api('/stock'),
       api('/orders/clients/all'),
+      api('/orders'),
       api('/orders/shift/current'),
     ]);
     menuCatsData = menuData.categories;
@@ -596,6 +608,7 @@ async function startApp() {
     menuItems = menuData.items;
     ingredients = stockData;
     clients = clientsData;
+    orders = ordersData;
     currentShift = shiftData;
 
     document.getElementById('brand-name').textContent = venueInfo?.name || 'QassaPos';
@@ -982,35 +995,158 @@ async function addRecItem(itemId) {
 // ═══════════════════════════════════════════════════════════
 // CLIENTS
 // ═══════════════════════════════════════════════════════════
-async function reloadClients() { clients = await api('/orders/clients/all'); }
+async function reloadClients(query='') {
+  const path = '/orders/clients/all' + (query ? '?search=' + encodeURIComponent(query) : '');
+  clients = await api(path);
+}
+function getClientStatus(c) {
+  if (!c.visits) return 'Новые';
+  if (c.total_spent >= 200000) return 'VIP';
+  if (c.visits >= 5) return 'Активные';
+  if (c.visits >= 2) return 'Нуждаются';
+  return 'Редко';
+}
+function getClientLastOrder(c) {
+  const clientOrders = orders.filter(o => o.client_id === c.id);
+  if (!clientOrders.length) return null;
+  return clientOrders.reduce((last, o) => !last || new Date(o.created_at) > new Date(last.created_at) ? o : last, null);
+}
 function renderClients() {
   document.getElementById('client-metrics').innerHTML = `
     <div class="metric"><div class="metric-label">Всего клиентов</div><div class="metric-value">${clients.length}</div></div>
     <div class="metric"><div class="metric-label">Всего визитов</div><div class="metric-value">${clients.reduce((a,c)=>a+c.visits,0)}</div></div>
     <div class="metric"><div class="metric-label">Бонусов выдано</div><div class="metric-value green">${fmt(clients.reduce((a,c)=>a+c.bonus,0))}</div></div>`;
-  document.getElementById('clients-tbody').innerHTML = clients.map(c => `<tr>
-    <td><strong>${c.name}</strong></td>
-    <td style="color:#888;">${c.phone||'—'}</td>
-    <td>${c.visits}</td>
-    <td style="color:#0F6E56;font-weight:600;">${fmt(c.bonus)}</td>
-    <td>${fmt(c.total_spent)}</td>
-    <td style="text-align:right;display:flex;gap:4px;justify-content:flex-end;">
-      <button class="btn btn-icon btn-sm" onclick="openClientModal(${c.id})">✏️</button>
-      <button class="btn btn-icon btn-sm" onclick="deleteClient(${c.id})">🗑️</button>
-    </td>
-  </tr>`).join('');
+  document.getElementById('client-search').value = clientSearchQuery;
+  const tableCard = document.getElementById('clients-table-card');
+  const kanbanBoard = document.getElementById('clients-kanban');
+  if (clientViewMode === 'kanban') {
+    tableCard.style.display = 'none';
+    kanbanBoard.style.display = 'grid';
+    renderClientKanban();
+  } else {
+    tableCard.style.display = 'block';
+    kanbanBoard.style.display = 'none';
+    document.getElementById('clients-tbody').innerHTML = clients.map(c => {
+      const last = getClientLastOrder(c);
+      const lastLabel = last ? new Date(last.created_at).toLocaleDateString('ru-RU') : '—';
+      return `<tr>
+        <td><strong>${c.name}</strong><div style="font-size:12px;color:#888;margin-top:4px;">${getClientStatus(c)}</div></td>
+        <td style="color:#888;">${c.phone||'—'}</td>
+        <td>${c.visits}</td>
+        <td style="color:#0F6E56;font-weight:600;">${fmt(c.bonus)}</td>
+        <td>${fmt(c.total_spent)}</td>
+        <td style="text-align:right;display:flex;gap:4px;justify-content:flex-end;white-space:nowrap;">
+          <button class="btn btn-icon btn-sm" onclick="openClientProfile(${c.id})">👁️</button>
+          <button class="btn btn-icon btn-sm" onclick="openClientModal(${c.id})">✏️</button>
+          <button class="btn btn-icon btn-sm" onclick="deleteClient(${c.id})">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+}
+function renderClientKanban() {
+  const columns = ['Новые','Активные','VIP','Нуждаются'];
+  const groups = columns.map(col => ({ title: col, items: clients.filter(c => getClientStatus(c) === col) }));
+  document.getElementById('clients-kanban').innerHTML = groups.map(group => `
+    <div class="kanban-column">
+      <h4>${group.title} <span style="color:#888;font-size:12px;">${group.items.length}</span></h4>
+      ${group.items.map(c => {
+        const last = getClientLastOrder(c);
+        const lastLabel = last ? new Date(last.created_at).toLocaleDateString('ru-RU') : 'нет заказов';
+        return `<div class="client-card" onclick="openClientProfile(${c.id})">
+          <div class="client-card-title"><strong>${c.name}</strong><span>${c.phone||'—'}</span></div>
+          <div class="client-card-meta">
+            <span>Визитов: ${c.visits}</span>
+            <span>Чек: ${fmt(c.total_spent)}</span>
+            <span>Бонусы: ${fmt(c.bonus)}</span>
+            <span>Последний: ${lastLabel}</span>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
 }
 async function deleteClient(id) {
   if (!confirm('Удалить клиента?')) return;
-  try { await api('/orders/clients/'+id, { method:'DELETE' }); await reloadClients(); renderClients(); }
+  try { await api('/orders/clients/'+id, { method:'DELETE' }); await reloadClients(clientSearchQuery); renderClients(); }
   catch(err){ toast(err.message); }
+}
+function setClientView(mode) {
+  clientViewMode = mode;
+  document.getElementById('view-table').classList.toggle('active', mode==='table');
+  document.getElementById('view-kanban').classList.toggle('active', mode==='kanban');
+  renderClients();
+}
+function searchClients(value) {
+  clientSearchQuery = value.trim();
+  reloadClients(clientSearchQuery).then(renderClients).catch(err => toast(err.message));
+}
+function openClientProfile(id) {
+  const c = getClient(id);
+  if (!c) return;
+  const last = getClientLastOrder(c);
+  const recent = orders.filter(o => o.client_id === c.id).slice(0,5);
+  const receipts = clientReceipts[c.id] || [];
+  const receiptHtml = receipts.length ? receipts.map(r => `<div><strong>${r.name}</strong> · ${new Date(r.uploaded_at).toLocaleDateString('ru-RU')}<div class="receipt-preview">${r.size}</div></div>`).join('') : '<div style="color:#888;">Чеки не добавлены</div>';
+  showModal(`<div class="modal-title">Карточка клиента</div>
+    <div class="field"><strong>${c.name}</strong></div>
+    <div class="field"><label>Телефон</label><div>${c.phone||'—'}</div></div>
+    <div class="field-row">
+      <div class="field"><label>Визитов</label><div>${c.visits}</div></div>
+      <div class="field"><label>Бонусы</label><div>${fmt(c.bonus)}</div></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Email</label><div>${c.email||'—'}</div></div>
+      <div class="field"><label>Телефон</label><div>${c.phone||'—'}</div></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Сумма покупок</label><div>${fmt(c.total_spent)}</div></div>
+      <div class="field"><label>Последний заказ</label><div>${last ? new Date(last.created_at).toLocaleDateString('ru-RU') : 'нет'}</div></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Статус</label><div>${c.status || getClientStatus(c)}</div></div>
+      <div class="field"><label>Доступ до</label><div>${c.expires_at ? new Date(c.expires_at).toLocaleDateString('ru-RU') : '—'}</div></div>
+    </div>
+    <div class="field"><label>Недавние заказы</label>${recent.length ? `<ul style="padding-left:18px;margin:8px 0;color:#555;">${recent.map(o=>`<li>#${o.id} ${fmt(o.total)} · ${new Date(o.created_at).toLocaleDateString('ru-RU')}</li>`).join('')}</ul>` : '<div style="color:#888;">Нет недавних заказов</div>'}</div>
+    <div class="field"><label>Прикреплённые чеки</label><div class="receipt-list">${receiptHtml}</div></div>
+    <div class="field"><label>Добавить чек</label><input type="file" id="receipt-file" accept="image/*,.pdf" onchange="attachClientReceipt(${c.id})"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Закрыть</button>
+      <button class="btn btn-primary" onclick="openClientModal(${c.id})">Редактировать</button>
+    </div>`);
+}
+function attachClientReceipt(clientId) {
+  const input = document.getElementById('receipt-file');
+  if (!input || !input.files || !input.files.length) return;
+  const file = input.files[0];
+  const reader = new FileReader();
+  reader.onload = () => {
+    const list = clientReceipts[clientId] || [];
+    list.unshift({ name: file.name, data: reader.result, uploaded_at: Date.now(), size: Math.round(file.size / 1024) + ' kb' });
+    clientReceipts[clientId] = list.slice(0, 10);
+    localStorage.setItem('qp_client_receipts', JSON.stringify(clientReceipts));
+    openClientProfile(clientId);
+    toast('Чек добавлен');
+  };
+  reader.readAsDataURL(file);
 }
 function openClientModal(id) {
   const c = id ? getClient(id) : null;
   showModal(`<div class="modal-title">${id?'Редактировать клиента':'Новый клиент'}</div>
     <div class="field"><label>Имя</label><input type="text" id="cf-name" value="${c?c.name:''}"></div>
-    <div class="field"><label>Телефон</label><input type="text" id="cf-phone" value="${c?(c.phone||''):''}"></div>
-    ${c?`<div class="field"><label>Бонусы</label><input type="number" id="cf-bonus" value="${c.bonus}"></div>`:''}
+    <div class="field-row">
+      <div class="field"><label>Email</label><input type="email" id="cf-email" value="${c?c.email||'':''}"></div>
+      <div class="field"><label>Телефон</label><input type="text" id="cf-phone" value="${c?(c.phone||''):''}"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Статус</label><select id="cf-status">
+        <option value="new"${c&&c.status==='new'?' selected':''}>Новый</option>
+        <option value="active"${c&&c.status==='active'?' selected':''}>Активный</option>
+        <option value="vip"${c&&c.status==='vip'?' selected':''}>VIP</option>
+        <option value="inactive"${c&&c.status==='inactive'?' selected':''}>Неактивный</option>
+      </select></div>
+      <div class="field"><label>Срок VIP / акции</label><input type="date" id="cf-expires" value="${c&&c.expires_at?new Date(c.expires_at).toISOString().slice(0,10):''}"></div>
+    </div>
+    ${c?`<div class="field-row"><div class="field"><label>Бонусы</label><input type="number" id="cf-bonus" value="${c.bonus}"></div><div class="field"><label>Визитов</label><input type="number" id="cf-visits" value="${c.visits}" disabled></div></div>`:''}
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
       <button class="btn btn-primary" onclick="saveClient(${id||0})">Сохранить</button>
@@ -1018,16 +1154,21 @@ function openClientModal(id) {
 }
 async function saveClient(id) {
   const name = document.getElementById('cf-name').value.trim();
+  const email = document.getElementById('cf-email').value.trim();
   const phone = document.getElementById('cf-phone').value.trim();
-  if (!name) return;
+  const status = document.getElementById('cf-status').value;
+  const expires_at = document.getElementById('cf-expires').value || null;
+  if (!name) { toast('Введите имя клиента'); return; }
   try {
     if (id) {
       const bonus = +document.getElementById('cf-bonus').value || 0;
-      await api('/orders/clients/'+id, { method:'PUT', body:{ name, phone, bonus } });
+      await api('/orders/clients/'+id, { method:'PUT', body:{ name, phone, email, status, expires_at, bonus } });
     } else {
-      await api('/orders/clients', { method:'POST', body:{ name, phone } });
+      await api('/orders/clients', { method:'POST', body:{ name, phone, email, status, expires_at } });
     }
-    await reloadClients(); closeModal(); renderClients();
+    await reloadClients(clientSearchQuery);
+    closeModal();
+    renderClients();
   } catch(err) { toast(err.message); }
 }
 
