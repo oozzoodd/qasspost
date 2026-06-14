@@ -135,6 +135,93 @@ router.get('/shifts/history', requireRole('owner', 'admin'), async (req, res) =>
   res.json(r.rows);
 });
 
+// POST /orders/expenses — добавить расход в текущую открытую смену
+router.post('/expenses', async (req, res) => {
+  const amount = Number(req.body.amount);
+  const category = String(req.body.category || '').trim();
+  const comment = String(req.body.comment || '').trim();
+
+  if (!Number.isInteger(amount) || amount <= 0) {
+    return res.status(400).json({ error: 'Укажите корректную сумму расхода' });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const shiftRes = await client.query(
+      `SELECT id FROM shifts
+       WHERE venue_id = $1 AND closed_at IS NULL
+       ORDER BY opened_at DESC LIMIT 1
+       FOR UPDATE`,
+      [req.user.venueId]
+    );
+    if (!shiftRes.rows.length) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ error: 'Смена не открыта. Откройте смену перед добавлением расхода.' });
+    }
+
+    const r = await client.query(
+      `INSERT INTO cash_expenses (venue_id, staff_id, shift_id, amount, category, comment)
+       VALUES ($1,$2,$3,$4,$5,$6)
+       RETURNING *`,
+      [
+        req.user.venueId,
+        req.user.staffId,
+        shiftRes.rows[0].id,
+        amount,
+        category || null,
+        comment || null,
+      ]
+    );
+
+    await client.query('COMMIT');
+    res.json(r.rows[0]);
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error(err);
+    res.status(500).json({ error: 'Ошибка при сохранении расхода' });
+  } finally {
+    client.release();
+  }
+});
+
+// GET /orders/expenses — последние расходы заведения
+router.get('/expenses', async (req, res) => {
+  const r = await pool.query(
+    `SELECT e.*, s.name AS staff_name
+     FROM cash_expenses e
+     LEFT JOIN staff s ON s.id = e.staff_id
+     WHERE e.venue_id = $1
+     ORDER BY e.created_at DESC
+     LIMIT 50`,
+    [req.user.venueId]
+  );
+  res.json(r.rows);
+});
+
+// GET /orders/expenses/summary — расходы текущей открытой смены
+router.get('/expenses/summary', async (req, res) => {
+  const shiftRes = await pool.query(
+    `SELECT id FROM shifts
+     WHERE venue_id = $1 AND closed_at IS NULL
+     ORDER BY opened_at DESC LIMIT 1`,
+    [req.user.venueId]
+  );
+
+  if (!shiftRes.rows.length) {
+    return res.json({ total_expenses: 0 });
+  }
+
+  const r = await pool.query(
+    `SELECT COALESCE(SUM(amount), 0)::int AS total_expenses
+     FROM cash_expenses
+     WHERE venue_id = $1 AND shift_id = $2`,
+    [req.user.venueId, shiftRes.rows[0].id]
+  );
+  res.json(r.rows[0]);
+});
+
 // ── ЗАКАЗЫ ───────────────────────────────────────────────────
 
 // GET /orders — история заказов (последние 50)

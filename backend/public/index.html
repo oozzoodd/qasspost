@@ -744,6 +744,24 @@
           <button class="btn" id="shift-toggle-btn" onclick="toggleShift()" style="width:100%;justify-content:center;">Открыть смену</button>
         </div>
       </div>
+      <div class="card" id="expenses-card">
+        <div class="card-title">Расходы</div>
+        <div style="font-size:13px;color:#555;margin-bottom:12px;">Расходы за смену: <strong id="expenses-summary">0 сум</strong></div>
+        <div class="field-row">
+          <div class="field"><label>Сумма</label><input type="number" id="expense-amount" min="1" placeholder="0"></div>
+          <div class="field"><label>Категория</label><input type="text" id="expense-category" maxlength="100" placeholder="Закупка, аренда..."></div>
+        </div>
+        <div class="field"><label>Комментарий</label><input type="text" id="expense-comment" placeholder="Необязательно"></div>
+        <button class="btn btn-primary" onclick="addCashExpense()">Добавить расход</button>
+        <div class="table-wrap" style="margin-top:14px;">
+          <table>
+            <thead><tr><th>Сумма</th><th>Категория</th><th>Комментарий</th><th>Сотрудник</th><th>Время</th></tr></thead>
+            <tbody id="expenses-tbody">
+              <tr><td colspan="5" style="text-align:center;color:#bbb;padding:18px;">Загрузка...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
       <div class="card" id="shift-history-card">
         <div class="card-title">История смен</div>
         <div class="table-wrap">
@@ -806,6 +824,8 @@ let clientReceipts = JSON.parse(localStorage.getItem('qp_client_receipts') || '{
 let currentShift = null;
 let dailySummary = { total: 0, cash: 0, card: 0, orders_count: 0 };
 let shiftHistory = [];
+let cashExpenses = [];
+let expensesSummary = { total_expenses: 0 };
 
 let cart = {};
 let cartClientId = null;
@@ -1759,6 +1779,12 @@ function renderSettings() {
     Статус: <strong>${statusMap[accountInfo?.status]||accountInfo?.status||'—'}</strong><br>
     Доступ до: <strong>${expires}</strong>`;
 
+  renderCashExpenses();
+  reloadCashExpenses().then(renderCashExpenses).catch(err => {
+    const tbody = document.getElementById('expenses-tbody');
+    if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#C0392B;padding:18px;">${esc(err.message)}</td></tr>`;
+  });
+
   renderShiftHistory();
   if (['owner','admin'].includes(currentUser?.role)) {
     reloadShiftHistory().then(renderShiftHistory).catch(err => {
@@ -1766,6 +1792,58 @@ function renderSettings() {
       if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#C0392B;padding:18px;">${esc(err.message)}</td></tr>`;
     });
   }
+}
+
+async function reloadCashExpenses() {
+  const [list, summary] = await Promise.all([
+    api('/orders/expenses'),
+    api('/orders/expenses/summary'),
+  ]);
+  cashExpenses = list;
+  expensesSummary = summary;
+}
+
+async function addCashExpense() {
+  const amountEl = document.getElementById('expense-amount');
+  const categoryEl = document.getElementById('expense-category');
+  const commentEl = document.getElementById('expense-comment');
+  const amount = +amountEl.value || 0;
+  const category = categoryEl.value.trim();
+  const comment = commentEl.value.trim();
+
+  if (amount <= 0) {
+    toast('Укажите сумму расхода');
+    return;
+  }
+
+  try {
+    await api('/orders/expenses', { method:'POST', body:{ amount, category, comment } });
+    amountEl.value = '';
+    categoryEl.value = '';
+    commentEl.value = '';
+    await reloadCashExpenses();
+    renderCashExpenses();
+    toast('Расход добавлен');
+  } catch (err) {
+    toast(err.message);
+  }
+}
+
+function renderCashExpenses() {
+  const summaryEl = document.getElementById('expenses-summary');
+  const tbody = document.getElementById('expenses-tbody');
+  if (!summaryEl || !tbody) return;
+
+  summaryEl.textContent = fmt(expensesSummary.total_expenses || 0);
+  tbody.innerHTML = cashExpenses.length
+    ? cashExpenses.map(e => `<tr>
+        <td style="font-weight:600;">${fmt(e.amount || 0)}</td>
+        <td>${esc(e.category || '—')}</td>
+        <td>${esc(e.comment || '—')}</td>
+        <td>${esc(e.staff_name || '—')}</td>
+        <td style="color:#888;">${shiftDate(e.created_at)}</td>
+      </tr>`).join('')
+    : '<tr><td colspan="5" style="text-align:center;color:#bbb;padding:18px;">Расходов пока нет</td></tr>';
 }
 
 async function reloadShiftHistory() {

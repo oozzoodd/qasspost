@@ -102,6 +102,18 @@ CREATE TABLE IF NOT EXISTS shifts (
   orders_count INTEGER DEFAULT 0
 );
 
+-- Расходы кассы
+CREATE TABLE IF NOT EXISTS cash_expenses (
+  id SERIAL PRIMARY KEY,
+  venue_id INTEGER REFERENCES venues(id) ON DELETE CASCADE,
+  staff_id INTEGER REFERENCES staff(id),
+  shift_id INTEGER REFERENCES shifts(id),
+  amount INTEGER NOT NULL CHECK (amount > 0),
+  category VARCHAR(100),
+  comment TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
 -- Заказы
 CREATE TABLE IF NOT EXISTS orders (
   id SERIAL PRIMARY KEY,
@@ -122,3 +134,6 @@ CREATE INDEX IF NOT EXISTS idx_menu_items_venue ON menu_items(venue_id);
 CREATE INDEX IF NOT EXISTS idx_ingredients_venue ON ingredients(venue_id);
 CREATE INDEX IF NOT EXISTS idx_orders_venue ON orders(venue_id);
 CREATE INDEX IF NOT EXISTS idx_orders_created ON orders(created_at);
+CREATE INDEX IF NOT EXISTS idx_cash_expenses_venue ON cash_expenses(venue_id);
+CREATE INDEX IF NOT EXISTS idx_cash_expenses_shift ON cash_expenses(shift_id);
+CREATE INDEX IF NOT EXISTS idx_cash_expenses_created ON cash_expenses(created_at);
