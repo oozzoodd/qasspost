@@ -526,6 +526,8 @@ async function api(path, { method = 'GET', body, token } = {}) {
 // HELPERS
 // ═══════════════════════════════════════════════════════════
 const fmt = n => Math.round(n).toLocaleString('ru-RU') + ' ' + currency;
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
+  ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 function toast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -761,7 +763,7 @@ function renderPos() {
 
   renderPosMenu();
   const sel = document.getElementById('cart-client-sel');
-  sel.innerHTML = '<option value="">— Клиент не выбран —</option>' + clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  sel.innerHTML = '<option value="">— Клиент не выбран —</option>' + clients.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
   if (cartClientId) sel.value = cartClientId;
   renderCartClientOptions(document.getElementById('cart-client-search')?.value || '');
   renderCart();
@@ -784,7 +786,7 @@ function renderCartClientOptions(query = '') {
   const filtered = clients
     .filter(c => !q || (c.name || '').toLowerCase().includes(q) || (c.phone || '').toLowerCase().includes(q) || (c.email || '').toLowerCase().includes(q))
     .slice(0, 30);
-  sel.innerHTML = '<option value="">— Клиент не выбран —</option>' + filtered.map(c => `<option value="${c.id}">${c.name}${c.phone ? ' · ' + c.phone : ''} · бонус ${fmt(c.bonus || 0)}</option>`).join('');
+  sel.innerHTML = '<option value="">— Клиент не выбран —</option>' + filtered.map(c => `<option value="${c.id}">${esc(c.name)}${c.phone ? ' · ' + esc(c.phone) : ''} · бонус ${fmt(c.bonus || 0)}</option>`).join('');
   if (cartClientId && filtered.some(c => String(c.id) === String(cartClientId))) sel.value = cartClientId;
 }
 function renderPosMenu() {
@@ -792,7 +794,7 @@ function renderPosMenu() {
   document.getElementById('pos-menu').innerHTML = items.map(item => {
     const ok = canMake(item);
     return `<div class="menu-card ${ok?'':'no-stock'}" ${ok?`onclick="addToCart(${item.id})"`:''}>
-      <div class="menu-card-name">${item.name}</div>
+      <div class="menu-card-name">${esc(item.name)}</div>
       <div class="menu-card-price">${ok ? fmt(item.price) : 'Нет остатка'}</div>
     </div>`;}).join('');
 }
@@ -826,7 +828,7 @@ function renderCart() {
     const item = getItem(+id); const qty = cart[id]; const sub = item.price * qty;
     total += sub; count += qty;
     return `<div class="cart-row">
-      <span class="cart-name">${item.name}</span>
+      <span class="cart-name">${esc(item.name)}</span>
       <button class="qty-btn" onclick="changeQty(${id},-1)">−</button>
       <span class="qty-num">${qty}</span>
       <button class="qty-btn" onclick="changeQty(${id},+1)">+</button>
@@ -869,7 +871,7 @@ function renderMenu() {
     const isAll = c === 'all';
     const name = isAll ? 'Все блюда' : menuCatsData.find(x=>x.id===c)?.name;
     const active = activeMenuCat === c;
-    return `<div style="padding:7px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:${active?'#0F6E56':'#555'};background:${active?'#E8F7F1':'transparent'};" onclick="setMenuCat('${c}')">${name}</div>`;
+    return `<div style="padding:7px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:${active?'#0F6E56':'#555'};background:${active?'#E8F7F1':'transparent'};" onclick="setMenuCat('${c}')">${esc(name)}</div>`;
   }).join('');
 
   const items = activeMenuCat === 'all' ? menuItems : menuItems.filter(i => i.category_id === activeMenuCat);
@@ -877,9 +879,9 @@ function renderMenu() {
   document.getElementById('menu-cat-title').textContent = catTitle;
   document.getElementById('menu-count-label').textContent = items.length + ' позиций';
   document.getElementById('menu-tbody').innerHTML = items.map(item => `<tr>
-    <td><strong>${item.name}</strong></td>
+    <td><strong>${esc(item.name)}</strong></td>
     <td>${fmt(item.price)}</td>
-    <td>${catNameOf(item)}</td>
+    <td>${esc(catNameOf(item))}</td>
     <td><span class="badge ${item.active?'badge-green':'badge-gray'}">${item.active?'Активно':'Скрыто'}</span></td>
     <td style="text-align:right;white-space:nowrap;display:flex;gap:4px;justify-content:flex-end;">
       <button class="btn btn-icon btn-sm" onclick="toggleMenuItem(${item.id})" title="${item.active?'Скрыть':'Показать'}">${item.active?'👁️':'🚫'}</button>
@@ -907,9 +909,9 @@ async function addMenuCat() {
 }
 function openMenuModal(id) {
   const item = id ? getItem(id) : null;
-  const catOpts = menuCatsData.map(c => `<option value="${c.id}"${item&&item.category_id===c.id?' selected':''}>${c.name}</option>`).join('');
+  const catOpts = menuCatsData.map(c => `<option value="${c.id}"${item&&item.category_id===c.id?' selected':''}>${esc(c.name)}</option>`).join('');
   showModal(`<div class="modal-title">${id ? 'Редактировать блюдо' : 'Новое блюдо'}</div>
-    <div class="field"><label>Название</label><input type="text" id="mf-name" value="${item?item.name:''}"></div>
+    <div class="field"><label>Название</label><input type="text" id="mf-name" value="${item?esc(item.name):''}"></div>
     <div class="field-row">
       <div class="field"><label>Цена (${currency})</label><input type="number" id="mf-price" value="${item?item.price:''}"></div>
       <div class="field"><label>Категория</label><select id="mf-cat">${catOpts}</select></div>
@@ -949,7 +951,7 @@ function renderStock() {
     const badge = s==='ok'?'badge-green':s==='low'?'badge-amber':'badge-red';
     const label = s==='ok'?'Норма':s==='low'?'Мало':'Нет';
     return `<tr>
-      <td><strong>${ing.name}</strong></td>
+      <td><strong>${esc(ing.name)}</strong></td>
       <td>${ing.stock_grams.toLocaleString('ru-RU')} г</td>
       <td style="color:#888;">${ing.min_grams.toLocaleString('ru-RU')} г</td>
       <td><div class="progress-wrap"><div class="progress-bar" style="width:${pct}%;background:${col};"></div></div></td>
@@ -968,7 +970,7 @@ async function deleteIng(id) {
 function openIngModal(id) {
   const ing = id ? getIng(id) : null;
   showModal(`<div class="modal-title">${id ? 'Редактировать ингредиент' : 'Новый ингредиент'}</div>
-    <div class="field"><label>Название</label><input type="text" id="if-name" value="${ing?ing.name:''}"></div>
+    <div class="field"><label>Название</label><input type="text" id="if-name" value="${ing?esc(ing.name):''}"></div>
     <div class="field-row">
       <div class="field"><label>Остаток (г)</label><input type="number" id="if-stock" value="${ing?ing.stock_grams:''}"></div>
       <div class="field"><label>Мин. остаток (г)</label><input type="number" id="if-min" value="${ing?ing.min_grams:300}"></div>
@@ -990,7 +992,7 @@ async function saveIng(id) {
   } catch(err) { toast(err.message); }
 }
 function openIncomeModal() {
-  const opts = ingredients.map(i => `<option value="${i.id}">${i.name}</option>`).join('');
+  const opts = ingredients.map(i => `<option value="${i.id}">${esc(i.name)}</option>`).join('');
   showModal(`<div class="modal-title">Приход товара</div>
     <div class="field"><label>Ингредиент</label><select id="inc-ing">${opts}</select></div>
     <div class="field"><label>Количество (г)</label><input type="number" id="inc-qty" value="1000"></div>
@@ -1015,18 +1017,18 @@ async function renderRecipes() {
     const items = recipesData[item.id] || [];
     return `<div class="recipe-card">
       <div class="recipe-head" onclick="toggleRecipe(${item.id})">
-        <strong>${item.name}</strong>
+        <strong>${esc(item.name)}</strong>
         <span style="font-size:12px;color:#888;">${items.length} ингр. ▾</span>
       </div>
       <div class="recipe-body" id="rb-${item.id}">
         <div style="padding-top:10px;">
         ${items.map(ri => `<div class="recipe-row">
-            <span>${ri.ingredient_name}</span>
+            <span>${esc(ri.ingredient_name)}</span>
             <div><input class="gram-input" type="number" value="${ri.grams}" onchange="updRec(${ri.id},${item.id},this.value)"> г</div>
             <button class="btn btn-icon btn-sm" onclick="remRec(${ri.id},${item.id})">✕</button>
           </div>`).join('')}
         <div style="display:flex;gap:8px;margin-top:10px;align-items:center;">
-          <select id="rs-${item.id}" style="flex:1;padding:7px;border:1px solid #E0E0DB;border-radius:8px;font-size:12px;">${ingredients.map(i=>`<option value="${i.id}">${i.name}</option>`).join('')}</select>
+          <select id="rs-${item.id}" style="flex:1;padding:7px;border:1px solid #E0E0DB;border-radius:8px;font-size:12px;">${ingredients.map(i=>`<option value="${i.id}">${esc(i.name)}</option>`).join('')}</select>
           <input type="number" id="rg-${item.id}" value="50" style="width:60px;padding:7px;border:1px solid #E0E0DB;border-radius:8px;font-size:12px;"> г
           <button class="btn btn-primary btn-sm" onclick="addRecItem(${item.id})">+ Добавить</button>
         </div>
@@ -1089,8 +1091,8 @@ function renderClients() {
       const last = getClientLastOrder(c);
       const lastLabel = last ? new Date(last.created_at).toLocaleDateString('ru-RU') : '—';
       return `<tr>
-        <td><strong>${c.name}</strong><div style="font-size:12px;color:#888;margin-top:4px;">${getClientStatus(c)}</div></td>
-        <td style="color:#888;">${c.phone||'—'}</td>
+        <td><strong>${esc(c.name)}</strong><div style="font-size:12px;color:#888;margin-top:4px;">${getClientStatus(c)}</div></td>
+        <td style="color:#888;">${esc(c.phone||'—')}</td>
         <td>${c.visits}</td>
         <td style="color:#0F6E56;font-weight:600;">${fmt(c.bonus)}</td>
         <td>${fmt(c.total_spent)}</td>
@@ -1113,7 +1115,7 @@ function renderClientKanban() {
         const last = getClientLastOrder(c);
         const lastLabel = last ? new Date(last.created_at).toLocaleDateString('ru-RU') : 'нет заказов';
         return `<div class="client-card" onclick="openClientProfile(${c.id})">
-          <div class="client-card-title"><strong>${c.name}</strong><span>${c.phone||'—'}</span></div>
+          <div class="client-card-title"><strong>${esc(c.name)}</strong><span>${esc(c.phone||'—')}</span></div>
           <div class="client-card-meta">
             <span>Визитов: ${c.visits}</span>
             <span>Чек: ${fmt(c.total_spent)}</span>
@@ -1145,24 +1147,24 @@ function openClientProfile(id) {
   const last = getClientLastOrder(c);
   const recent = orders.filter(o => o.client_id === c.id).slice(0,5);
   const receipts = clientReceipts[c.id] || [];
-  const receiptHtml = receipts.length ? receipts.map(r => `<div><strong>${r.name}</strong> · ${new Date(r.uploaded_at).toLocaleDateString('ru-RU')}<div class="receipt-preview">${r.size}</div></div>`).join('') : '<div style="color:#888;">Чеки не добавлены</div>';
+  const receiptHtml = receipts.length ? receipts.map(r => `<div><strong>${esc(r.name)}</strong> · ${new Date(r.uploaded_at).toLocaleDateString('ru-RU')}<div class="receipt-preview">${r.size}</div></div>`).join('') : '<div style="color:#888;">Чеки не добавлены</div>';
   showModal(`<div class="modal-title">Карточка клиента</div>
-    <div class="field"><strong>${c.name}</strong></div>
-    <div class="field"><label>Телефон</label><div>${c.phone||'—'}</div></div>
+    <div class="field"><strong>${esc(c.name)}</strong></div>
+    <div class="field"><label>Телефон</label><div>${esc(c.phone||'—')}</div></div>
     <div class="field-row">
       <div class="field"><label>Визитов</label><div>${c.visits}</div></div>
       <div class="field"><label>Бонусы</label><div>${fmt(c.bonus)}</div></div>
     </div>
     <div class="field-row">
-      <div class="field"><label>Email</label><div>${c.email||'—'}</div></div>
-      <div class="field"><label>Телефон</label><div>${c.phone||'—'}</div></div>
+      <div class="field"><label>Email</label><div>${esc(c.email||'—')}</div></div>
+      <div class="field"><label>Телефон</label><div>${esc(c.phone||'—')}</div></div>
     </div>
     <div class="field-row">
       <div class="field"><label>Сумма покупок</label><div>${fmt(c.total_spent)}</div></div>
       <div class="field"><label>Последний заказ</label><div>${last ? new Date(last.created_at).toLocaleDateString('ru-RU') : 'нет'}</div></div>
     </div>
     <div class="field-row">
-      <div class="field"><label>Статус</label><div>${c.status || getClientStatus(c)}</div></div>
+      <div class="field"><label>Статус</label><div>${esc(c.status || getClientStatus(c))}</div></div>
       <div class="field"><label>Доступ до</label><div>${c.expires_at ? new Date(c.expires_at).toLocaleDateString('ru-RU') : '—'}</div></div>
     </div>
     <div class="field"><label>Недавние заказы</label>${recent.length ? `<ul style="padding-left:18px;margin:8px 0;color:#555;">${recent.map(o=>`<li>#${o.id} ${fmt(o.total)} · ${new Date(o.created_at).toLocaleDateString('ru-RU')}</li>`).join('')}</ul>` : '<div style="color:#888;">Нет недавних заказов</div>'}</div>
@@ -1191,10 +1193,10 @@ function attachClientReceipt(clientId) {
 function openClientModal(id) {
   const c = id ? getClient(id) : null;
   showModal(`<div class="modal-title">${id?'Редактировать клиента':'Новый клиент'}</div>
-    <div class="field"><label>Имя</label><input type="text" id="cf-name" value="${c?c.name:''}"></div>
+    <div class="field"><label>Имя</label><input type="text" id="cf-name" value="${c?esc(c.name):''}"></div>
     <div class="field-row">
-      <div class="field"><label>Email</label><input type="email" id="cf-email" value="${c?c.email||'':''}"></div>
-      <div class="field"><label>Телефон</label><input type="text" id="cf-phone" value="${c?(c.phone||''):''}"></div>
+      <div class="field"><label>Email</label><input type="email" id="cf-email" value="${c?esc(c.email||''):''}"></div>
+      <div class="field"><label>Телефон</label><input type="text" id="cf-phone" value="${c?esc(c.phone||''):''}"></div>
     </div>
     <div class="field-row">
       <div class="field"><label>Статус</label><select id="cf-status">
@@ -1245,8 +1247,8 @@ async function renderStaff() {
   const roleMap = {owner:'Владелец',admin:'Администратор',cashier:'Кассир'};
   const roleBadge = {owner:'badge-purple',admin:'badge-blue',cashier:'badge-green'};
   document.getElementById('staff-tbody').innerHTML = staff.map(s => `<tr>
-    <td><strong>${s.name}</strong></td>
-    <td style="color:#888;">${s.phone||'—'}</td>
+    <td><strong>${esc(s.name)}</strong></td>
+    <td style="color:#888;">${esc(s.phone||'—')}</td>
     <td><span class="badge ${roleBadge[s.role]}">${roleMap[s.role]}</span></td>
     <td style="font-family:monospace;color:#888;">${s.pin}</td>
     <td><span class="badge ${s.active?'badge-green':'badge-gray'}">${s.active?'Активен':'Неактивен'}</span></td>
@@ -1264,8 +1266,8 @@ async function deleteStaff(id) {
 function openStaffModal(id) {
   const s = id ? staff.find(s=>s.id===id) : null;
   showModal(`<div class="modal-title">${id?'Редактировать':'Новый сотрудник'}</div>
-    <div class="field"><label>Имя</label><input type="text" id="sf-name" value="${s?s.name:''}"></div>
-    <div class="field"><label>Телефон</label><input type="text" id="sf-phone" value="${s?(s.phone||''):''}"></div>
+    <div class="field"><label>Имя</label><input type="text" id="sf-name" value="${s?esc(s.name):''}"></div>
+    <div class="field"><label>Телефон</label><input type="text" id="sf-phone" value="${s?esc(s.phone||''):''}"></div>
     <div class="field-row">
       <div class="field"><label>Роль</label><select id="sf-role">
         <option value="cashier"${s&&s.role==='cashier'?' selected':''}>Кассир</option>
@@ -1309,7 +1311,7 @@ async function renderAnalytics() {
   const top = Object.entries(dishCount).sort((a,b)=>b[1]-a[1]).slice(0,5);
   const maxD = top[0]?top[0][1]:1;
   document.getElementById('top-dishes').innerHTML = top.length
-    ? top.map(([n,c]) => `<div class="bar-row"><span class="bar-label">${n}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(c/maxD*100)}%"></div></div><span class="bar-count">${c}</span></div>`).join('')
+    ? top.map(([n,c]) => `<div class="bar-row"><span class="bar-label">${esc(n)}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(c/maxD*100)}%"></div></div><span class="bar-count">${c}</span></div>`).join('')
     : '<p style="color:#bbb;font-size:13px;">Продаж пока нет</p>';
   const cash = orders.filter(o=>o.pay_method==='cash').length;
   const card = orders.filter(o=>o.pay_method==='card').length;
@@ -1318,9 +1320,9 @@ async function renderAnalytics() {
     <div class="bar-row"><span class="bar-label">Карта</span><div class="bar-track"><div class="bar-fill" style="width:${orders.length?Math.round(card/orders.length*100):0}%;background:#378ADD"></div></div><span class="bar-count">${card}</span></div>`;
   document.getElementById('orders-tbody').innerHTML = orders.length
     ? orders.slice(0,20).map(o=>{
-        const itemsStr = (o.items_json||[]).map(i=>i.name+' ×'+i.qty).join(', ');
+        const itemsStr = (o.items_json||[]).map(i=>esc(i.name)+' ×'+i.qty).join(', ');
         const time = new Date(o.created_at).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-        return `<tr><td>#${o.id}</td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#888;">${itemsStr}</td><td style="font-weight:600;">${fmt(o.total)}</td><td>${o.pay_method==='cash'?'Нал.':'Карта'}</td><td>${o.client_name||'—'}</td><td style="color:#888;">${time}</td></tr>`;
+        return `<tr><td>#${o.id}</td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#888;">${itemsStr}</td><td style="font-weight:600;">${fmt(o.total)}</td><td>${o.pay_method==='cash'?'Нал.':'Карта'}</td><td>${esc(o.client_name||'—')}</td><td style="color:#888;">${time}</td></tr>`;
       }).join('')
     : '<tr><td colspan="6" style="text-align:center;color:#bbb;padding:24px;">Заказов ещё нет — оформите первый на кассе</td></tr>';
 }
