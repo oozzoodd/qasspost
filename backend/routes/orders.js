@@ -235,7 +235,7 @@ router.delete('/clients/:id', requireRole('owner', 'admin'), async (req, res) =>
 // ── СОТРУДНИКИ ───────────────────────────────────────────────
 
 router.get('/staff/all', requireRole('owner', 'admin'), async (req, res) => {
-  const r = await pool.query('SELECT id,name,phone,role,pin,active FROM staff WHERE venue_id=$1 ORDER BY id', [req.user.venueId]);
+  const r = await pool.query('SELECT id,name,phone,role,active FROM staff WHERE venue_id=$1 ORDER BY id', [req.user.venueId]);
   res.json(r.rows);
 });
 
@@ -243,7 +243,7 @@ router.post('/staff', requireRole('owner'), async (req, res) => {
   const { name, phone, role, pin } = req.body;
   if (!name || !pin) return res.status(400).json({ error: 'Укажите имя и PIN' });
   const r = await pool.query(
-    'INSERT INTO staff (venue_id,name,phone,role,pin) VALUES ($1,$2,$3,$4,$5) RETURNING id,name,phone,role,pin,active',
+    'INSERT INTO staff (venue_id,name,phone,role,pin) VALUES ($1,$2,$3,$4,$5) RETURNING id,name,phone,role,active',
     [req.user.venueId, name, phone || null, role || 'cashier', pin]
   );
   res.json(r.rows[0]);
@@ -254,8 +254,8 @@ router.put('/staff/:id', requireRole('owner'), async (req, res) => {
   const r = await pool.query(
     `UPDATE staff SET name=COALESCE($1,name), phone=COALESCE($2,phone), role=COALESCE($3,role),
        pin=COALESCE($4,pin), active=COALESCE($5,active)
-     WHERE id=$6 AND venue_id=$7 RETURNING id,name,phone,role,pin,active`,
-    [name, phone, role, pin, active, req.params.id, req.user.venueId]
+     WHERE id=$6 AND venue_id=$7 RETURNING id,name,phone,role,active`,
+    [name, phone, role, pin || null, active, req.params.id, req.user.venueId]
   );
   if (!r.rows.length) return res.status(404).json({ error: 'Не найдено' });
   res.json(r.rows[0]);

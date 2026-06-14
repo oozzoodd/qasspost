@@ -702,7 +702,7 @@
       <div class="card">
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Сотрудник</th><th>Телефон</th><th>Роль</th><th>PIN</th><th>Статус</th><th></th></tr></thead>
+            <thead><tr><th>Сотрудник</th><th>Телефон</th><th>Роль</th><th>Статус</th><th></th></tr></thead>
             <tbody id="staff-tbody"></tbody>
           </table>
         </div>
@@ -1625,7 +1625,6 @@ async function renderStaff() {
     <td><strong>${esc(s.name)}</strong></td>
     <td style="color:#888;">${esc(s.phone||'—')}</td>
     <td><span class="badge ${roleBadge[s.role]}">${roleMap[s.role]}</span></td>
-    <td style="font-family:monospace;color:#888;">${s.pin}</td>
     <td><span class="badge ${s.active?'badge-green':'badge-gray'}">${s.active?'Активен':'Неактивен'}</span></td>
     <td style="text-align:right;display:flex;gap:4px;justify-content:flex-end;">
       <button class="btn btn-icon btn-sm" onclick="openStaffModal(${s.id})">✏️</button>
@@ -1649,7 +1648,7 @@ function openStaffModal(id) {
         <option value="admin"${s&&s.role==='admin'?' selected':''}>Администратор</option>
         <option value="owner"${s&&s.role==='owner'?' selected':''}>Владелец</option>
       </select></div>
-      <div class="field"><label>PIN (4 цифры)</label><input type="text" id="sf-pin" value="${s?s.pin:''}" maxlength="4"></div>
+      <div class="field"><label>${id?'Новый PIN (если нужно изменить)':'PIN (4 цифры)'}</label><input type="text" id="sf-pin" value="" maxlength="4"></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
@@ -1661,10 +1660,14 @@ async function saveStaff(id) {
   const phone = document.getElementById('sf-phone').value.trim();
   const role = document.getElementById('sf-role').value;
   const pin = document.getElementById('sf-pin').value.trim();
-  if (!name || pin.length !== 4) { toast('Укажите имя и 4-значный PIN'); return; }
+  if (!name) { toast('Укажите имя'); return; }
+  if (!id && pin.length !== 4) { toast('Укажите 4-значный PIN'); return; }
+  if (id && pin && pin.length !== 4) { toast('PIN должен быть из 4 цифр'); return; }
   try {
-    if (id) await api('/orders/staff/'+id, { method:'PUT', body:{ name, phone, role, pin } });
-    else await api('/orders/staff', { method:'POST', body:{ name, phone, role, pin } });
+    const body = { name, phone, role };
+    if (!id || pin) body.pin = pin;
+    if (id) await api('/orders/staff/'+id, { method:'PUT', body });
+    else await api('/orders/staff', { method:'POST', body });
     closeModal(); renderStaff();
   } catch(err) { toast(err.message); }
 }
