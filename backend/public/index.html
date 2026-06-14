@@ -298,8 +298,8 @@
             </select>
             <div class="client-picker">
               <div class="client-picker-row">
-                <input id="cart-client-search" type="search" placeholder="Поиск клиента: имя или телефон" oninput="renderCartClientOptions(this.value)">
-                <button class="btn btn-secondary btn-sm" onclick="openClientModal(null)">+ Клиент</button>
+                <input id="cart-client-search" type="search" placeholder="Поиск: имя, телефон или email" oninput="renderCartClientOptions(this.value)">
+                <button class="btn btn-secondary btn-sm" onclick="openQuickClientModal()">+ Клиент</button>
               </div>
             </div>
             <div class="pay-methods">
@@ -784,10 +784,43 @@ function renderCartClientOptions(query = '') {
   if (!sel) return;
   const q = query.trim().toLowerCase();
   const filtered = clients
-    .filter(c => !q || (c.name || '').toLowerCase().includes(q) || (c.phone || '').toLowerCase().includes(q) || (c.email || '').toLowerCase().includes(q))
+    .filter(c => {
+      const haystack = [c.name, c.phone, c.email].filter(Boolean).join(' ').toLowerCase();
+      return !q || haystack.includes(q);
+    })
     .slice(0, 30);
-  sel.innerHTML = '<option value="">— Клиент не выбран —</option>' + filtered.map(c => `<option value="${c.id}">${esc(c.name)}${c.phone ? ' · ' + esc(c.phone) : ''} · бонус ${fmt(c.bonus || 0)}</option>`).join('');
+  sel.innerHTML = '<option value="">— Клиент не выбран —</option>' + filtered.map(c => {
+    const details = [c.phone, c.email].filter(Boolean).map(esc).join(' · ');
+    return `<option value="${c.id}">${esc(c.name)}${details ? ' · ' + details : ''} · бонус ${fmt(c.bonus || 0)}</option>`;
+  }).join('');
   if (cartClientId && filtered.some(c => String(c.id) === String(cartClientId))) sel.value = cartClientId;
+}
+function openQuickClientModal() {
+  showModal(`<div class="modal-title">Новый клиент</div>
+    <div class="field"><label>Имя</label><input type="text" id="qcf-name" autocomplete="name"></div>
+    <div class="field"><label>Телефон</label><input type="text" id="qcf-phone" autocomplete="tel"></div>
+    <div class="field"><label>Email</label><input type="email" id="qcf-email" autocomplete="email"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="saveQuickClient()">Сохранить</button>
+    </div>`);
+}
+async function saveQuickClient() {
+  const name = document.getElementById('qcf-name').value.trim();
+  const phone = document.getElementById('qcf-phone').value.trim();
+  const email = document.getElementById('qcf-email').value.trim();
+  if (!name) { toast('Введите имя клиента'); return; }
+  try {
+    const created = await api('/orders/clients', { method:'POST', body:{ name, phone, email } });
+    clients = await api('/orders/clients/all');
+    cartClientId = created.id;
+    const search = document.getElementById('cart-client-search');
+    if (search) search.value = '';
+    renderCartClientOptions('');
+    renderCart();
+    closeModal();
+    toast('Клиент добавлен и выбран');
+  } catch(err) { toast(err.message); }
 }
 function renderPosMenu() {
   const items = (activePoscat === 'all' ? menuItems : menuItems.filter(i => catNameOf(i) === activePoscat)).filter(i => i.active);
