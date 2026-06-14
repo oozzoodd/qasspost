@@ -744,6 +744,19 @@
           <button class="btn" id="shift-toggle-btn" onclick="toggleShift()" style="width:100%;justify-content:center;">Открыть смену</button>
         </div>
       </div>
+      <div class="card" id="shift-history-card">
+        <div class="card-title">История смен</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>№</th><th>Открыта</th><th>Закрыта</th><th>Сотрудник</th><th>Итого</th><th>Наличные</th><th>Карта</th><th>Заказов</th></tr>
+            </thead>
+            <tbody id="shift-history-tbody">
+              <tr><td colspan="8" style="text-align:center;color:#bbb;padding:18px;">Загрузка...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
   </main>
@@ -792,6 +805,7 @@ let orders = [];
 let clientReceipts = JSON.parse(localStorage.getItem('qp_client_receipts') || '{}');
 let currentShift = null;
 let dailySummary = { total: 0, cash: 0, card: 0, orders_count: 0 };
+let shiftHistory = [];
 
 let cart = {};
 let cartClientId = null;
@@ -1744,6 +1758,47 @@ function renderSettings() {
     Тариф: <strong>${planMap[accountInfo?.plan]||accountInfo?.plan||'—'}</strong><br>
     Статус: <strong>${statusMap[accountInfo?.status]||accountInfo?.status||'—'}</strong><br>
     Доступ до: <strong>${expires}</strong>`;
+
+  renderShiftHistory();
+  if (['owner','admin'].includes(currentUser?.role)) {
+    reloadShiftHistory().then(renderShiftHistory).catch(err => {
+      const tbody = document.getElementById('shift-history-tbody');
+      if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#C0392B;padding:18px;">${esc(err.message)}</td></tr>`;
+    });
+  }
+}
+
+async function reloadShiftHistory() {
+  shiftHistory = await api('/orders/shifts/history');
+}
+
+function shiftDate(value) {
+  return value ? new Date(value).toLocaleString('ru-RU', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : '—';
+}
+
+function renderShiftHistory() {
+  const card = document.getElementById('shift-history-card');
+  const tbody = document.getElementById('shift-history-tbody');
+  if (!card || !tbody) return;
+
+  if (!['owner','admin'].includes(currentUser?.role)) {
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = 'block';
+
+  tbody.innerHTML = shiftHistory.length
+    ? shiftHistory.map(s => `<tr>
+        <td>#${s.id}</td>
+        <td>${shiftDate(s.opened_at)}</td>
+        <td>${shiftDate(s.closed_at)}</td>
+        <td>${esc(s.staff_name || '—')}</td>
+        <td style="font-weight:600;">${fmt(s.revenue || 0)}</td>
+        <td>${fmt(s.cash_total || 0)}</td>
+        <td>${fmt(s.card_total || 0)}</td>
+        <td>${s.orders_count || 0}</td>
+      </tr>`).join('')
+    : '<tr><td colspan="8" style="text-align:center;color:#bbb;padding:18px;">Закрытых смен пока нет</td></tr>';
 }
 
 // ═══════════════════════════════════════════════════════════

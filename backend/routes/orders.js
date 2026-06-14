@@ -112,6 +112,29 @@ router.get('/shift/summary', async (req, res) => {
   res.json(r.rows[0]);
 });
 
+// GET /orders/shifts/history — последние закрытые смены
+router.get('/shifts/history', requireRole('owner', 'admin'), async (req, res) => {
+  const r = await pool.query(
+    `SELECT
+       s.id,
+       s.opened_at,
+       s.closed_at,
+       s.revenue,
+       s.cash_total,
+       s.card_total,
+       s.orders_count,
+       s.staff_id,
+       st.name AS staff_name
+     FROM shifts s
+     LEFT JOIN staff st ON st.id = s.staff_id
+     WHERE s.venue_id = $1 AND s.closed_at IS NOT NULL
+     ORDER BY s.closed_at DESC
+     LIMIT 50`,
+    [req.user.venueId]
+  );
+  res.json(r.rows);
+});
+
 // ── ЗАКАЗЫ ───────────────────────────────────────────────────
 
 // GET /orders — история заказов (последние 50)
