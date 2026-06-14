@@ -73,6 +73,21 @@ CREATE TABLE IF NOT EXISTS recipes (
   grams INTEGER NOT NULL
 );
 
+-- История приходов товара
+CREATE TABLE IF NOT EXISTS stock_incomes (
+  id SERIAL PRIMARY KEY,
+  venue_id INTEGER REFERENCES venues(id) ON DELETE CASCADE,
+  ingredient_id INTEGER REFERENCES ingredients(id) ON DELETE CASCADE,
+  staff_id INTEGER REFERENCES staff(id),
+  quantity NUMERIC(12,3) NOT NULL CHECK (quantity > 0),
+  unit VARCHAR(10) NOT NULL CHECK (unit IN ('pcs','g','kg','ml','l')),
+  stock_delta_grams INTEGER NOT NULL CHECK (stock_delta_grams > 0),
+  purchase_price INTEGER DEFAULT 0 CHECK (purchase_price >= 0),
+  total_amount INTEGER DEFAULT 0 CHECK (total_amount >= 0),
+  comment TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
 -- Клиенты заведения (программа лояльности)
 CREATE TABLE IF NOT EXISTS clients (
   id SERIAL PRIMARY KEY,
@@ -132,6 +147,9 @@ CREATE INDEX IF NOT EXISTS idx_venues_account ON venues(account_id);
 CREATE INDEX IF NOT EXISTS idx_staff_venue ON staff(venue_id);
 CREATE INDEX IF NOT EXISTS idx_menu_items_venue ON menu_items(venue_id);
 CREATE INDEX IF NOT EXISTS idx_ingredients_venue ON ingredients(venue_id);
+CREATE INDEX IF NOT EXISTS idx_stock_incomes_venue ON stock_incomes(venue_id);
+CREATE INDEX IF NOT EXISTS idx_stock_incomes_ingredient ON stock_incomes(ingredient_id);
+CREATE INDEX IF NOT EXISTS idx_stock_incomes_created ON stock_incomes(created_at);
 CREATE INDEX IF NOT EXISTS idx_orders_venue ON orders(venue_id);
 CREATE INDEX IF NOT EXISTS idx_orders_created ON orders(created_at);
 CREATE INDEX IF NOT EXISTS idx_cash_expenses_venue ON cash_expenses(venue_id);

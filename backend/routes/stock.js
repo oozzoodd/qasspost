@@ -5,9 +5,42 @@ const { requireAuth, requireRole } = require('../middleware/auth');
 const router = express.Router();
 router.use(requireAuth);
 
+const INCOME_UNITS = new Set(['pcs', 'g', 'kg', 'ml', 'l']);
+
+function toStockDeltaGrams(quantity, unit) {
+  if (unit === 'kg' || unit === 'l') return Math.round(quantity * 1000);
+  return Math.round(quantity);
+}
+
 // GET /stock — список ингредиентов
 router.get('/', async (req, res) => {
   const r = await pool.query('SELECT * FROM ingredients WHERE venue_id = $1 ORDER BY name', [req.user.venueId]);
+  res.json(r.rows);
+});
+
+// GET /stock/incomes — последние приходы товара
+router.get('/incomes', requireRole('owner', 'admin'), async (req, res) => {
+  const r = await pool.query(
+    `SELECT
+       si.id,
+       si.ingredient_id,
+       i.name AS ingredient_name,
+       si.staff_id,
+       s.name AS staff_name,
+       si.quantity,
+       si.unit,
+       si.purchase_price,
+       si.total_amount,
+       si.comment,
+       si.created_at
+     FROM stock_incomes si
+     JOIN ingredients i ON i.id = si.ingredient_id
+     LEFT JOIN staff s ON s.id = si.staff_id
+     WHERE si.venue_id = $1
+     ORDER BY si.created_at DESC
+     LIMIT 50`,
+    [req.user.venueId]
+  );
   res.json(r.rows);
 });
 
@@ -38,17 +71,73 @@ router.put('/:id', requireRole('owner', 'admin'), async (req, res) => {
   res.json(r.rows[0]);
 });
 
-// POST /stock/:id/income — приход товара (+grams к остатку)
+// POST /stock/:id/income — приход товара с историей
 router.post('/:id/income', requireRole('owner', 'admin'), async (req, res) => {
-  const { grams } = req.body;
-  if (!grams || grams <= 0) return res.status(400).json({ error: 'Укажите положительное количество' });
-  const r = await pool.query(
-    `UPDATE ingredients SET stock_grams = stock_grams + $1, updated_at = NOW()
-     WHERE id = $2 AND venue_id = $3 RETURNING *`,
-    [grams, req.params.id, req.user.venueId]
-  );
-  if (!r.rows.length) return res.status(404).json({ error: 'Не найдено' });
-  res.json(r.rows[0]);
+  const quantity = Number(req.body.quantity ?? req.body.grams);
+  const unit = String(req.body.unit || 'g');
+  const purchasePrice = Math.round(Number(req.body.purchase_price) || 0);
+  const comment = String(req.body.comment || '').trim();
+
+  if (!Number.isFinite(quantity) || quantity <= 0 || !INCOME_UNITS.has(unit)) {
+    return res.status(400).json({ error: 'Укажите корректное количество и единицу измерения' });
+  }
+  if (!Number.isInteger(purchasePrice) || purchasePrice < 0) {
+    return res.status(400).json({ error: 'Укажите корректную цену закупки' });
+  }
+
+  const stockDeltaGrams = toStockDeltaGrams(quantity, unit);
+  if (stockDeltaGrams <= 0) {
+    return res.status(400).json({ error: 'Количество слишком маленькое для учёта остатка' });
+  }
+  const totalAmount = Math.round(quantity * purchasePrice);
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const ingRes = await client.query(
+      `SELECT id FROM ingredients
+       WHERE id = $1 AND venue_id = $2
+       FOR UPDATE`,
+      [req.params.id, req.user.venueId]
+    );
+    if (!ingRes.rows.length) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Не найдено' });
+    }
+
+    const r = await client.query(
+      `UPDATE ingredients SET stock_grams = stock_grams + $1, updated_at = NOW()
+       WHERE id = $2 AND venue_id = $3 RETURNING *`,
+      [stockDeltaGrams, req.params.id, req.user.venueId]
+    );
+
+    await client.query(
+      `INSERT INTO stock_incomes
+        (venue_id, ingredient_id, staff_id, quantity, unit, stock_delta_grams, purchase_price, total_amount, comment)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+      [
+        req.user.venueId,
+        req.params.id,
+        req.user.staffId,
+        quantity,
+        unit,
+        stockDeltaGrams,
+        purchasePrice,
+        totalAmount,
+        comment || null,
+      ]
+    );
+
+    await client.query('COMMIT');
+    res.json(r.rows[0]);
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error(err);
+    res.status(500).json({ error: 'Ошибка при сохранении прихода' });
+  } finally {
+    client.release();
+  }
 });
 
 // DELETE /stock/:id
