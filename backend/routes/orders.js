@@ -42,6 +42,33 @@ router.post('/shift/close', async (req, res) => {
   res.json(r.rows[0]);
 });
 
+// GET /orders/shift/summary — сводка по текущей открытой смене
+router.get('/shift/summary', async (req, res) => {
+  const shiftRes = await pool.query(
+    `SELECT id FROM shifts
+     WHERE venue_id = $1 AND closed_at IS NULL
+     ORDER BY opened_at DESC LIMIT 1`,
+    [req.user.venueId]
+  );
+
+  if (!shiftRes.rows.length) {
+    return res.json({ total: 0, cash: 0, card: 0, orders_count: 0 });
+  }
+
+  const r = await pool.query(
+    `SELECT
+       COALESCE(SUM(total), 0)::int AS total,
+       COALESCE(SUM(total) FILTER (WHERE pay_method = 'cash'), 0)::int AS cash,
+       COALESCE(SUM(total) FILTER (WHERE pay_method = 'card'), 0)::int AS card,
+       COUNT(*)::int AS orders_count
+     FROM orders
+     WHERE venue_id = $1 AND shift_id = $2`,
+    [req.user.venueId, shiftRes.rows[0].id]
+  );
+
+  res.json(r.rows[0]);
+});
+
 // ── ЗАКАЗЫ ───────────────────────────────────────────────────
 
 // GET /orders — история заказов (последние 50)

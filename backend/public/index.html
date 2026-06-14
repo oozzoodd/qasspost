@@ -943,7 +943,7 @@ async function startApp() {
       api('/orders/clients/all'),
       api('/orders'),
       api('/orders/shift/current'),
-      api('/orders/today-summary'),
+      api('/orders/shift/summary'),
     ]);
     menuCatsData = menuData.categories;
     menuCats = menuData.categories.map(c => c.name);
@@ -1030,6 +1030,8 @@ async function toggleShift() {
       currentShift = await api('/orders/shift/open', { method: 'POST' });
       toast('Смена открыта!');
     }
+    dailySummary = await api('/orders/shift/summary');
+    renderDailyCashBar();
     renderPos(); renderSettings();
   } catch (err) { toast(err.message); }
 }
@@ -1089,7 +1091,7 @@ function renderDailyCashBar() {
   const el = document.getElementById('daily-cash-bar');
   if (!el) return;
   el.innerHTML = `
-    <div class="daily-cash-item"><div class="daily-cash-label">Сегодня всего</div><div class="daily-cash-value">${fmt(dailySummary.total || 0)}</div></div>
+    <div class="daily-cash-item"><div class="daily-cash-label">Смена</div><div class="daily-cash-value">${fmt(dailySummary.total || 0)}</div></div>
     <div class="daily-cash-item"><div class="daily-cash-label">Наличные</div><div class="daily-cash-value">${fmt(dailySummary.cash || 0)}</div></div>
     <div class="daily-cash-item"><div class="daily-cash-label">Карта</div><div class="daily-cash-value">${fmt(dailySummary.card || 0)}</div></div>
     <div class="daily-cash-item"><div class="daily-cash-label">Заказов</div><div class="daily-cash-value">${dailySummary.orders_count || 0}</div></div>`;
@@ -1216,6 +1218,7 @@ async function checkout() {
     toast('✅ Заказ оформлен! ' + fmt(order.total));
     ingredients = await api('/stock');
     currentShift = await api('/orders/shift/current');
+    dailySummary = await api('/orders/shift/summary');
     if (cartClientId) clients = await api('/orders/clients/all');
     cart = {}; cartClientId = null; payMethod = null;
     document.getElementById('pay-cash').className = 'pay-btn';
