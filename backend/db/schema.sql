@@ -96,7 +96,10 @@ CREATE TABLE IF NOT EXISTS shifts (
   staff_id INTEGER REFERENCES staff(id),
   opened_at TIMESTAMP DEFAULT NOW(),
   closed_at TIMESTAMP,
-  revenue INTEGER DEFAULT 0
+  revenue INTEGER DEFAULT 0,
+  cash_total INTEGER DEFAULT 0,
+  card_total INTEGER DEFAULT 0,
+  orders_count INTEGER DEFAULT 0
 );
 
 -- Заказы

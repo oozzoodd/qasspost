@@ -1026,16 +1026,19 @@ document.getElementById('modal-bg').addEventListener('click', e => { if (e.targe
 async function toggleShift() {
   try {
     if (currentShift && !currentShift.closed_at) {
-      currentShift = await api('/orders/shift/close', { method: 'POST' });
-      toast('Смена закрыта. Выручка: ' + fmt(currentShift.revenue));
+      const closedShift = await api('/orders/shift/close', { method: 'POST' });
+      showShiftCloseReport(closedShift);
+      toast('Смена закрыта. Выручка: ' + fmt(closedShift.revenue));
       currentShift = null;
     } else {
       currentShift = await api('/orders/shift/open', { method: 'POST' });
       toast('Смена открыта!');
     }
     dailySummary = await api('/orders/shift/summary');
+    renderShiftBar();
     renderDailyCashBar();
-    renderPos(); renderSettings();
+    renderPos();
+    renderSettings();
   } catch (err) { toast(err.message); }
 }
 function renderShiftBar() {
@@ -1045,6 +1048,24 @@ function renderShiftBar() {
     <span>${open ? '✅ Смена открыта' : '⛔ Смена закрыта — продажи недоступны'}</span>
     ${open ? '<span style="font-weight:600;">Выручка: ' + fmt(currentShift.revenue || 0) + '</span>' : ''}
   </div>`;
+}
+function showShiftCloseReport(shift) {
+  showModal(`<div class="modal-title">Итог смены</div>
+    <div class="field-row">
+      <div class="field"><label>Итого</label><div><strong>${fmt(shift.revenue || 0)}</strong></div></div>
+      <div class="field"><label>Заказов</label><div><strong>${shift.orders_count || 0}</strong></div></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Наличные</label><div>${fmt(shift.cash_total || 0)}</div></div>
+      <div class="field"><label>Карта</label><div>${fmt(shift.card_total || 0)}</div></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Открыта</label><div>${new Date(shift.opened_at).toLocaleString('ru-RU')}</div></div>
+      <div class="field"><label>Закрыта</label><div>${new Date(shift.closed_at).toLocaleString('ru-RU')}</div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="closeModal()">Готово</button>
+    </div>`);
 }
 
 // ═══════════════════════════════════════════════════════════

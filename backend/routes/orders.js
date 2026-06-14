@@ -33,13 +33,56 @@ router.post('/shift/open', async (req, res) => {
 
 // POST /orders/shift/close — закрыть текущую смену
 router.post('/shift/close', async (req, res) => {
-  const r = await pool.query(
-    `UPDATE shifts SET closed_at = NOW()
-     WHERE venue_id = $1 AND closed_at IS NULL RETURNING *`,
-    [req.user.venueId]
-  );
-  if (!r.rows.length) return res.status(404).json({ error: 'Открытой смены нет' });
-  res.json(r.rows[0]);
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const shiftRes = await client.query(
+      `SELECT * FROM shifts
+       WHERE venue_id = $1 AND closed_at IS NULL
+       ORDER BY opened_at DESC LIMIT 1
+       FOR UPDATE`,
+      [req.user.venueId]
+    );
+    if (!shiftRes.rows.length) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Открытой смены нет' });
+    }
+
+    const shift = shiftRes.rows[0];
+    const summaryRes = await client.query(
+      `SELECT
+         COALESCE(SUM(total), 0)::int AS total,
+         COALESCE(SUM(total) FILTER (WHERE pay_method = 'cash'), 0)::int AS cash,
+         COALESCE(SUM(total) FILTER (WHERE pay_method = 'card'), 0)::int AS card,
+         COUNT(*)::int AS orders_count
+       FROM orders
+       WHERE venue_id = $1 AND shift_id = $2`,
+      [req.user.venueId, shift.id]
+    );
+    const summary = summaryRes.rows[0];
+
+    const r = await client.query(
+      `UPDATE shifts
+       SET closed_at = NOW(),
+           revenue = $1,
+           cash_total = $2,
+           card_total = $3,
+           orders_count = $4
+       WHERE id = $5 AND venue_id = $6
+       RETURNING *`,
+      [summary.total, summary.cash, summary.card, summary.orders_count, shift.id, req.user.venueId]
+    );
+
+    await client.query('COMMIT');
+    res.json(r.rows[0]);
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error(err);
+    res.status(500).json({ error: 'Ошибка при закрытии смены' });
+  } finally {
+    client.release();
+  }
 });
 
 // GET /orders/shift/summary — сводка по текущей открытой смене
