@@ -110,6 +110,7 @@
     .pos-layout { display: grid; grid-template-columns: 1fr 300px; border: 1px solid #E8E8E3; border-radius: 12px; overflow: hidden; background: #fff; min-height: 520px; }
     .pos-mobile-header, .pos-mobile-backdrop { display: none; }
     .pos-mobile-order-meta { font-size: 11px; color: #777; font-weight: 500; }
+    .mobile-bottom-nav { display: none; }
     .pos-left { padding: 14px; background: #FAFAF8; }
     .pos-right { border-left: 1px solid #E8E8E3; display: flex; flex-direction: column; }
     .cat-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
@@ -203,7 +204,7 @@
       .nav { display: flex; gap: 6px; overflow-x: auto; padding: 8px; }
       .nav-group-label { display: none; }
       .nav-item { flex: 0 0 auto; margin-bottom: 0; white-space: nowrap; }
-      .page { width: 100%; max-width: 100%; min-width: 0; padding: 12px; gap: 12px; overflow-x: hidden; }
+      .page { width: 100%; max-width: 100%; min-width: 0; padding: 12px 12px calc(88px + env(safe-area-inset-bottom)); gap: 12px; overflow-x: hidden; }
       .page > *, .card, .metrics { min-width: 0; max-width: 100%; }
       .pos-layout {
         display: block !important;
@@ -229,6 +230,38 @@
       .table-wrap table { min-width: 620px; }
       #page-menu > div[style*="grid-template-columns:180px 1fr"] {
         grid-template-columns: 1fr !important;
+      }
+      .mobile-bottom-nav {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 220;
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 0;
+        width: 100%;
+        max-width: 100%;
+        padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+        background: #fff;
+        border-top: 1px solid #E8E8E3;
+        box-shadow: 0 -6px 20px rgba(0,0,0,0.08);
+      }
+      .mobile-bottom-nav button {
+        min-width: 0;
+        min-height: 44px;
+        border: none;
+        border-radius: 8px;
+        background: transparent;
+        color: #555;
+        font: inherit;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .mobile-bottom-nav button.active {
+        background: #E8F7F1;
+        color: #0F6E56;
       }
     }
 
@@ -258,7 +291,7 @@
         width: 100%;
         max-width: 100%;
         margin: 0;
-        padding: 8px 8px calc(96px + env(safe-area-inset-bottom));
+        padding: 8px 8px calc(156px + env(safe-area-inset-bottom));
         gap: 8px;
         overflow-x: hidden;
       }
@@ -356,7 +389,7 @@
         position: fixed;
         left: 0 !important;
         right: 0 !important;
-        bottom: 0 !important;
+        bottom: calc(58px + env(safe-area-inset-bottom)) !important;
         width: 100% !important;
         max-width: 100% !important;
         z-index: 90;
@@ -364,7 +397,7 @@
         border-radius: 0;
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 6px;
-        padding: 9px 10px calc(9px + env(safe-area-inset-bottom));
+        padding: 9px 10px;
       }
       .daily-cash-label { font-size: 10px; }
       .daily-cash-value { font-size: 12px; }
@@ -640,6 +673,14 @@
     </div>
 
   </main>
+  <nav class="mobile-bottom-nav" aria-label="Мобильное меню">
+    <button type="button" data-page="pos" onclick="showPage('pos')">Касса</button>
+    <button type="button" data-page="menu" onclick="showPage('menu')">Меню</button>
+    <button type="button" data-page="stock" onclick="showPage('stock')">Склад</button>
+    <button type="button" data-page="clients" onclick="showPage('clients')">Клиенты</button>
+    <button type="button" data-page="analytics" onclick="showPage('analytics')">Аналитика</button>
+    <button type="button" data-page="settings" onclick="showPage('settings')">Настройки</button>
+  </nav>
 </div>
 
 <!-- MODAL -->
@@ -882,9 +923,20 @@ function nav(page, el) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
   if (el) el.classList.add('active');
+  setMobileNavActive(page);
   closeMobilePanels();
   const renders = {pos:renderPos,menu:renderMenu,stock:renderStock,recipes:renderRecipes,clients:renderClients,staff:renderStaff,analytics:renderAnalytics,settings:renderSettings};
   if (renders[page]) renders[page]();
+}
+function showPage(page) {
+  const item = Array.from(document.querySelectorAll('.nav-item'))
+    .find(el => (el.getAttribute('onclick') || '').includes(`nav('${page}'`));
+  nav(page, item || null);
+}
+function setMobileNavActive(page) {
+  document.querySelectorAll('.mobile-bottom-nav button').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.page === page);
+  });
 }
 
 // ═══════════════════════════════════════════════════════════
