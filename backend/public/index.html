@@ -651,7 +651,7 @@
       <div class="card">
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Ингредиент</th><th>Остаток</th><th>Минимум</th><th>Уровень</th><th>Статус</th><th></th></tr></thead>
+            <thead><tr><th>Название</th><th>Категория</th><th>Остаток</th><th>Ед.</th><th>Минимум</th><th>Статус</th><th>Приход</th><th></th></tr></thead>
             <tbody id="stock-tbody"></tbody>
           </table>
         </div>
@@ -1403,10 +1403,12 @@ function renderStock() {
     const label = s==='ok'?'Норма':s==='low'?'Мало':'Нет';
     return `<tr>
       <td><strong>${esc(ing.name)}</strong></td>
-      <td>${ing.stock_grams.toLocaleString('ru-RU')} г</td>
-      <td style="color:#888;">${ing.min_grams.toLocaleString('ru-RU')} г</td>
-      <td><div class="progress-wrap"><div class="progress-bar" style="width:${pct}%;background:${col};"></div></div></td>
+      <td><span class="badge badge-gray">${stockCategoryLabel(ing.category)}</span></td>
+      <td>${stockDisplayQty(ing.stock_grams, ing.unit).toLocaleString('ru-RU')}</td>
+      <td>${stockUnitLabel(ing.unit)}</td>
+      <td style="color:#888;">${stockDisplayQty(ing.min_grams, ing.unit).toLocaleString('ru-RU')}</td>
       <td><span class="badge ${badge}">${label}</span></td>
+      <td><button class="btn btn-secondary btn-sm" onclick="openIncomeModal(${ing.id})">Приход</button></td>
       <td style="text-align:right;white-space:nowrap;display:flex;gap:4px;justify-content:flex-end;">
         <button class="btn btn-icon btn-sm" onclick="openIngModal(${ing.id})">✏️</button>
         <button class="btn btn-icon btn-sm" onclick="deleteIng(${ing.id})">🗑️</button>
@@ -1425,11 +1427,17 @@ async function deleteIng(id) {
 }
 function openIngModal(id) {
   const ing = id ? getIng(id) : null;
+  const unit = ing?.unit || 'g';
+  const category = ing?.category || 'kitchen';
   showModal(`<div class="modal-title">${id ? 'Редактировать ингредиент' : 'Новый ингредиент'}</div>
     <div class="field"><label>Название</label><input type="text" id="if-name" value="${ing?esc(ing.name):''}"></div>
     <div class="field-row">
-      <div class="field"><label>Остаток (г)</label><input type="number" id="if-stock" value="${ing?ing.stock_grams:''}"></div>
-      <div class="field"><label>Мин. остаток (г)</label><input type="number" id="if-min" value="${ing?ing.min_grams:300}"></div>
+      <div class="field"><label>Категория</label><select id="if-category">${stockCategoryOptions(category)}</select></div>
+      <div class="field"><label>Единица хранения</label><select id="if-unit">${stockUnitOptions(unit)}</select></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Остаток</label><input type="number" id="if-stock" step="0.001" value="${ing?stockDisplayQty(ing.stock_grams, unit):''}"></div>
+      <div class="field"><label>Мин. остаток</label><input type="number" id="if-min" step="0.001" value="${ing?stockDisplayQty(ing.min_grams, unit):300}"></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
@@ -1438,22 +1446,27 @@ function openIngModal(id) {
 }
 async function saveIng(id) {
   const name = document.getElementById('if-name').value.trim();
-  const stock_grams = +document.getElementById('if-stock').value || 0;
-  const min_grams = +document.getElementById('if-min').value || 300;
+  const category = document.getElementById('if-category').value;
+  const unit = document.getElementById('if-unit').value;
+  const stock_grams = stockInputToBase(+document.getElementById('if-stock').value || 0, unit);
+  const min_grams = stockInputToBase(+document.getElementById('if-min').value || 0, unit) || 300;
   if (!name) return;
   try {
-    if (id) await api('/stock/'+id, { method:'PUT', body:{ name, stock_grams, min_grams } });
-    else await api('/stock', { method:'POST', body:{ name, stock_grams, min_grams } });
+    if (id) await api('/stock/'+id, { method:'PUT', body:{ name, category, unit, stock_grams, min_grams } });
+    else await api('/stock', { method:'POST', body:{ name, category, unit, stock_grams, min_grams } });
     await reloadStock(); closeModal(); renderStock();
   } catch(err) { toast(err.message); }
 }
-function openIncomeModal() {
-  const opts = ingredients.map(i => `<option value="${i.id}">${esc(i.name)}</option>`).join('');
+function openIncomeModal(id = null) {
+  if (!ingredients.length) { toast('Добавьте товар на склад'); return; }
+  const selectedId = id || ingredients[0].id;
+  const selectedIng = getIng(selectedId) || ingredients[0];
+  const opts = ingredients.map(i => `<option value="${i.id}"${i.id===selectedIng.id?' selected':''}>${esc(i.name)}</option>`).join('');
   showModal(`<div class="modal-title">Приход товара</div>
-    <div class="field"><label>Ингредиент</label><select id="inc-ing">${opts}</select></div>
+    <div class="field"><label>Ингредиент</label><select id="inc-ing" onchange="setIncomeUnitFromIngredient()">${opts}</select></div>
     <div class="field-row">
       <div class="field"><label>Количество</label><input type="number" id="inc-qty" step="0.001" min="0" value="1" oninput="updateIncomeTotal()"></div>
-      <div class="field"><label>Ед. изм.</label><select id="inc-unit"><option value="g">г</option><option value="kg">кг</option><option value="pcs">шт</option><option value="ml">мл</option><option value="l">л</option></select></div>
+      <div class="field"><label>Ед. изм.</label><select id="inc-unit">${stockUnitOptions(selectedIng.unit || 'g')}</select></div>
     </div>
     <div class="field-row">
       <div class="field"><label>Цена закупки</label><input type="number" id="inc-price" min="0" value="0" oninput="updateIncomeTotal()"></div>
@@ -1465,6 +1478,11 @@ function openIncomeModal() {
       <button class="btn btn-primary" onclick="doIncome()">Принять</button>
     </div>`);
   updateIncomeTotal();
+}
+function setIncomeUnitFromIngredient() {
+  const ing = getIng(+document.getElementById('inc-ing').value);
+  const unitEl = document.getElementById('inc-unit');
+  if (ing && unitEl) unitEl.value = ing.unit || 'g';
 }
 async function doIncome() {
   const id = +document.getElementById('inc-ing').value;
@@ -1488,7 +1506,28 @@ function updateIncomeTotal() {
   if (total) total.value = Math.round(qty * price);
 }
 function stockUnitLabel(unit) {
-  return ({ pcs:'шт', g:'г', kg:'кг', ml:'мл', l:'л' })[unit] || unit || '';
+  return ({ pcs:'шт', g:'г', kg:'кг', ml:'мл', l:'л' })[unit] || unit || 'г';
+}
+function stockCategoryLabel(category) {
+  return ({ kitchen:'Кухня', bar:'Бар', drinks:'Напитки', packaging:'Упаковка', other:'Прочее' })[category] || 'Кухня';
+}
+function stockCategoryOptions(selected='kitchen') {
+  return ['kitchen','bar','drinks','packaging','other']
+    .map(c => `<option value="${c}"${c===selected?' selected':''}>${stockCategoryLabel(c)}</option>`)
+    .join('');
+}
+function stockUnitOptions(selected='g') {
+  return ['pcs','g','kg','ml','l']
+    .map(u => `<option value="${u}"${u===selected?' selected':''}>${stockUnitLabel(u)}</option>`)
+    .join('');
+}
+function stockDisplayQty(value, unit) {
+  const n = Number(value) || 0;
+  return (unit === 'kg' || unit === 'l') ? n / 1000 : n;
+}
+function stockInputToBase(value, unit) {
+  const n = Number(value) || 0;
+  return (unit === 'kg' || unit === 'l') ? Math.round(n * 1000) : Math.round(n);
 }
 function renderStockIncomes() {
   const tbody = document.getElementById('stock-incomes-tbody');

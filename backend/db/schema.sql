@@ -60,6 +60,8 @@ CREATE TABLE IF NOT EXISTS ingredients (
   id SERIAL PRIMARY KEY,
   venue_id INTEGER REFERENCES venues(id) ON DELETE CASCADE,
   name VARCHAR(255) NOT NULL,
+  category VARCHAR(50) DEFAULT 'kitchen',
+  unit VARCHAR(10) DEFAULT 'g',
   stock_grams INTEGER DEFAULT 0,
   min_grams INTEGER DEFAULT 300,
   updated_at TIMESTAMP DEFAULT NOW()
@@ -151,6 +153,7 @@ CREATE INDEX IF NOT EXISTS idx_venues_account ON venues(account_id);
 CREATE INDEX IF NOT EXISTS idx_staff_venue ON staff(venue_id);
 CREATE INDEX IF NOT EXISTS idx_menu_items_venue ON menu_items(venue_id);
 CREATE INDEX IF NOT EXISTS idx_ingredients_venue ON ingredients(venue_id);
+CREATE INDEX IF NOT EXISTS idx_ingredients_venue_category ON ingredients(venue_id, category);
 CREATE INDEX IF NOT EXISTS idx_stock_incomes_venue ON stock_incomes(venue_id);
 CREATE INDEX IF NOT EXISTS idx_stock_incomes_ingredient ON stock_incomes(ingredient_id);
 CREATE INDEX IF NOT EXISTS idx_stock_incomes_created ON stock_incomes(created_at);

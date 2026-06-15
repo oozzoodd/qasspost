@@ -6,6 +6,7 @@ const router = express.Router();
 router.use(requireAuth);
 
 const INCOME_UNITS = new Set(['pcs', 'g', 'kg', 'ml', 'l']);
+const STOCK_CATEGORIES = new Set(['kitchen', 'bar', 'drinks', 'packaging', 'other']);
 
 function toStockDeltaGrams(quantity, unit) {
   if (unit === 'kg' || unit === 'l') return Math.round(quantity * 1000);
@@ -46,26 +47,37 @@ router.get('/incomes', requireRole('owner', 'admin'), async (req, res) => {
 
 // POST /stock — новый ингредиент (owner, admin)
 router.post('/', requireRole('owner', 'admin'), async (req, res) => {
-  const { name, stock_grams = 0, min_grams = 300 } = req.body;
+  const { name, stock_grams = 0, min_grams = 300, category = 'kitchen', unit = 'g' } = req.body;
   if (!name) return res.status(400).json({ error: 'Укажите название' });
+  if (!STOCK_CATEGORIES.has(category) || !INCOME_UNITS.has(unit)) {
+    return res.status(400).json({ error: 'Проверьте категорию и единицу измерения' });
+  }
   const r = await pool.query(
-    'INSERT INTO ingredients (venue_id, name, stock_grams, min_grams) VALUES ($1,$2,$3,$4) RETURNING *',
-    [req.user.venueId, name, stock_grams, min_grams]
+    'INSERT INTO ingredients (venue_id, name, category, unit, stock_grams, min_grams) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
+    [req.user.venueId, name, category, unit, stock_grams, min_grams]
   );
   res.json(r.rows[0]);
 });
 
 // PUT /stock/:id — изменить ингредиент
 router.put('/:id', requireRole('owner', 'admin'), async (req, res) => {
-  const { name, stock_grams, min_grams } = req.body;
+  const { name, stock_grams, min_grams, category, unit } = req.body;
+  if (category && !STOCK_CATEGORIES.has(category)) {
+    return res.status(400).json({ error: 'Неверная категория' });
+  }
+  if (unit && !INCOME_UNITS.has(unit)) {
+    return res.status(400).json({ error: 'Неверная единица измерения' });
+  }
   const r = await pool.query(
     `UPDATE ingredients SET
        name = COALESCE($1, name),
        stock_grams = COALESCE($2, stock_grams),
        min_grams = COALESCE($3, min_grams),
+       category = COALESCE($4, category),
+       unit = COALESCE($5, unit),
        updated_at = NOW()
-     WHERE id = $4 AND venue_id = $5 RETURNING *`,
-    [name, stock_grams, min_grams, req.params.id, req.user.venueId]
+     WHERE id = $6 AND venue_id = $7 RETURNING *`,
+    [name, stock_grams, min_grams, category, unit, req.params.id, req.user.venueId]
   );
   if (!r.rows.length) return res.status(404).json({ error: 'Не найдено' });
   res.json(r.rows[0]);
@@ -74,29 +86,26 @@ router.put('/:id', requireRole('owner', 'admin'), async (req, res) => {
 // POST /stock/:id/income — приход товара с историей
 router.post('/:id/income', requireRole('owner', 'admin'), async (req, res) => {
   const quantity = Number(req.body.quantity ?? req.body.grams);
-  const unit = String(req.body.unit || 'g');
+  const requestedUnit = req.body.unit ? String(req.body.unit) : null;
   const purchasePrice = Math.round(Number(req.body.purchase_price) || 0);
   const comment = String(req.body.comment || '').trim();
 
-  if (!Number.isFinite(quantity) || quantity <= 0 || !INCOME_UNITS.has(unit)) {
+  if (!Number.isFinite(quantity) || quantity <= 0) {
     return res.status(400).json({ error: 'Укажите корректное количество и единицу измерения' });
+  }
+  if (requestedUnit && !INCOME_UNITS.has(requestedUnit)) {
+    return res.status(400).json({ error: 'Неверная единица измерения' });
   }
   if (!Number.isInteger(purchasePrice) || purchasePrice < 0) {
     return res.status(400).json({ error: 'Укажите корректную цену закупки' });
   }
-
-  const stockDeltaGrams = toStockDeltaGrams(quantity, unit);
-  if (stockDeltaGrams <= 0) {
-    return res.status(400).json({ error: 'Количество слишком маленькое для учёта остатка' });
-  }
-  const totalAmount = Math.round(quantity * purchasePrice);
 
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
     const ingRes = await client.query(
-      `SELECT id FROM ingredients
+      `SELECT id, unit FROM ingredients
        WHERE id = $1 AND venue_id = $2
        FOR UPDATE`,
       [req.params.id, req.user.venueId]
@@ -105,6 +114,19 @@ router.post('/:id/income', requireRole('owner', 'admin'), async (req, res) => {
       await client.query('ROLLBACK');
       return res.status(404).json({ error: 'Не найдено' });
     }
+
+    const unit = requestedUnit || ingRes.rows[0].unit || 'g';
+    if (!INCOME_UNITS.has(unit)) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Неверная единица измерения товара' });
+    }
+
+    const stockDeltaGrams = toStockDeltaGrams(quantity, unit);
+    if (stockDeltaGrams <= 0) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Количество слишком маленькое для учёта остатка' });
+    }
+    const totalAmount = Math.round(quantity * purchasePrice);
 
     const r = await client.query(
       `UPDATE ingredients SET stock_grams = stock_grams + $1, updated_at = NOW()
