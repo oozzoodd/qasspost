@@ -177,6 +177,103 @@ router.get('/shifts/history', requireRole('owner', 'admin'), async (req, res) =>
   res.json(r.rows);
 });
 
+function financePeriodSql(period) {
+  if (period === 'today') return { start: 'CURRENT_DATE', end: "CURRENT_DATE + INTERVAL '1 day'" };
+  if (period === '7d') return { start: "NOW() - INTERVAL '7 days'", end: 'NOW()' };
+  if (period === '30d') return { start: "NOW() - INTERVAL '30 days'", end: 'NOW()' };
+  return null;
+}
+
+// GET /orders/finance/summary — финансовая сводка за период
+router.get('/finance/summary', requireRole('owner', 'admin'), async (req, res) => {
+  const period = financePeriodSql(req.query.period || 'today');
+  if (!period) return res.status(400).json({ error: 'Неверный период' });
+
+  const revenueRes = await pool.query(
+    `SELECT
+       COALESCE(SUM(total), 0)::int AS revenue,
+       COALESCE(SUM(total) FILTER (WHERE pay_method = 'cash'), 0)::int AS cash_total,
+       COALESCE(SUM(total) FILTER (WHERE pay_method = 'card'), 0)::int AS card_total,
+       COUNT(*)::int AS orders_count
+     FROM orders
+     WHERE venue_id = $1
+       AND created_at >= ${period.start}
+       AND created_at < ${period.end}`,
+    [req.user.venueId]
+  );
+
+  const expensesRes = await pool.query(
+    `SELECT COALESCE(SUM(amount), 0)::int AS expenses_total
+     FROM cash_expenses
+     WHERE venue_id = $1
+       AND created_at >= ${period.start}
+       AND created_at < ${period.end}`,
+    [req.user.venueId]
+  );
+
+  const stockRes = await pool.query(
+    `SELECT COALESCE(SUM(total_amount), 0)::int AS stock_income_total
+     FROM stock_incomes
+     WHERE venue_id = $1
+       AND created_at >= ${period.start}
+       AND created_at < ${period.end}`,
+    [req.user.venueId]
+  );
+
+  const shiftsRes = await pool.query(
+    `SELECT COUNT(*)::int AS shifts_count
+     FROM shifts
+     WHERE venue_id = $1
+       AND closed_at IS NOT NULL
+       AND closed_at >= ${period.start}
+       AND closed_at < ${period.end}`,
+    [req.user.venueId]
+  );
+
+  const revenue = revenueRes.rows[0].revenue || 0;
+  const expensesTotal = expensesRes.rows[0].expenses_total || 0;
+  const stockIncomeTotal = stockRes.rows[0].stock_income_total || 0;
+  const netProfit = revenue - expensesTotal - stockIncomeTotal;
+  const marginPercent = revenue > 0 ? Math.round((netProfit / revenue * 100) * 100) / 100 : 0;
+
+  res.json({
+    ...revenueRes.rows[0],
+    expenses_total: expensesTotal,
+    stock_income_total: stockIncomeTotal,
+    net_profit: netProfit,
+    margin_percent: marginPercent,
+    shifts_count: shiftsRes.rows[0].shifts_count || 0,
+  });
+});
+
+// GET /orders/finance/shifts — закрытые смены за период
+router.get('/finance/shifts', requireRole('owner', 'admin'), async (req, res) => {
+  const period = financePeriodSql(req.query.period || 'today');
+  if (!period) return res.status(400).json({ error: 'Неверный период' });
+
+  const r = await pool.query(
+    `SELECT
+       id,
+       opened_at,
+       closed_at,
+       COALESCE(revenue, 0)::int AS revenue,
+       COALESCE(expenses_total, 0)::int AS expenses_total,
+       COALESCE(stock_income_total, 0)::int AS stock_income_total,
+       COALESCE(net_profit, 0)::int AS net_profit,
+       COALESCE(margin_percent, 0) AS margin_percent,
+       COALESCE(orders_count, 0)::int AS orders_count
+     FROM shifts
+     WHERE venue_id = $1
+       AND closed_at IS NOT NULL
+       AND closed_at >= ${period.start}
+       AND closed_at < ${period.end}
+     ORDER BY closed_at DESC
+     LIMIT 50`,
+    [req.user.venueId]
+  );
+  res.json(r.rows);
+});
+
 // POST /orders/expenses — добавить расход в текущую открытую смену
 router.post('/expenses', async (req, res) => {
   const amount = Number(req.body.amount);

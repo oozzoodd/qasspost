@@ -543,6 +543,7 @@
       <div class="nav-item" data-roles="owner,admin" onclick="nav('clients',this)"><span class="icon">👥</span>Клиенты</div>
       <div class="nav-item" data-roles="owner" onclick="nav('staff',this)"><span class="icon">👤</span>Сотрудники</div>
       <div class="nav-item" data-roles="owner,admin" onclick="nav('analytics',this)"><span class="icon">📊</span>Аналитика</div>
+      <div class="nav-item" data-roles="owner,admin" onclick="nav('finance',this)"><span class="icon">💰</span>Финансы</div>
       <div class="nav-group-label">Система</div>
       <div class="nav-item" onclick="nav('settings',this)"><span class="icon">⚙️</span>Настройки</div>
     </nav>
@@ -741,6 +742,28 @@
       </div>
     </div>
 
+    <!-- ФИНАНСЫ -->
+    <div class="page" id="page-finance">
+      <div class="page-header">
+        <div class="page-title">Финансы</div>
+      </div>
+      <div class="view-switch" style="margin-bottom:14px;">
+        <button id="finance-period-today" data-finance-period="today" onclick="setFinancePeriod('today')">Сегодня</button>
+        <button id="finance-period-7d" data-finance-period="7d" onclick="setFinancePeriod('7d')">7 дней</button>
+        <button id="finance-period-30d" data-finance-period="30d" onclick="setFinancePeriod('30d')">30 дней</button>
+      </div>
+      <div class="metrics" id="finance-metrics"></div>
+      <div class="card">
+        <div class="card-title">История смен</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>№</th><th>Закрыта</th><th>Выручка</th><th>Расходы</th><th>Закупка</th><th>Прибыль</th><th>Маржа</th><th>Заказов</th></tr></thead>
+            <tbody id="finance-shifts-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- НАСТРОЙКИ -->
     <div class="page" id="page-settings">
       <div class="page-header"><div class="page-title">Настройки</div></div>
@@ -838,6 +861,9 @@ let dailySummary = { total: 0, cash: 0, card: 0, orders_count: 0 };
 let shiftHistory = [];
 let cashExpenses = [];
 let expensesSummary = { total_expenses: 0 };
+let financePeriod = 'today';
+let financeSummary = {};
+let financeShifts = [];
 
 let cart = {};
 let cartClientId = null;
@@ -1045,7 +1071,7 @@ function nav(page, el) {
   if (el) el.classList.add('active');
   setMobileNavActive(page);
   closeMobilePanels();
-  const renders = {pos:renderPos,menu:renderMenu,stock:renderStock,recipes:renderRecipes,clients:renderClients,staff:renderStaff,analytics:renderAnalytics,settings:renderSettings};
+  const renders = {pos:renderPos,menu:renderMenu,stock:renderStock,recipes:renderRecipes,clients:renderClients,staff:renderStaff,analytics:renderAnalytics,finance:renderFinance,settings:renderSettings};
   if (renders[page]) renders[page]();
 }
 function showPage(page) {
@@ -1868,6 +1894,52 @@ async function renderAnalytics() {
         return `<tr><td>#${o.id}</td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#888;">${itemsStr}</td><td style="font-weight:600;">${fmt(o.total)}</td><td>${o.pay_method==='cash'?'Нал.':'Карта'}</td><td>${esc(o.client_name||'—')}</td><td style="color:#888;">${time}</td></tr>`;
       }).join('')
     : '<tr><td colspan="6" style="text-align:center;color:#bbb;padding:24px;">Заказов ещё нет — оформите первый на кассе</td></tr>';
+}
+
+// ═══════════════════════════════════════════════════════════
+// FINANCE
+// ═══════════════════════════════════════════════════════════
+async function reloadFinance() {
+  const q = '?period=' + encodeURIComponent(financePeriod);
+  const [summary, shifts] = await Promise.all([
+    api('/orders/finance/summary' + q),
+    api('/orders/finance/shifts' + q),
+  ]);
+  financeSummary = summary;
+  financeShifts = shifts;
+}
+
+async function renderFinance() {
+  try { await reloadFinance(); } catch (err) { toast(err.message); return; }
+
+  document.querySelectorAll('[data-finance-period]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.financePeriod === financePeriod);
+  });
+
+  document.getElementById('finance-metrics').innerHTML = `
+    <div class="metric"><div class="metric-label">Выручка</div><div class="metric-value green">${fmt(financeSummary.revenue || 0)}</div></div>
+    <div class="metric"><div class="metric-label">Расходы кассы</div><div class="metric-value red">${fmt(financeSummary.expenses_total || 0)}</div></div>
+    <div class="metric"><div class="metric-label">Закупка товара</div><div class="metric-value amber">${fmt(financeSummary.stock_income_total || 0)}</div></div>
+    <div class="metric"><div class="metric-label">Чистая прибыль</div><div class="metric-value ${financeSummary.net_profit >= 0 ? 'green' : 'red'}">${fmt(financeSummary.net_profit || 0)}</div></div>
+    <div class="metric"><div class="metric-label">Маржа</div><div class="metric-value">${Number(financeSummary.margin_percent || 0).toLocaleString('ru-RU', { maximumFractionDigits: 2 })}%</div></div>`;
+
+  document.getElementById('finance-shifts-tbody').innerHTML = financeShifts.length
+    ? financeShifts.map(s => `<tr>
+        <td>#${s.id}</td>
+        <td>${shiftDate(s.closed_at)}</td>
+        <td style="font-weight:600;">${fmt(s.revenue || 0)}</td>
+        <td>${fmt(s.expenses_total || 0)}</td>
+        <td>${fmt(s.stock_income_total || 0)}</td>
+        <td style="font-weight:600;">${fmt(s.net_profit || 0)}</td>
+        <td>${Number(s.margin_percent || 0).toLocaleString('ru-RU', { maximumFractionDigits: 2 })}%</td>
+        <td>${s.orders_count || 0}</td>
+      </tr>`).join('')
+    : '<tr><td colspan="8" style="text-align:center;color:#bbb;padding:18px;">Смен за период нет</td></tr>';
+}
+
+function setFinancePeriod(period) {
+  financePeriod = period;
+  renderFinance();
 }
 
 // ═══════════════════════════════════════════════════════════
