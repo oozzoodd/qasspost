@@ -177,17 +177,41 @@ router.get('/shifts/history', requireRole('owner', 'admin'), async (req, res) =>
   res.json(r.rows);
 });
 
-function financePeriodSql(period) {
-  if (period === 'today') return { start: 'CURRENT_DATE', end: "CURRENT_DATE + INTERVAL '1 day'" };
-  if (period === '7d') return { start: "NOW() - INTERVAL '7 days'", end: 'NOW()' };
-  if (period === '30d') return { start: "NOW() - INTERVAL '30 days'", end: 'NOW()' };
-  return null;
+function isValidDateParam(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(value || ''))) return false;
+  const date = new Date(value + 'T00:00:00Z');
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
+function financePeriodSql(query) {
+  const period = query.period || 'today';
+  const ranges = {
+    today: { start: 'CURRENT_DATE', end: "CURRENT_DATE + INTERVAL '1 day'", params: [] },
+    yesterday: { start: "CURRENT_DATE - INTERVAL '1 day'", end: 'CURRENT_DATE', params: [] },
+    '7d': { start: "NOW() - INTERVAL '7 days'", end: 'NOW()', params: [] },
+    '30d': { start: "NOW() - INTERVAL '30 days'", end: 'NOW()', params: [] },
+    this_week: { start: "date_trunc('week', CURRENT_DATE)", end: "date_trunc('week', CURRENT_DATE) + INTERVAL '7 days'", params: [] },
+    last_week: { start: "date_trunc('week', CURRENT_DATE) - INTERVAL '7 days'", end: "date_trunc('week', CURRENT_DATE)", params: [] },
+    this_month: { start: "date_trunc('month', CURRENT_DATE)", end: "date_trunc('month', CURRENT_DATE) + INTERVAL '1 month'", params: [] },
+    last_month: { start: "date_trunc('month', CURRENT_DATE) - INTERVAL '1 month'", end: "date_trunc('month', CURRENT_DATE)", params: [] },
+    quarter: { start: "date_trunc('quarter', CURRENT_DATE)", end: "date_trunc('quarter', CURRENT_DATE) + INTERVAL '3 months'", params: [] },
+    year: { start: "date_trunc('year', CURRENT_DATE)", end: "date_trunc('year', CURRENT_DATE) + INTERVAL '1 year'", params: [] },
+  };
+
+  if (period === 'custom') {
+    const { start, end } = query;
+    if (!isValidDateParam(start) || !isValidDateParam(end) || start > end) return null;
+    return { start: '$2::date', end: "($3::date + INTERVAL '1 day')", params: [start, end] };
+  }
+
+  return ranges[period] || null;
 }
 
 // GET /orders/finance/summary — финансовая сводка за период
 router.get('/finance/summary', requireRole('owner', 'admin'), async (req, res) => {
-  const period = financePeriodSql(req.query.period || 'today');
+  const period = financePeriodSql(req.query);
   if (!period) return res.status(400).json({ error: 'Неверный период' });
+  const params = [req.user.venueId, ...period.params];
 
   const revenueRes = await pool.query(
     `SELECT
@@ -199,7 +223,7 @@ router.get('/finance/summary', requireRole('owner', 'admin'), async (req, res) =
      WHERE venue_id = $1
        AND created_at >= ${period.start}
        AND created_at < ${period.end}`,
-    [req.user.venueId]
+    params
   );
 
   const expensesRes = await pool.query(
@@ -208,7 +232,7 @@ router.get('/finance/summary', requireRole('owner', 'admin'), async (req, res) =
      WHERE venue_id = $1
        AND created_at >= ${period.start}
        AND created_at < ${period.end}`,
-    [req.user.venueId]
+    params
   );
 
   const stockRes = await pool.query(
@@ -217,7 +241,7 @@ router.get('/finance/summary', requireRole('owner', 'admin'), async (req, res) =
      WHERE venue_id = $1
        AND created_at >= ${period.start}
        AND created_at < ${period.end}`,
-    [req.user.venueId]
+    params
   );
 
   const shiftsRes = await pool.query(
@@ -227,7 +251,7 @@ router.get('/finance/summary', requireRole('owner', 'admin'), async (req, res) =
        AND closed_at IS NOT NULL
        AND closed_at >= ${period.start}
        AND closed_at < ${period.end}`,
-    [req.user.venueId]
+    params
   );
 
   const revenue = revenueRes.rows[0].revenue || 0;
@@ -248,8 +272,9 @@ router.get('/finance/summary', requireRole('owner', 'admin'), async (req, res) =
 
 // GET /orders/finance/shifts — закрытые смены за период
 router.get('/finance/shifts', requireRole('owner', 'admin'), async (req, res) => {
-  const period = financePeriodSql(req.query.period || 'today');
+  const period = financePeriodSql(req.query);
   if (!period) return res.status(400).json({ error: 'Неверный период' });
+  const params = [req.user.venueId, ...period.params];
 
   const r = await pool.query(
     `SELECT
@@ -269,7 +294,7 @@ router.get('/finance/shifts', requireRole('owner', 'admin'), async (req, res) =>
        AND closed_at < ${period.end}
      ORDER BY closed_at DESC
      LIMIT 50`,
-    [req.user.venueId]
+    params
   );
   res.json(r.rows);
 });
