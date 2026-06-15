@@ -50,6 +50,9 @@ router.post('/shift/close', async (req, res) => {
     }
 
     const shift = shiftRes.rows[0];
+    const closeTimeRes = await client.query('SELECT NOW() AS closed_at');
+    const closedAt = closeTimeRes.rows[0].closed_at;
+
     const summaryRes = await client.query(
       `SELECT
          COALESCE(SUM(total), 0)::int AS total,
@@ -62,16 +65,55 @@ router.post('/shift/close', async (req, res) => {
     );
     const summary = summaryRes.rows[0];
 
+    const expensesRes = await client.query(
+      `SELECT COALESCE(SUM(amount), 0)::int AS total
+       FROM cash_expenses
+       WHERE venue_id = $1 AND shift_id = $2`,
+      [req.user.venueId, shift.id]
+    );
+
+    const stockIncomeRes = await client.query(
+      `SELECT COALESCE(SUM(total_amount), 0)::int AS total
+       FROM stock_incomes
+       WHERE venue_id = $1
+         AND created_at >= $2
+         AND created_at <= $3`,
+      [req.user.venueId, shift.opened_at, closedAt]
+    );
+
+    const expensesTotal = expensesRes.rows[0].total || 0;
+    const stockIncomeTotal = stockIncomeRes.rows[0].total || 0;
+    const netProfit = summary.total - expensesTotal - stockIncomeTotal;
+    const marginPercent = summary.total > 0
+      ? Math.round((netProfit / summary.total * 100) * 100) / 100
+      : 0;
+
     const r = await client.query(
       `UPDATE shifts
-       SET closed_at = NOW(),
-           revenue = $1,
-           cash_total = $2,
-           card_total = $3,
-           orders_count = $4
-       WHERE id = $5 AND venue_id = $6
+       SET closed_at = $1,
+           revenue = $2,
+           cash_total = $3,
+           card_total = $4,
+           orders_count = $5,
+           expenses_total = $6,
+           stock_income_total = $7,
+           net_profit = $8,
+           margin_percent = $9
+       WHERE id = $10 AND venue_id = $11
        RETURNING *`,
-      [summary.total, summary.cash, summary.card, summary.orders_count, shift.id, req.user.venueId]
+      [
+        closedAt,
+        summary.total,
+        summary.cash,
+        summary.card,
+        summary.orders_count,
+        expensesTotal,
+        stockIncomeTotal,
+        netProfit,
+        marginPercent,
+        shift.id,
+        req.user.venueId,
+      ]
     );
 
     await client.query('COMMIT');

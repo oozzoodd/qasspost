@@ -114,7 +114,11 @@ CREATE TABLE IF NOT EXISTS shifts (
   revenue INTEGER DEFAULT 0,
   cash_total INTEGER DEFAULT 0,
   card_total INTEGER DEFAULT 0,
-  orders_count INTEGER DEFAULT 0
+  orders_count INTEGER DEFAULT 0,
+  expenses_total INTEGER DEFAULT 0,
+  stock_income_total INTEGER DEFAULT 0,
+  net_profit INTEGER DEFAULT 0,
+  margin_percent NUMERIC(7,2) DEFAULT 0
 );
 
 -- Расходы кассы

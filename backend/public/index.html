@@ -1098,12 +1098,20 @@ function renderShiftBar() {
 function showShiftCloseReport(shift) {
   showModal(`<div class="modal-title">Итог смены</div>
     <div class="field-row">
-      <div class="field"><label>Итого</label><div><strong>${fmt(shift.revenue || 0)}</strong></div></div>
+      <div class="field"><label>Выручка</label><div><strong>${fmt(shift.revenue || 0)}</strong></div></div>
       <div class="field"><label>Заказов</label><div><strong>${shift.orders_count || 0}</strong></div></div>
     </div>
     <div class="field-row">
       <div class="field"><label>Наличные</label><div>${fmt(shift.cash_total || 0)}</div></div>
       <div class="field"><label>Карта</label><div>${fmt(shift.card_total || 0)}</div></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Расходы кассы</label><div>${fmt(shift.expenses_total || 0)}</div></div>
+      <div class="field"><label>Закупка товара</label><div>${fmt(shift.stock_income_total || 0)}</div></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Чистая прибыль</label><div><strong>${fmt(shift.net_profit || 0)}</strong></div></div>
+      <div class="field"><label>Маржа %</label><div><strong>${Number(shift.margin_percent || 0).toLocaleString('ru-RU', { maximumFractionDigits: 2 })}%</strong></div></div>
     </div>
     <div class="field-row">
       <div class="field"><label>Открыта</label><div>${new Date(shift.opened_at).toLocaleString('ru-RU')}</div></div>
