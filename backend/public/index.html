@@ -484,6 +484,33 @@
         color: var(--success);
         box-shadow: 0 1px 4px rgba(0,0,0,0.08);
       }
+      #page-clients {
+        padding-bottom: calc(104px + env(safe-area-inset-bottom));
+      }
+      #clients-kanban {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        width: 100%;
+        max-width: 100%;
+      }
+      #clients-kanban[style*="display: none"] {
+        display: none !important;
+      }
+      #clients-kanban.kanban-visible {
+        display: grid !important;
+      }
+      .kanban-board {
+        grid-template-columns: 1fr !important;
+      }
+      .kanban-column {
+        width: 100%;
+        min-width: 0;
+      }
+      .client-card {
+        width: 100%;
+        min-width: 0;
+      }
       .finance-toolbar {
         justify-content: stretch;
       }
@@ -2268,10 +2295,12 @@ function renderClients() {
   if (clientViewMode === 'kanban') {
     tableCard.style.display = 'none';
     kanbanBoard.style.display = 'grid';
+    kanbanBoard.classList.add('kanban-visible');
     renderClientKanban();
   } else {
-    tableCard.style.display = 'block';
+    tableCard.style.display = '';
     kanbanBoard.style.display = 'none';
+    kanbanBoard.classList.remove('kanban-visible');
     document.getElementById('clients-tbody').innerHTML = clients.map(c => {
       const last = getClientLastOrder(c);
       const lastLabel = last ? new Date(last.created_at).toLocaleDateString('ru-RU') : '—';
@@ -2320,6 +2349,18 @@ function setClientView(mode) {
   clientViewMode = mode;
   document.getElementById('view-table').classList.toggle('active', mode==='table');
   document.getElementById('view-kanban').classList.toggle('active', mode==='kanban');
+  const clientsTableCard = document.getElementById('clients-table-card');
+  const clientsKanban = document.getElementById('clients-kanban');
+  if (mode === 'kanban') {
+    clientsTableCard.style.display = 'none';
+    clientsKanban.style.display = 'grid';
+    clientsKanban.classList.add('kanban-visible');
+    renderClientKanban();
+  } else {
+    clientsTableCard.style.display = '';
+    clientsKanban.style.display = 'none';
+    clientsKanban.classList.remove('kanban-visible');
+  }
   renderClients();
 }
 function searchClients(value) {
