@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>QassaPos — Кассовая система</title>
+  <title>QassaPos</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -990,18 +990,18 @@
       <span class="logo-name" id="brand-name">QassaPos</span>
     </div>
     <nav class="nav">
-      <div class="nav-group-label">Основное</div>
+      <div class="nav-group-label" data-i18n="sidebar.main">Основное</div>
       <div class="nav-item active" onclick="nav('pos',this)"><span class="icon">🧾</span><span data-i18n="nav.pos">Касса</span></div>
       <div class="nav-item" data-roles="owner,admin" onclick="nav('menu',this)"><span class="icon">🍔</span><span data-i18n="nav.menu">Меню</span></div>
-      <div class="nav-group-label">Склад</div>
+      <div class="nav-group-label" data-i18n="sidebar.stock">Склад</div>
       <div class="nav-item" data-roles="owner,admin" onclick="nav('stock',this)"><span class="icon">📦</span><span data-i18n="nav.stock">Остатки</span></div>
       <div class="nav-item" data-roles="owner,admin" onclick="nav('recipes',this)"><span class="icon">📋</span><span data-i18n="nav.recipes">Тех.карты</span></div>
-      <div class="nav-group-label">Бизнес</div>
+      <div class="nav-group-label" data-i18n="sidebar.business">Бизнес</div>
       <div class="nav-item" data-roles="owner,admin" onclick="nav('clients',this)"><span class="icon">👥</span><span data-i18n="nav.clients">Клиенты</span></div>
       <div class="nav-item" data-roles="owner" onclick="nav('staff',this)"><span class="icon">👤</span><span data-i18n="nav.staff">Сотрудники</span></div>
       <div class="nav-item" data-roles="owner,admin" onclick="nav('analytics',this)"><span class="icon">📊</span><span data-i18n="nav.analytics">Аналитика</span></div>
       <div class="nav-item" data-roles="owner,admin" onclick="nav('finance',this)"><span class="icon">💰</span><span data-i18n="nav.finance">Финансы</span></div>
-      <div class="nav-group-label">Система</div>
+      <div class="nav-group-label" data-i18n="sidebar.system">Система</div>
       <div class="nav-item" onclick="nav('settings',this)"><span class="icon">⚙️</span><span data-i18n="nav.settings">Настройки</span></div>
     </nav>
     <div class="sidebar-bottom">
@@ -1012,7 +1012,7 @@
           <div class="user-role" id="user-role-display">—</div>
         </div>
       </div>
-      <div class="logout-btn" onclick="staffLogout()">Сменить сотрудника</div>
+      <div class="logout-btn" onclick="staffLogout()" data-i18n="sidebar.switchStaff">Сменить сотрудника</div>
     </div>
   </aside>
 
@@ -1026,7 +1026,7 @@
         <div class="pos-mobile-title" data-i18n="pos.title">Касса</div>
         <button class="btn btn-secondary btn-sm" onclick="toggleMobileCart()">
           <span data-i18n="pos.order">Заказ</span>
-          <span class="pos-mobile-order-meta"><span id="mobile-cart-count">0</span> · <span id="mobile-cart-total">0 сум</span></span>
+              <span class="pos-mobile-order-meta"><span id="mobile-cart-count">0</span> · <span id="mobile-cart-total">0</span></span>
         </button>
       </div>
       <div class="page-header">
@@ -1048,7 +1048,7 @@
           </div>
           <div class="pos-cart-footer">
             <div class="total-row"><span data-i18n="pos.positions">Позиций</span><span id="cart-count">0</span></div>
-            <div class="total-row big"><span data-i18n="pos.total">Итого</span><span id="cart-total">0 сум</span></div>
+            <div class="total-row big"><span data-i18n="pos.total">Итого</span><span id="cart-total">0</span></div>
             <select id="cart-client-sel" class="inline-control" style="width:100%;margin-bottom:8px;font-size:12px;" onchange="selectClient(this.value)">
               <option value="" data-i18n="pos.noClient">— Клиент не выбран —</option>
             </select>
@@ -1072,23 +1072,23 @@
     <!-- МЕНЮ -->
     <div class="page" id="page-menu">
       <div class="page-header">
-        <div class="page-title">Редактор меню</div>
-        <button class="btn btn-primary" onclick="openMenuModal(null)">+ Добавить блюдо</button>
+        <div class="page-title" data-i18n="menu.title">Редактор меню</div>
+        <button class="btn btn-primary" onclick="openMenuModal(null)" data-i18n="menu.addDish">+ Добавить блюдо</button>
       </div>
       <div style="display:grid;grid-template-columns:180px 1fr;gap:14px;">
         <div class="card" style="padding:12px;">
-          <div class="subtle-label" style="margin-bottom:8px;">КАТЕГОРИИ</div>
+          <div class="subtle-label" style="margin-bottom:8px;" data-i18n="menu.categories">КАТЕГОРИИ</div>
           <div id="menu-cats-list"></div>
-          <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px;justify-content:center;" onclick="addMenuCat()">+ Добавить</button>
+          <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px;justify-content:center;" onclick="addMenuCat()" data-i18n="menu.addCategory">+ Добавить</button>
         </div>
         <div class="card">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-            <div style="font-size:14px;font-weight:600;" id="menu-cat-title">Все блюда</div>
+            <div style="font-size:14px;font-weight:600;" id="menu-cat-title" data-i18n="menu.allDishes">Все блюда</div>
             <div class="muted-text" style="font-size:12px;" id="menu-count-label"></div>
           </div>
           <div class="table-wrap">
             <table id="menu-table">
-              <thead><tr><th>Блюдо</th><th>Цена</th><th>Категория</th><th>Статус</th><th></th></tr></thead>
+              <thead><tr><th data-i18n="menu.dish">Блюдо</th><th data-i18n="menu.price">Цена</th><th data-i18n="menu.category">Категория</th><th data-i18n="menu.status">Статус</th><th></th></tr></thead>
               <tbody id="menu-tbody"></tbody>
             </table>
           </div>
@@ -1099,28 +1099,28 @@
     <!-- СКЛАД -->
     <div class="page" id="page-stock">
       <div class="page-header">
-        <div class="page-title">Склад</div>
+        <div class="page-title" data-i18n="stock.title">Склад</div>
         <div style="display:flex;gap:8px;">
-          <button class="btn btn-secondary" onclick="openIncomeModal()">📥 Приход</button>
-          <button class="btn btn-primary" onclick="openIngModal(null)">+ Добавить</button>
+          <button class="btn btn-secondary" onclick="openIncomeModal()">📥 <span data-i18n="stock.income">Приход</span></button>
+          <button class="btn btn-primary" onclick="openIngModal(null)" data-i18n="stock.addItem">+ Добавить</button>
         </div>
       </div>
       <div class="metrics" id="stock-metrics"></div>
       <div class="card">
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Название</th><th>Категория</th><th>Остаток</th><th>Ед.</th><th>Минимум</th><th>Статус</th><th>Приход</th><th></th></tr></thead>
+            <thead><tr><th data-i18n="stock.name">Название</th><th data-i18n="stock.category">Категория</th><th data-i18n="stock.balance">Остаток</th><th data-i18n="stock.unit">Ед.</th><th data-i18n="stock.minimum">Минимум</th><th data-i18n="stock.status">Статус</th><th data-i18n="stock.incomeAction">Приход</th><th></th></tr></thead>
             <tbody id="stock-tbody"></tbody>
           </table>
         </div>
       </div>
       <div class="card">
-        <div class="card-title">История приходов</div>
+        <div class="card-title" data-i18n="stock.history">История приходов</div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Товар</th><th>Количество</th><th>Цена</th><th>Сумма</th><th>Комментарий</th><th>Сотрудник</th><th>Время</th></tr></thead>
+            <thead><tr><th data-i18n="stock.product">Товар</th><th data-i18n="stock.quantity">Количество</th><th data-i18n="stock.price">Цена</th><th data-i18n="stock.amount">Сумма</th><th data-i18n="stock.comment">Комментарий</th><th data-i18n="stock.staff">Сотрудник</th><th data-i18n="stock.time">Время</th></tr></thead>
             <tbody id="stock-incomes-tbody">
-              <tr><td colspan="7" class="empty-state">Загрузка...</td></tr>
+              <tr><td colspan="7" class="empty-state" data-i18n="stock.loading">Загрузка...</td></tr>
             </tbody>
           </table>
         </div>
@@ -1130,9 +1130,9 @@
     <!-- ТЕХ.КАРТЫ -->
     <div class="page" id="page-recipes">
       <div class="page-header">
-        <div class="page-title">Технологические карты</div>
+        <div class="page-title" data-i18n="recipes.title">Технологические карты</div>
       </div>
-      <p class="muted-text" style="font-size:13px;">Нажмите на блюдо чтобы настроить состав. При каждой продаже ингредиенты списываются автоматически.</p>
+      <p class="muted-text" style="font-size:13px;" data-i18n="recipes.description">Нажмите на блюдо чтобы настроить состав. При каждой продаже ингредиенты списываются автоматически.</p>
       <div id="recipes-list"></div>
     </div>
 
@@ -1164,14 +1164,14 @@
     <!-- СОТРУДНИКИ -->
     <div class="page" id="page-staff">
       <div class="page-header">
-        <div class="page-title">Сотрудники</div>
-        <button class="btn btn-primary" onclick="openStaffModal(null)">+ Добавить</button>
+        <div class="page-title" data-i18n="staff.title">Сотрудники</div>
+        <button class="btn btn-primary" onclick="openStaffModal(null)" data-i18n="staff.addStaff">+ Добавить</button>
       </div>
       <div class="metrics" id="staff-metrics"></div>
       <div class="card">
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Сотрудник</th><th>Телефон</th><th>Роль</th><th>Статус</th><th></th></tr></thead>
+            <thead><tr><th data-i18n="staff.employee">Сотрудник</th><th data-i18n="staff.phone">Телефон</th><th data-i18n="staff.role">Роль</th><th data-i18n="staff.status">Статус</th><th></th></tr></thead>
             <tbody id="staff-tbody"></tbody>
           </table>
         </div>
@@ -1181,18 +1181,18 @@
     <!-- АНАЛИТИКА -->
     <div class="page" id="page-analytics">
       <div class="page-header">
-        <div class="page-title">Аналитика</div>
+        <div class="page-title" data-i18n="analytics.title">Аналитика</div>
       </div>
       <div class="metrics" id="analytics-metrics"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-        <div class="card"><div class="card-title">Топ блюд</div><div id="top-dishes"></div></div>
-        <div class="card"><div class="card-title">Оплата</div><div id="pay-stats"></div></div>
+        <div class="card"><div class="card-title" data-i18n="analytics.topDishes">Топ блюд</div><div id="top-dishes"></div></div>
+        <div class="card"><div class="card-title" data-i18n="analytics.payment">Оплата</div><div id="pay-stats"></div></div>
       </div>
       <div class="card">
-        <div class="card-title">История заказов</div>
+        <div class="card-title" data-i18n="analytics.orderHistory">История заказов</div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>№</th><th>Состав</th><th>Сумма</th><th>Оплата</th><th>Клиент</th><th>Время</th></tr></thead>
+            <thead><tr><th>№</th><th data-i18n="analytics.composition">Состав</th><th data-i18n="analytics.amount">Сумма</th><th data-i18n="analytics.payment">Оплата</th><th data-i18n="analytics.client">Клиент</th><th data-i18n="analytics.time">Время</th></tr></thead>
             <tbody id="orders-tbody"></tbody>
           </table>
         </div>
@@ -1253,21 +1253,21 @@
         <div class="card">
           <div class="card-title" data-i18n="settings.shift">Смена</div>
           <div class="muted-text" style="font-size:13px;margin-bottom:12px;" id="shift-settings-status"></div>
-          <button class="btn" id="shift-toggle-btn" onclick="toggleShift()" style="width:100%;justify-content:center;">Открыть смену</button>
+          <button class="btn" id="shift-toggle-btn" onclick="toggleShift()" style="width:100%;justify-content:center;" data-i18n="shift.open">Открыть смену</button>
         </div>
       </div>
       <div class="card appearance-card" id="appearance-card">
         <div class="card-title" data-i18n="settings.appearance">Внешний вид</div>
         <div class="appearance-row">
           <div class="appearance-label" data-i18n="settings.theme">Тема</div>
-          <div class="segmented-control" role="group" aria-label="Тема">
+          <div class="segmented-control" role="group" aria-label="Тема" data-i18n-aria-label="settings.theme" data-i18n-title="settings.theme">
             <button type="button" id="theme-light-btn" onclick="setTheme('light')" data-i18n="settings.light">Светлая</button>
             <button type="button" id="theme-dark-btn" onclick="setTheme('dark')" data-i18n="settings.dark">Тёмная</button>
           </div>
         </div>
         <div class="appearance-row">
           <div class="appearance-label" data-i18n="settings.language">Язык</div>
-          <div class="segmented-control" role="group" aria-label="Язык">
+          <div class="segmented-control" role="group" aria-label="Язык" data-i18n-aria-label="settings.language" data-i18n-title="settings.language">
             <button type="button" id="lang-ru-btn" onclick="setLang('ru')" data-i18n="settings.russian">Русский</button>
             <button type="button" id="lang-uz-btn" onclick="setLang('uz')" data-i18n="settings.uzbek">O‘zbekcha</button>
           </div>
@@ -1284,7 +1284,7 @@
         <button class="btn btn-primary" onclick="addCashExpense()" data-i18n="settings.addExpense">Добавить расход</button>
         <div class="table-wrap" style="margin-top:14px;">
           <table>
-            <thead><tr><th>Сумма</th><th>Категория</th><th>Комментарий</th><th>Сотрудник</th><th>Время</th></tr></thead>
+            <thead><tr><th data-i18n="settings.expenseAmount">Сумма</th><th data-i18n="settings.expenseCategory">Категория</th><th data-i18n="settings.expenseComment">Комментарий</th><th data-i18n="stock.staff">Сотрудник</th><th data-i18n="stock.time">Время</th></tr></thead>
             <tbody id="expenses-tbody">
               <tr><td colspan="5" class="empty-state" data-i18n="common.loading">Загрузка...</td></tr>
             </tbody>
@@ -1296,7 +1296,7 @@
         <div class="table-wrap">
           <table>
             <thead>
-              <tr><th>№</th><th>Открыта</th><th>Закрыта</th><th>Сотрудник</th><th>Итого</th><th>Наличные</th><th>Карта</th><th>Заказов</th></tr>
+              <tr><th>№</th><th data-i18n="settings.openedAt">Открыта</th><th data-i18n="settings.closedAt">Закрыта</th><th data-i18n="stock.staff">Сотрудник</th><th data-i18n="pos.total">Итого</th><th data-i18n="pos.cash">Наличные</th><th data-i18n="pos.card">Карта</th><th data-i18n="cashBar.orders">Заказов</th></tr>
             </thead>
             <tbody id="shift-history-tbody">
               <tr><td colspan="8" class="empty-state" data-i18n="common.loading">Загрузка...</td></tr>
@@ -1307,7 +1307,7 @@
     </div>
 
   </main>
-  <nav class="mobile-bottom-nav" aria-label="Мобильное меню">
+<nav class="mobile-bottom-nav" aria-label="Мобильное меню" data-i18n-aria-label="mobile.menuLabel" data-i18n-title="mobile.menuLabel">
     <button type="button" data-page="pos" onclick="showPage('pos')" data-i18n="nav.pos">Касса</button>
     <button type="button" data-page="menu" onclick="showPage('menu')" data-i18n="nav.menu">Меню</button>
     <button type="button" data-page="stock" onclick="showPage('stock')" data-i18n="mobile.stock">Склад</button>
@@ -1377,7 +1377,6 @@ let activeMenuCat = 'all';
 let clientViewMode = 'table';
 let clientSearchQuery = '';
 let pinInput = '';
-let currency = 'сум';
 
 // ═══════════════════════════════════════════════════════════
 // API HELPER
@@ -1398,16 +1397,16 @@ async function api(path, { method = 'GET', body, token } = {}) {
 
   if (res.status === 402 && data.code === 'SUBSCRIPTION_EXPIRED') {
     showScreen('expired');
-    throw new Error('Подписка истекла');
+    throw new Error(t('auth.subscriptionExpired'));
   }
-  if (!res.ok) throw new Error(data.error || 'Ошибка сервера (' + res.status + ')');
+  if (!res.ok) throw new Error(data.error || t('common.serverError') + ' (' + res.status + ')');
   return data;
 }
 
 // ═══════════════════════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════════════════════
-const fmt = n => Math.round(n).toLocaleString('ru-RU') + ' ' + currency;
+const fmt = n => Math.round(n).toLocaleString(appLang === 'uz' ? 'uz-UZ' : 'ru-RU') + ' ' + t('common.currency');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
   ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 function toast(msg) {
@@ -1428,7 +1427,15 @@ const I18N = {
     'nav.analytics': 'Аналитика',
     'nav.finance': 'Финансы',
     'nav.settings': 'Настройки',
+    'common.appTitle': 'QassaPos — Кассовая система',
+    'common.currency': 'сум',
     'mobile.stock': 'Склад',
+    'mobile.menuLabel': 'Мобильное меню',
+    'sidebar.main': 'Основное',
+    'sidebar.stock': 'Склад',
+    'sidebar.business': 'Бизнес',
+    'sidebar.system': 'Система',
+    'sidebar.switchStaff': 'Сменить сотрудника',
     'auth.loginTitle': 'Вход в систему',
     'auth.email': 'Email',
     'auth.password': 'Пароль',
@@ -1444,6 +1451,7 @@ const I18N = {
     'auth.signingIn': 'Входим...',
     'auth.loginError': 'Ошибка входа',
     'auth.enterPin4': 'Введите 4 цифры',
+    'auth.subscriptionExpired': 'Подписка истекла',
     'pos.title': 'Касса',
     'pos.mobileMenu': 'Меню',
     'pos.addItems': 'Добавьте позиции из меню',
@@ -1458,6 +1466,11 @@ const I18N = {
     'pos.salesUnavailable': 'Продажи недоступны',
     'pos.orderCreated': 'Заказ оформлен',
     'pos.openShiftFirst': 'Сначала откройте смену в настройках',
+    'pos.all': 'Все',
+    'pos.bonus': 'бонус',
+    'pos.noStock': 'Нет остатка',
+    'pos.quickClientTitle': 'Новый клиент',
+    'pos.quickClientAdded': 'Клиент добавлен и выбран',
     'settings.title': 'Настройки',
     'settings.account': 'Аккаунт',
     'settings.shift': 'Смена',
@@ -1475,6 +1488,15 @@ const I18N = {
     'settings.accessUntil': 'Доступ до',
     'settings.noExpenses': 'Расходов пока нет',
     'settings.noClosedShifts': 'Закрытых смен пока нет',
+    'settings.openedAt': 'Открыта',
+    'settings.closedAt': 'Закрыта',
+    'settings.planStart': 'Старт',
+    'settings.planBusiness': 'Бизнес',
+    'settings.planNetwork': 'Сеть',
+    'settings.statusTrial': 'Пробный период',
+    'settings.statusActive': 'Активна',
+    'settings.statusExpired': 'Истекла',
+    'settings.statusBlocked': 'Блокирована',
     'common.save': 'Сохранить',
     'common.cancel': 'Отмена',
     'common.close': 'Закрыть',
@@ -1482,6 +1504,23 @@ const I18N = {
     'common.error': 'Ошибка',
     'common.success': 'Готово',
     'common.loadingError': 'Ошибка загрузки',
+    'common.delete': 'Удалить',
+    'common.edit': 'Редактировать',
+    'common.add': 'Добавить',
+    'common.yes': 'Да',
+    'common.no': 'Нет',
+    'common.confirm': 'Подтвердите действие',
+    'common.saved': 'Сохранено',
+    'common.deleted': 'Удалено',
+    'common.added': 'Добавлено',
+    'common.required': 'Обязательное поле',
+    'common.invalid': 'Неверное значение',
+    'common.noData': 'Данных пока нет',
+    'common.errorLoading': 'Ошибка загрузки',
+    'common.errorSaving': 'Ошибка сохранения',
+    'common.accessDenied': 'Недостаточно прав для этого раздела',
+    'common.serverError': 'Ошибка сервера',
+    'common.deleteConfirm': 'Удалить?',
     'settings.appearance': 'Внешний вид',
     'settings.theme': 'Тема',
     'settings.language': 'Язык',
@@ -1499,6 +1538,10 @@ const I18N = {
     'shift.closed': 'Смена закрыта — продажи недоступны',
     'shift.openedShort': 'Открыта',
     'shift.closedShort': 'Закрыта',
+    'shift.reportTitle': 'Итог смены',
+    'shift.stockPurchase': 'Закупка',
+    'shift.netProfit': 'Чистая прибыль',
+    'shift.margin': 'Маржа',
     'pos.currentOrder': 'Текущий заказ',
     'pos.order': 'Заказ',
     'pos.checkout': 'Оформить заказ',
@@ -1579,7 +1622,136 @@ const I18N = {
     'finance.orders': 'Заказов',
     'finance.loading': 'Загрузка...',
     'finance.noShifts': 'Смен за период нет',
-    'finance.selectStartDate': 'Выберите дату начала'
+    'finance.selectStartDate': 'Выберите дату начала',
+    'menu.title': 'Редактор меню',
+    'menu.addDish': '+ Добавить блюдо',
+    'menu.categories': 'КАТЕГОРИИ',
+    'menu.addCategory': '+ Добавить',
+    'menu.allDishes': 'Все блюда',
+    'menu.dish': 'Блюдо',
+    'menu.price': 'Цена',
+    'menu.category': 'Категория',
+    'menu.status': 'Статус',
+    'menu.active': 'Активно',
+    'menu.hidden': 'Скрыто',
+    'menu.editDish': 'Редактировать блюдо',
+    'menu.newDish': 'Новое блюдо',
+    'menu.name': 'Название',
+    'menu.saveDish': 'Сохранить',
+    'menu.deleteDish': 'Блюдо удалено',
+    'menu.deleteConfirm': 'Удалить блюдо?',
+    'menu.categoryName': 'Название категории',
+    'menu.categoryAdded': 'Категория добавлена',
+    'menu.dishSaved': 'Блюдо сохранено',
+    'menu.dishDeleted': 'Блюдо удалено',
+    'menu.noDishes': 'Блюд пока нет',
+    'menu.positions': 'позиций',
+    'menu.hide': 'Скрыть',
+    'menu.show': 'Показать',
+    'stock.title': 'Склад',
+    'stock.income': 'Приход',
+    'stock.addItem': '+ Добавить',
+    'stock.name': 'Название',
+    'stock.category': 'Категория',
+    'stock.balance': 'Остаток',
+    'stock.unit': 'Ед.',
+    'stock.minimum': 'Минимум',
+    'stock.status': 'Статус',
+    'stock.incomeAction': 'Приход',
+    'stock.history': 'История приходов',
+    'stock.product': 'Товар',
+    'stock.quantity': 'Количество',
+    'stock.price': 'Цена',
+    'stock.amount': 'Сумма',
+    'stock.comment': 'Комментарий',
+    'stock.staff': 'Сотрудник',
+    'stock.time': 'Время',
+    'stock.loading': 'Загрузка...',
+    'stock.noData': 'Приходов пока нет',
+    'stock.normal': 'Норма',
+    'stock.low': 'Мало',
+    'stock.empty': 'Нет',
+    'stock.kitchen': 'Кухня',
+    'stock.bar': 'Бар',
+    'stock.drinks': 'Напитки',
+    'stock.package': 'Упаковка',
+    'stock.other': 'Прочее',
+    'stock.addIncome': 'Принять',
+    'stock.purchasePrice': 'Цена закупки',
+    'stock.saveItem': 'Сохранить',
+    'stock.itemSaved': 'Товар сохранён',
+    'stock.incomeAdded': 'Приход добавлен',
+    'stock.totalItems': 'Всего позиций',
+    'stock.lowItems': 'Заканчивается',
+    'stock.emptyItems': 'Нет на складе',
+    'stock.editItem': 'Редактировать ингредиент',
+    'stock.newItem': 'Новый ингредиент',
+    'stock.storageUnit': 'Единица хранения',
+    'stock.minBalance': 'Мин. остаток',
+    'stock.item': 'Ингредиент',
+    'stock.measureUnit': 'Ед. изм.',
+    'stock.totalIncome': 'Сумма прихода',
+    'stock.optional': 'Необязательно',
+    'stock.addStockFirst': 'Добавьте товар на склад',
+    'stock.accepted': 'Принято',
+    'recipes.title': 'Технологические карты',
+    'recipes.description': 'Нажмите на блюдо чтобы настроить состав. При каждой продаже ингредиенты списываются автоматически.',
+    'recipes.ingredients': 'ингр.',
+    'recipes.addIngredient': '+ Добавить',
+    'recipes.save': 'Сохранить',
+    'recipes.grams': 'г',
+    'recipes.noIngredients': 'Ингредиенты пока не добавлены',
+    'recipes.recipeSaved': 'Тех.карта сохранена',
+    'staff.title': 'Сотрудники',
+    'staff.addStaff': '+ Добавить',
+    'staff.employee': 'Сотрудник',
+    'staff.phone': 'Телефон',
+    'staff.role': 'Роль',
+    'staff.status': 'Статус',
+    'staff.active': 'Активен',
+    'staff.inactive': 'Неактивен',
+    'staff.owner': 'Владелец',
+    'staff.admin': 'Администратор',
+    'staff.cashier': 'Кассир',
+    'staff.newStaff': 'Новый сотрудник',
+    'staff.editStaff': 'Редактировать сотрудника',
+    'staff.name': 'Имя',
+    'staff.pin': 'PIN (4 цифры)',
+    'staff.pinHelp': 'Новый PIN (если нужно изменить)',
+    'staff.saveStaff': 'Сохранить',
+    'staff.deleteStaff': 'Удалить сотрудника',
+    'staff.staffSaved': 'Сотрудник сохранён',
+    'staff.staffDeleted': 'Сотрудник удалён',
+    'staff.deleteConfirm': 'Удалить сотрудника?',
+    'staff.noStaff': 'Сотрудников пока нет',
+    'staff.total': 'Всего',
+    'staff.activeCount': 'Активных',
+    'staff.inactiveCount': 'Неактивных',
+    'staff.nameRequired': 'Укажите имя',
+    'staff.pinRequired': 'Укажите 4-значный PIN',
+    'staff.pinInvalid': 'PIN должен быть из 4 цифр',
+    'analytics.title': 'Аналитика',
+    'analytics.topDishes': 'Топ блюд',
+    'analytics.payment': 'Оплата',
+    'analytics.orderHistory': 'История заказов',
+    'analytics.revenueTotal': 'Выручка (всего)',
+    'analytics.averageCheck': 'Средний чек',
+    'analytics.orders': 'Заказов',
+    'analytics.cash': 'Наличные',
+    'analytics.card': 'Карта',
+    'analytics.dish': 'Блюдо',
+    'analytics.composition': 'Состав',
+    'analytics.amount': 'Сумма',
+    'analytics.client': 'Клиент',
+    'analytics.time': 'Время',
+    'analytics.noOrders': 'Заказов ещё нет',
+    'analytics.noData': 'Данных пока нет',
+    'analytics.lastOrders': 'Последние заказы',
+    'analytics.total': 'Всего',
+    'analytics.clients': 'Клиентов',
+    'analytics.noSales': 'Продаж пока нет',
+    'analytics.firstOrderHint': 'оформите первый на кассе',
+    'analytics.cashShort': 'Нал.'
   },
   uz: {
     'nav.pos': 'Kassa',
@@ -1591,7 +1763,15 @@ const I18N = {
     'nav.analytics': 'Analitika',
     'nav.finance': 'Moliya',
     'nav.settings': 'Sozlamalar',
+    'common.appTitle': 'QassaPos — Kassa tizimi',
+    'common.currency': 'so‘m',
     'mobile.stock': 'Ombor',
+    'mobile.menuLabel': 'Mobil menyu',
+    'sidebar.main': 'Asosiy',
+    'sidebar.stock': 'Ombor',
+    'sidebar.business': 'Biznes',
+    'sidebar.system': 'Tizim',
+    'sidebar.switchStaff': 'Xodimni almashtirish',
     'auth.loginTitle': 'Tizimga kirish',
     'auth.email': 'Email',
     'auth.password': 'Parol',
@@ -1607,6 +1787,7 @@ const I18N = {
     'auth.signingIn': 'Kirilmoqda...',
     'auth.loginError': 'Kirish xatosi',
     'auth.enterPin4': '4 ta raqam kiriting',
+    'auth.subscriptionExpired': 'Obuna muddati tugagan',
     'pos.title': 'Kassa',
     'pos.mobileMenu': 'Menyu',
     'pos.addItems': 'Menyudan mahsulot qo‘shing',
@@ -1621,6 +1802,11 @@ const I18N = {
     'pos.salesUnavailable': 'Savdo mavjud emas',
     'pos.orderCreated': 'Buyurtma rasmiylashtirildi',
     'pos.openShiftFirst': 'Avval sozlamalarda smenani oching',
+    'pos.all': 'Barchasi',
+    'pos.bonus': 'bonus',
+    'pos.noStock': 'Qoldiq yo‘q',
+    'pos.quickClientTitle': 'Yangi mijoz',
+    'pos.quickClientAdded': 'Mijoz qo‘shildi va tanlandi',
     'settings.title': 'Sozlamalar',
     'settings.account': 'Akkaunt',
     'settings.shift': 'Smena',
@@ -1638,6 +1824,15 @@ const I18N = {
     'settings.accessUntil': 'Kirish muddati',
     'settings.noExpenses': 'Hozircha xarajatlar yo‘q',
     'settings.noClosedShifts': 'Hozircha yopilgan smenalar yo‘q',
+    'settings.openedAt': 'Ochildi',
+    'settings.closedAt': 'Yopildi',
+    'settings.planStart': 'Boshlang‘ich',
+    'settings.planBusiness': 'Biznes',
+    'settings.planNetwork': 'Tarmoq',
+    'settings.statusTrial': 'Sinov davri',
+    'settings.statusActive': 'Faol',
+    'settings.statusExpired': 'Muddati tugagan',
+    'settings.statusBlocked': 'Bloklangan',
     'common.save': 'Saqlash',
     'common.cancel': 'Bekor qilish',
     'common.close': 'Yopish',
@@ -1645,6 +1840,23 @@ const I18N = {
     'common.error': 'Xato',
     'common.success': 'Tayyor',
     'common.loadingError': 'Yuklash xatosi',
+    'common.delete': 'O‘chirish',
+    'common.edit': 'Tahrirlash',
+    'common.add': 'Qo‘shish',
+    'common.yes': 'Ha',
+    'common.no': 'Yo‘q',
+    'common.confirm': 'Amalni tasdiqlang',
+    'common.saved': 'Saqlandi',
+    'common.deleted': 'O‘chirildi',
+    'common.added': 'Qo‘shildi',
+    'common.required': 'Majburiy maydon',
+    'common.invalid': 'Noto‘g‘ri qiymat',
+    'common.noData': 'Hozircha maʼlumot yo‘q',
+    'common.errorLoading': 'Yuklash xatosi',
+    'common.errorSaving': 'Saqlash xatosi',
+    'common.accessDenied': 'Bu bo‘lim uchun huquq yetarli emas',
+    'common.serverError': 'Server xatosi',
+    'common.deleteConfirm': 'O‘chirish?',
     'settings.appearance': 'Ko‘rinish',
     'settings.theme': 'Mavzu',
     'settings.language': 'Til',
@@ -1662,6 +1874,10 @@ const I18N = {
     'shift.closed': 'Smena yopiq — savdo mavjud emas',
     'shift.openedShort': 'Ochiq',
     'shift.closedShort': 'Yopiq',
+    'shift.reportTitle': 'Smena yakuni',
+    'shift.stockPurchase': 'Xarid',
+    'shift.netProfit': 'Sof foyda',
+    'shift.margin': 'Marja',
     'pos.currentOrder': 'Joriy buyurtma',
     'pos.order': 'Buyurtma',
     'pos.checkout': 'Buyurtmani yakunlash',
@@ -1742,7 +1958,136 @@ const I18N = {
     'finance.orders': 'Buyurtmalar',
     'finance.loading': 'Yuklanmoqda...',
     'finance.noShifts': 'Bu davrda smenalar yo‘q',
-    'finance.selectStartDate': 'Boshlanish sanasini tanlang'
+    'finance.selectStartDate': 'Boshlanish sanasini tanlang',
+    'menu.title': 'Menyu muharriri',
+    'menu.addDish': '+ Taom qo‘shish',
+    'menu.categories': 'KATEGORIYALAR',
+    'menu.addCategory': '+ Qo‘shish',
+    'menu.allDishes': 'Barcha taomlar',
+    'menu.dish': 'Taom',
+    'menu.price': 'Narx',
+    'menu.category': 'Kategoriya',
+    'menu.status': 'Holat',
+    'menu.active': 'Faol',
+    'menu.hidden': 'Yashirilgan',
+    'menu.editDish': 'Taomni tahrirlash',
+    'menu.newDish': 'Yangi taom',
+    'menu.name': 'Nomi',
+    'menu.saveDish': 'Saqlash',
+    'menu.deleteDish': 'Taom o‘chirildi',
+    'menu.deleteConfirm': 'Taomni o‘chirish?',
+    'menu.categoryName': 'Kategoriya nomi',
+    'menu.categoryAdded': 'Kategoriya qo‘shildi',
+    'menu.dishSaved': 'Taom saqlandi',
+    'menu.dishDeleted': 'Taom o‘chirildi',
+    'menu.noDishes': 'Hozircha taomlar yo‘q',
+    'menu.positions': 'pozitsiya',
+    'menu.hide': 'Yashirish',
+    'menu.show': 'Ko‘rsatish',
+    'stock.title': 'Ombor',
+    'stock.income': 'Kirim',
+    'stock.addItem': '+ Qo‘shish',
+    'stock.name': 'Nomi',
+    'stock.category': 'Kategoriya',
+    'stock.balance': 'Qoldiq',
+    'stock.unit': 'Birlik',
+    'stock.minimum': 'Minimum',
+    'stock.status': 'Holat',
+    'stock.incomeAction': 'Kirim',
+    'stock.history': 'Kirimlar tarixi',
+    'stock.product': 'Tovar',
+    'stock.quantity': 'Miqdor',
+    'stock.price': 'Narx',
+    'stock.amount': 'Summa',
+    'stock.comment': 'Izoh',
+    'stock.staff': 'Xodim',
+    'stock.time': 'Vaqt',
+    'stock.loading': 'Yuklanmoqda...',
+    'stock.noData': 'Hozircha kirimlar yo‘q',
+    'stock.normal': 'Norma',
+    'stock.low': 'Kam',
+    'stock.empty': 'Yo‘q',
+    'stock.kitchen': 'Oshxona',
+    'stock.bar': 'Bar',
+    'stock.drinks': 'Ichimliklar',
+    'stock.package': 'Qadoq',
+    'stock.other': 'Boshqa',
+    'stock.addIncome': 'Qabul qilish',
+    'stock.purchasePrice': 'Xarid narxi',
+    'stock.saveItem': 'Saqlash',
+    'stock.itemSaved': 'Tovar saqlandi',
+    'stock.incomeAdded': 'Kirim qo‘shildi',
+    'stock.totalItems': 'Jami pozitsiyalar',
+    'stock.lowItems': 'Tugab bormoqda',
+    'stock.emptyItems': 'Omborda yo‘q',
+    'stock.editItem': 'Ingredientni tahrirlash',
+    'stock.newItem': 'Yangi ingredient',
+    'stock.storageUnit': 'Saqlash birligi',
+    'stock.minBalance': 'Min. qoldiq',
+    'stock.item': 'Ingredient',
+    'stock.measureUnit': 'O‘lchov birligi',
+    'stock.totalIncome': 'Kirim summasi',
+    'stock.optional': 'Ixtiyoriy',
+    'stock.addStockFirst': 'Avval omborga tovar qo‘shing',
+    'stock.accepted': 'Qabul qilindi',
+    'recipes.title': 'Texnologik kartalar',
+    'recipes.description': 'Tarkibni sozlash uchun taomni bosing. Har bir savdoda ingredientlar avtomatik hisobdan chiqariladi.',
+    'recipes.ingredients': 'ingr.',
+    'recipes.addIngredient': '+ Qo‘shish',
+    'recipes.save': 'Saqlash',
+    'recipes.grams': 'g',
+    'recipes.noIngredients': 'Hozircha ingredientlar qo‘shilmagan',
+    'recipes.recipeSaved': 'Tex. karta saqlandi',
+    'staff.title': 'Xodimlar',
+    'staff.addStaff': '+ Qo‘shish',
+    'staff.employee': 'Xodim',
+    'staff.phone': 'Telefon',
+    'staff.role': 'Rol',
+    'staff.status': 'Holat',
+    'staff.active': 'Faol',
+    'staff.inactive': 'Nofaol',
+    'staff.owner': 'Egasi',
+    'staff.admin': 'Administrator',
+    'staff.cashier': 'Kassir',
+    'staff.newStaff': 'Yangi xodim',
+    'staff.editStaff': 'Xodimni tahrirlash',
+    'staff.name': 'Ism',
+    'staff.pin': 'PIN (4 raqam)',
+    'staff.pinHelp': 'Yangi PIN (o‘zgartirish kerak bo‘lsa)',
+    'staff.saveStaff': 'Saqlash',
+    'staff.deleteStaff': 'Xodimni o‘chirish',
+    'staff.staffSaved': 'Xodim saqlandi',
+    'staff.staffDeleted': 'Xodim o‘chirildi',
+    'staff.deleteConfirm': 'Xodimni o‘chirish?',
+    'staff.noStaff': 'Hozircha xodimlar yo‘q',
+    'staff.total': 'Jami',
+    'staff.activeCount': 'Faol',
+    'staff.inactiveCount': 'Nofaol',
+    'staff.nameRequired': 'Ismni kiriting',
+    'staff.pinRequired': '4 xonali PIN kiriting',
+    'staff.pinInvalid': 'PIN 4 ta raqamdan iborat bo‘lishi kerak',
+    'analytics.title': 'Analitika',
+    'analytics.topDishes': 'Top taomlar',
+    'analytics.payment': 'To‘lov',
+    'analytics.orderHistory': 'Buyurtmalar tarixi',
+    'analytics.revenueTotal': 'Tushum (jami)',
+    'analytics.averageCheck': 'O‘rtacha chek',
+    'analytics.orders': 'Buyurtmalar',
+    'analytics.cash': 'Naqd',
+    'analytics.card': 'Karta',
+    'analytics.dish': 'Taom',
+    'analytics.composition': 'Tarkib',
+    'analytics.amount': 'Summa',
+    'analytics.client': 'Mijoz',
+    'analytics.time': 'Vaqt',
+    'analytics.noOrders': 'Hozircha buyurtmalar yo‘q',
+    'analytics.noData': 'Hozircha maʼlumot yo‘q',
+    'analytics.lastOrders': 'Oxirgi buyurtmalar',
+    'analytics.total': 'Jami',
+    'analytics.clients': 'Mijozlar',
+    'analytics.noSales': 'Hozircha savdolar yo‘q',
+    'analytics.firstOrderHint': 'birinchi buyurtmani kassada rasmiylashtiring',
+    'analytics.cashShort': 'Naqd'
   }
 };
 
@@ -1770,6 +2115,7 @@ function setTheme(theme) {
 
 function applyLanguage() {
   document.documentElement.lang = appLang;
+  document.title = t('common.appTitle');
   document.querySelectorAll('[data-i18n]').forEach(el => {
     el.textContent = t(el.dataset.i18n);
   });
@@ -1778,6 +2124,9 @@ function applyLanguage() {
   });
   document.querySelectorAll('[data-i18n-title]').forEach(el => {
     el.setAttribute('title', t(el.dataset.i18nTitle));
+  });
+  document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
+    el.setAttribute('aria-label', t(el.dataset.i18nAriaLabel));
   });
   syncAppearanceControls();
 }
@@ -1795,6 +2144,21 @@ function setLang(lang) {
   if (document.getElementById('page-clients')?.classList.contains('active')) {
     renderClients();
   }
+  if (document.getElementById('page-menu')?.classList.contains('active')) {
+    renderMenu();
+  }
+  if (document.getElementById('page-stock')?.classList.contains('active')) {
+    renderStock();
+  }
+  if (document.getElementById('page-recipes')?.classList.contains('active')) {
+    renderRecipes();
+  }
+  if (document.getElementById('page-staff')?.classList.contains('active')) {
+    renderStaff();
+  }
+  if (document.getElementById('page-analytics')?.classList.contains('active')) {
+    renderAnalytics();
+  }
   if (document.getElementById('page-finance')?.classList.contains('active')) {
     renderFinance();
   } else {
@@ -1803,6 +2167,7 @@ function setLang(lang) {
   if (document.getElementById('page-settings')?.classList.contains('active')) {
     renderSettings();
   }
+  if (currentUser) setupUserCard();
 }
 
 function showScreen(name) {
@@ -1946,7 +2311,7 @@ async function startApp({ silentAuthRestore = false } = {}) {
     showScreen('app');
     nav('pos', document.querySelector('.nav-item'));
   } catch (err) {
-    if (err.message !== 'Подписка истекла') {
+      if (err.message !== t('auth.subscriptionExpired')) {
       clearAuthSession();
       showScreen('login');
       if (!silentAuthRestore) {
@@ -1957,7 +2322,7 @@ async function startApp({ silentAuthRestore = false } = {}) {
 }
 
 function setupUserCard() {
-  const roleMap = {owner:'Владелец',admin:'Администратор',cashier:'Кассир'};
+  const roleMap = {owner:t('staff.owner'),admin:t('staff.admin'),cashier:t('staff.cashier')};
   const initials = {owner:'ВЛ',admin:'АД',cashier:'КС'};
   document.getElementById('user-name-display').textContent = currentUser.name;
   document.getElementById('user-role-display').textContent = roleMap[currentUser.role] || currentUser.role;
@@ -1969,7 +2334,7 @@ function applyRolePermissions() {
     const roles = el.dataset.roles.split(',');
     if (!roles.includes(currentUser.role)) {
       el.classList.add('locked');
-      el.onclick = () => toast('Недостаточно прав для этого раздела');
+      el.onclick = () => toast(t('common.accessDenied'));
     }
   });
 }
@@ -2039,29 +2404,30 @@ function renderShiftBar() {
   </div>`;
 }
 function showShiftCloseReport(shift) {
-  showModal(`<div class="modal-title">Итог смены</div>
+  const locale = appLang === 'uz' ? 'uz-UZ' : 'ru-RU';
+  showModal(`<div class="modal-title">${t('shift.reportTitle')}</div>
     <div class="field-row">
-      <div class="field"><label>Выручка</label><div><strong>${fmt(shift.revenue || 0)}</strong></div></div>
-      <div class="field"><label>Заказов</label><div><strong>${shift.orders_count || 0}</strong></div></div>
+      <div class="field"><label>${t('finance.revenue')}</label><div><strong>${fmt(shift.revenue || 0)}</strong></div></div>
+      <div class="field"><label>${t('cashBar.orders')}</label><div><strong>${shift.orders_count || 0}</strong></div></div>
     </div>
     <div class="field-row">
-      <div class="field"><label>Наличные</label><div>${fmt(shift.cash_total || 0)}</div></div>
-      <div class="field"><label>Карта</label><div>${fmt(shift.card_total || 0)}</div></div>
+      <div class="field"><label>${t('pos.cash')}</label><div>${fmt(shift.cash_total || 0)}</div></div>
+      <div class="field"><label>${t('pos.card')}</label><div>${fmt(shift.card_total || 0)}</div></div>
     </div>
     <div class="field-row">
-      <div class="field"><label>Расходы кассы</label><div>${fmt(shift.expenses_total || 0)}</div></div>
-      <div class="field"><label>Закупка товара</label><div>${fmt(shift.stock_income_total || 0)}</div></div>
+      <div class="field"><label>${t('finance.cashExpenses')}</label><div>${fmt(shift.expenses_total || 0)}</div></div>
+      <div class="field"><label>${t('shift.stockPurchase')}</label><div>${fmt(shift.stock_income_total || 0)}</div></div>
     </div>
     <div class="field-row">
-      <div class="field"><label>Чистая прибыль</label><div><strong>${fmt(shift.net_profit || 0)}</strong></div></div>
-      <div class="field"><label>Маржа %</label><div><strong>${Number(shift.margin_percent || 0).toLocaleString('ru-RU', { maximumFractionDigits: 2 })}%</strong></div></div>
+      <div class="field"><label>${t('shift.netProfit')}</label><div><strong>${fmt(shift.net_profit || 0)}</strong></div></div>
+      <div class="field"><label>${t('shift.margin')} %</label><div><strong>${Number(shift.margin_percent || 0).toLocaleString(locale, { maximumFractionDigits: 2 })}%</strong></div></div>
     </div>
     <div class="field-row">
-      <div class="field"><label>Открыта</label><div>${new Date(shift.opened_at).toLocaleString('ru-RU')}</div></div>
-      <div class="field"><label>Закрыта</label><div>${new Date(shift.closed_at).toLocaleString('ru-RU')}</div></div>
+      <div class="field"><label>${t('settings.openedAt')}</label><div>${new Date(shift.opened_at).toLocaleString(locale)}</div></div>
+      <div class="field"><label>${t('settings.closedAt')}</label><div>${new Date(shift.closed_at).toLocaleString(locale)}</div></div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-primary" onclick="closeModal()">Готово</button>
+      <button class="btn btn-primary" onclick="closeModal()">${t('common.close')}</button>
     </div>`);
 }
 
@@ -2097,7 +2463,7 @@ function renderPos() {
   renderDailyCashBar();
   const cats = ['all', ...menuCats];
   document.getElementById('pos-cats').innerHTML = cats.map(c =>
-    `<button class="cat-tab ${activePoscat===c?'active':''}" onclick="setPoscat('${c}')">${c==='all'?'Все':c}</button>`).join('');
+    `<button class="cat-tab ${activePoscat===c?'active':''}" onclick="setPoscat('${c}')">${c==='all'?t('pos.all'):c}</button>`).join('');
 
   renderPosMenu();
   const sel = document.getElementById('cart-client-sel');
@@ -2129,25 +2495,25 @@ function renderCartClientOptions(query = '') {
     .slice(0, 30);
   sel.innerHTML = `<option value="">${t('pos.noClient')}</option>` + filtered.map(c => {
     const details = [c.phone, c.email].filter(Boolean).map(esc).join(' · ');
-    return `<option value="${c.id}">${esc(c.name)}${details ? ' · ' + details : ''} · бонус ${fmt(c.bonus || 0)}</option>`;
+    return `<option value="${c.id}">${esc(c.name)}${details ? ' · ' + details : ''} · ${t('pos.bonus')} ${fmt(c.bonus || 0)}</option>`;
   }).join('');
   if (cartClientId && filtered.some(c => String(c.id) === String(cartClientId))) sel.value = cartClientId;
 }
 function openQuickClientModal() {
-  showModal(`<div class="modal-title">Новый клиент</div>
-    <div class="field"><label>Имя</label><input type="text" id="qcf-name" autocomplete="name"></div>
-    <div class="field"><label>Телефон</label><input type="text" id="qcf-phone" autocomplete="tel"></div>
-    <div class="field"><label>Email</label><input type="email" id="qcf-email" autocomplete="email"></div>
+  showModal(`<div class="modal-title">${t('pos.quickClientTitle')}</div>
+    <div class="field"><label>${t('clients.name')}</label><input type="text" id="qcf-name" autocomplete="name" placeholder="${t('clients.name')}" data-i18n-placeholder="clients.name"></div>
+    <div class="field"><label>${t('clients.phone')}</label><input type="text" id="qcf-phone" autocomplete="tel" placeholder="${t('clients.phone')}" data-i18n-placeholder="clients.phone"></div>
+    <div class="field"><label>${t('clients.email')}</label><input type="email" id="qcf-email" autocomplete="email" placeholder="${t('clients.email')}" data-i18n-placeholder="clients.email"></div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
-      <button class="btn btn-primary" onclick="saveQuickClient()">Сохранить</button>
+      <button class="btn btn-secondary" onclick="closeModal()">${t('common.cancel')}</button>
+      <button class="btn btn-primary" onclick="saveQuickClient()">${t('common.save')}</button>
     </div>`);
 }
 async function saveQuickClient() {
   const name = document.getElementById('qcf-name').value.trim();
   const phone = document.getElementById('qcf-phone').value.trim();
   const email = document.getElementById('qcf-email').value.trim();
-  if (!name) { toast('Введите имя клиента'); return; }
+  if (!name) { toast(t('clients.enterName')); return; }
   try {
     const created = await api('/orders/clients', { method:'POST', body:{ name, phone, email } });
     clients = await api('/orders/clients/all');
@@ -2157,7 +2523,7 @@ async function saveQuickClient() {
     renderCartClientOptions('');
     renderCart();
     closeModal();
-    toast('Клиент добавлен и выбран');
+    toast(t('pos.quickClientAdded'));
   } catch(err) { toast(err.message); }
 }
 function toggleMobileNav() {
@@ -2185,7 +2551,7 @@ function renderPosMenu() {
     const ok = canMake(item);
     return `<div class="menu-card ${ok?'':'no-stock'}" ${ok?`onclick="addToCart(${item.id})"`:''}>
       <div class="menu-card-name">${esc(item.name)}</div>
-      <div class="menu-card-price">${ok ? fmt(item.price) : 'Нет остатка'}</div>
+      <div class="menu-card-price">${ok ? fmt(item.price) : t('pos.noStock')}</div>
     </div>`;}).join('');
 }
 
@@ -2208,7 +2574,7 @@ function renderCart() {
   const body = document.getElementById('cart-body');
   if (!keys.length) {
     body.innerHTML = `<div class="cart-empty">${t('pos.addItems')}</div>`;
-    document.getElementById('cart-total').textContent = '0 ' + currency;
+    document.getElementById('cart-total').textContent = fmt(0);
     document.getElementById('cart-count').textContent = '0';
     document.getElementById('checkout-btn').disabled = true;
     updateMobileCartButton(0, 0);
@@ -2262,26 +2628,26 @@ async function reloadMenu() {
 function renderMenu() {
   document.getElementById('menu-cats-list').innerHTML = ['all',...menuCatsData.map(c=>c.id)].map((c) => {
     const isAll = c === 'all';
-    const name = isAll ? 'Все блюда' : menuCatsData.find(x=>x.id===c)?.name;
+    const name = isAll ? t('menu.allDishes') : menuCatsData.find(x=>x.id===c)?.name;
     const active = activeMenuCat === c;
     return `<div class="menu-cat-item ${active ? 'active' : ''}" onclick="setMenuCat('${c}')">${esc(name)}</div>`;
   }).join('');
 
   const items = activeMenuCat === 'all' ? menuItems : menuItems.filter(i => i.category_id === activeMenuCat);
-  const catTitle = activeMenuCat === 'all' ? 'Все блюда' : (menuCatsData.find(c=>c.id===activeMenuCat)?.name || '');
+  const catTitle = activeMenuCat === 'all' ? t('menu.allDishes') : (menuCatsData.find(c=>c.id===activeMenuCat)?.name || '');
   document.getElementById('menu-cat-title').textContent = catTitle;
-  document.getElementById('menu-count-label').textContent = items.length + ' позиций';
-  document.getElementById('menu-tbody').innerHTML = items.map(item => `<tr>
+  document.getElementById('menu-count-label').textContent = items.length + ' ' + t('menu.positions');
+  document.getElementById('menu-tbody').innerHTML = items.length ? items.map(item => `<tr>
     <td><strong>${esc(item.name)}</strong></td>
     <td>${fmt(item.price)}</td>
     <td>${esc(catNameOf(item))}</td>
-    <td><span class="badge ${item.active?'badge-green':'badge-gray'}">${item.active?'Активно':'Скрыто'}</span></td>
+    <td><span class="badge ${item.active?'badge-green':'badge-gray'}">${item.active?t('menu.active'):t('menu.hidden')}</span></td>
     <td style="text-align:right;white-space:nowrap;display:flex;gap:4px;justify-content:flex-end;">
-      <button class="btn btn-icon btn-sm" onclick="toggleMenuItem(${item.id})" title="${item.active?'Скрыть':'Показать'}">${item.active?'👁️':'🚫'}</button>
+      <button class="btn btn-icon btn-sm" onclick="toggleMenuItem(${item.id})" title="${item.active?t('menu.hide'):t('menu.show')}">${item.active?'👁️':'🚫'}</button>
       <button class="btn btn-icon btn-sm" onclick="openMenuModal(${item.id})">✏️</button>
       <button class="btn btn-icon btn-sm" onclick="deleteMenuItem(${item.id})">🗑️</button>
     </td>
-  </tr>`).join('');
+  </tr>`).join('') : `<tr><td colspan="5" class="empty-state">${t('menu.noDishes')}</td></tr>`;
 }
 function setMenuCat(c) { activeMenuCat = c === 'all' ? 'all' : +c; renderMenu(); }
 async function toggleMenuItem(id) {
@@ -2290,28 +2656,28 @@ async function toggleMenuItem(id) {
   catch(err){ toast(err.message); }
 }
 async function deleteMenuItem(id) {
-  if (!confirm('Удалить блюдо?')) return;
-  try { await api('/menu/items/'+id, { method:'DELETE' }); await reloadMenu(); renderMenu(); }
+  if (!confirm(t('menu.deleteConfirm'))) return;
+  try { await api('/menu/items/'+id, { method:'DELETE' }); await reloadMenu(); renderMenu(); toast(t('menu.dishDeleted')); }
   catch(err){ toast(err.message); }
 }
 async function addMenuCat() {
-  const n = prompt('Название категории:');
+  const n = prompt(t('menu.categoryName') + ':');
   if (!n || !n.trim()) return;
-  try { await api('/menu/categories', { method:'POST', body:{ name:n.trim() } }); await reloadMenu(); renderMenu(); }
+  try { await api('/menu/categories', { method:'POST', body:{ name:n.trim() } }); await reloadMenu(); renderMenu(); toast(t('menu.categoryAdded')); }
   catch(err){ toast(err.message); }
 }
 function openMenuModal(id) {
   const item = id ? getItem(id) : null;
   const catOpts = menuCatsData.map(c => `<option value="${c.id}"${item&&item.category_id===c.id?' selected':''}>${esc(c.name)}</option>`).join('');
-  showModal(`<div class="modal-title">${id ? 'Редактировать блюдо' : 'Новое блюдо'}</div>
-    <div class="field"><label>Название</label><input type="text" id="mf-name" value="${item?esc(item.name):''}"></div>
+  showModal(`<div class="modal-title">${id ? t('menu.editDish') : t('menu.newDish')}</div>
+    <div class="field"><label>${t('menu.name')}</label><input type="text" id="mf-name" value="${item?esc(item.name):''}" placeholder="${t('menu.name')}" data-i18n-placeholder="menu.name"></div>
     <div class="field-row">
-      <div class="field"><label>Цена (${currency})</label><input type="number" id="mf-price" value="${item?item.price:''}"></div>
-      <div class="field"><label>Категория</label><select id="mf-cat">${catOpts}</select></div>
+      <div class="field"><label>${t('menu.price')} (${t('common.currency')})</label><input type="number" id="mf-price" value="${item?item.price:''}" placeholder="${t('menu.price')}" data-i18n-placeholder="menu.price"></div>
+      <div class="field"><label>${t('menu.category')}</label><select id="mf-cat">${catOpts}</select></div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
-      <button class="btn btn-primary" onclick="saveMenuItem(${id||0})">Сохранить</button>
+      <button class="btn btn-secondary" onclick="closeModal()">${t('common.cancel')}</button>
+      <button class="btn btn-primary" onclick="saveMenuItem(${id||0})">${t('menu.saveDish')}</button>
     </div>`);
 }
 async function saveMenuItem(id) {
@@ -2322,7 +2688,7 @@ async function saveMenuItem(id) {
   try {
     if (id) await api('/menu/items/'+id, { method:'PUT', body:{ name, price, category_id } });
     else await api('/menu/items', { method:'POST', body:{ name, price, category_id } });
-    await reloadMenu(); closeModal(); renderMenu();
+    await reloadMenu(); closeModal(); renderMenu(); toast(t('menu.dishSaved'));
   } catch(err) { toast(err.message); }
 }
 
@@ -2335,23 +2701,23 @@ function renderStock() {
   const low = ingredients.filter(i => stockStatus(i) === 'low').length;
   const out = ingredients.filter(i => stockStatus(i) === 'out').length;
   document.getElementById('stock-metrics').innerHTML = `
-    <div class="metric"><div class="metric-label">Всего позиций</div><div class="metric-value">${ingredients.length}</div></div>
-    <div class="metric"><div class="metric-label">Заканчивается</div><div class="metric-value amber">${low}</div></div>
-    <div class="metric"><div class="metric-label">Нет на складе</div><div class="metric-value red">${out}</div></div>`;
+    <div class="metric"><div class="metric-label">${t('stock.totalItems')}</div><div class="metric-value">${ingredients.length}</div></div>
+    <div class="metric"><div class="metric-label">${t('stock.lowItems')}</div><div class="metric-value amber">${low}</div></div>
+    <div class="metric"><div class="metric-label">${t('stock.emptyItems')}</div><div class="metric-value red">${out}</div></div>`;
   document.getElementById('stock-tbody').innerHTML = ingredients.map(ing => {
     const s = stockStatus(ing);
     const pct = Math.min(100, Math.round(ing.stock_grams / (ing.min_grams * 4) * 100));
     const col = s==='ok'?'#1D9E75':s==='low'?'#D97706':'#C0392B';
     const badge = s==='ok'?'badge-green':s==='low'?'badge-amber':'badge-red';
-    const label = s==='ok'?'Норма':s==='low'?'Мало':'Нет';
+    const label = s==='ok'?t('stock.normal'):s==='low'?t('stock.low'):t('stock.empty');
     return `<tr>
       <td><strong>${esc(ing.name)}</strong></td>
       <td><span class="badge badge-gray">${stockCategoryLabel(ing.category)}</span></td>
-      <td>${stockDisplayQty(ing.stock_grams, ing.unit).toLocaleString('ru-RU')}</td>
+      <td>${stockDisplayQty(ing.stock_grams, ing.unit).toLocaleString(appLang === 'uz' ? 'uz-UZ' : 'ru-RU')}</td>
       <td>${stockUnitLabel(ing.unit)}</td>
-      <td class="muted-text">${stockDisplayQty(ing.min_grams, ing.unit).toLocaleString('ru-RU')}</td>
+      <td class="muted-text">${stockDisplayQty(ing.min_grams, ing.unit).toLocaleString(appLang === 'uz' ? 'uz-UZ' : 'ru-RU')}</td>
       <td><span class="badge ${badge}">${label}</span></td>
-      <td><button class="btn btn-secondary btn-sm" onclick="openIncomeModal(${ing.id})">Приход</button></td>
+      <td><button class="btn btn-secondary btn-sm" onclick="openIncomeModal(${ing.id})">${t('stock.incomeAction')}</button></td>
       <td style="text-align:right;white-space:nowrap;display:flex;gap:4px;justify-content:flex-end;">
         <button class="btn btn-icon btn-sm" onclick="openIngModal(${ing.id})">✏️</button>
         <button class="btn btn-icon btn-sm" onclick="deleteIng(${ing.id})">🗑️</button>
@@ -2364,7 +2730,7 @@ function renderStock() {
   });
 }
 async function deleteIng(id) {
-  if (!confirm('Удалить?')) return;
+  if (!confirm(t('common.deleteConfirm'))) return;
   try { await api('/stock/'+id, { method:'DELETE' }); await reloadStock(); renderStock(); }
   catch(err){ toast(err.message); }
 }
@@ -2372,19 +2738,19 @@ function openIngModal(id) {
   const ing = id ? getIng(id) : null;
   const unit = ing?.unit || 'g';
   const category = ing?.category || 'kitchen';
-  showModal(`<div class="modal-title">${id ? 'Редактировать ингредиент' : 'Новый ингредиент'}</div>
-    <div class="field"><label>Название</label><input type="text" id="if-name" value="${ing?esc(ing.name):''}"></div>
+  showModal(`<div class="modal-title">${id ? t('stock.editItem') : t('stock.newItem')}</div>
+    <div class="field"><label>${t('stock.name')}</label><input type="text" id="if-name" value="${ing?esc(ing.name):''}" placeholder="${t('stock.name')}" data-i18n-placeholder="stock.name"></div>
     <div class="field-row">
-      <div class="field"><label>Категория</label><select id="if-category">${stockCategoryOptions(category)}</select></div>
-      <div class="field"><label>Единица хранения</label><select id="if-unit">${stockUnitOptions(unit)}</select></div>
+      <div class="field"><label>${t('stock.category')}</label><select id="if-category">${stockCategoryOptions(category)}</select></div>
+      <div class="field"><label>${t('stock.storageUnit')}</label><select id="if-unit">${stockUnitOptions(unit)}</select></div>
     </div>
     <div class="field-row">
-      <div class="field"><label>Остаток</label><input type="number" id="if-stock" step="0.001" value="${ing?stockDisplayQty(ing.stock_grams, unit):''}"></div>
-      <div class="field"><label>Мин. остаток</label><input type="number" id="if-min" step="0.001" value="${ing?stockDisplayQty(ing.min_grams, unit):300}"></div>
+      <div class="field"><label>${t('stock.balance')}</label><input type="number" id="if-stock" step="0.001" value="${ing?stockDisplayQty(ing.stock_grams, unit):''}" placeholder="${t('stock.quantity')}" data-i18n-placeholder="stock.quantity"></div>
+      <div class="field"><label>${t('stock.minBalance')}</label><input type="number" id="if-min" step="0.001" value="${ing?stockDisplayQty(ing.min_grams, unit):300}" placeholder="${t('stock.minimum')}" data-i18n-placeholder="stock.minimum"></div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
-      <button class="btn btn-primary" onclick="saveIng(${id||0})">Сохранить</button>
+      <button class="btn btn-secondary" onclick="closeModal()">${t('common.cancel')}</button>
+      <button class="btn btn-primary" onclick="saveIng(${id||0})">${t('stock.saveItem')}</button>
     </div>`);
 }
 async function saveIng(id) {
@@ -2397,28 +2763,28 @@ async function saveIng(id) {
   try {
     if (id) await api('/stock/'+id, { method:'PUT', body:{ name, category, unit, stock_grams, min_grams } });
     else await api('/stock', { method:'POST', body:{ name, category, unit, stock_grams, min_grams } });
-    await reloadStock(); closeModal(); renderStock();
+    await reloadStock(); closeModal(); renderStock(); toast(t('stock.itemSaved'));
   } catch(err) { toast(err.message); }
 }
 function openIncomeModal(id = null) {
-  if (!ingredients.length) { toast('Добавьте товар на склад'); return; }
+  if (!ingredients.length) { toast(t('stock.addStockFirst')); return; }
   const selectedId = id || ingredients[0].id;
   const selectedIng = getIng(selectedId) || ingredients[0];
   const opts = ingredients.map(i => `<option value="${i.id}"${i.id===selectedIng.id?' selected':''}>${esc(i.name)}</option>`).join('');
-  showModal(`<div class="modal-title">Приход товара</div>
-    <div class="field"><label>Ингредиент</label><select id="inc-ing" onchange="setIncomeUnitFromIngredient()">${opts}</select></div>
+  showModal(`<div class="modal-title">${t('stock.income')}</div>
+    <div class="field"><label>${t('stock.item')}</label><select id="inc-ing" onchange="setIncomeUnitFromIngredient()">${opts}</select></div>
     <div class="field-row">
-      <div class="field"><label>Количество</label><input type="number" id="inc-qty" step="0.001" min="0" value="1" oninput="updateIncomeTotal()"></div>
-      <div class="field"><label>Ед. изм.</label><select id="inc-unit">${stockUnitOptions(selectedIng.unit || 'g')}</select></div>
+      <div class="field"><label>${t('stock.quantity')}</label><input type="number" id="inc-qty" step="0.001" min="0" value="1" placeholder="${t('stock.quantity')}" data-i18n-placeholder="stock.quantity" oninput="updateIncomeTotal()"></div>
+      <div class="field"><label>${t('stock.measureUnit')}</label><select id="inc-unit">${stockUnitOptions(selectedIng.unit || 'g')}</select></div>
     </div>
     <div class="field-row">
-      <div class="field"><label>Цена закупки</label><input type="number" id="inc-price" min="0" value="0" oninput="updateIncomeTotal()"></div>
-      <div class="field"><label>Сумма прихода</label><input type="number" id="inc-total" value="0" readonly></div>
+      <div class="field"><label>${t('stock.purchasePrice')}</label><input type="number" id="inc-price" min="0" value="0" placeholder="${t('stock.purchasePrice')}" data-i18n-placeholder="stock.purchasePrice" oninput="updateIncomeTotal()"></div>
+      <div class="field"><label>${t('stock.totalIncome')}</label><input type="number" id="inc-total" value="0" readonly></div>
     </div>
-    <div class="field"><label>Комментарий</label><input type="text" id="inc-comment" placeholder="Необязательно"></div>
+    <div class="field"><label>${t('stock.comment')}</label><input type="text" id="inc-comment" placeholder="${t('stock.optional')}" data-i18n-placeholder="stock.optional"></div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
-      <button class="btn btn-primary" onclick="doIncome()">Принять</button>
+      <button class="btn btn-secondary" onclick="closeModal()">${t('common.cancel')}</button>
+      <button class="btn btn-primary" onclick="doIncome()">${t('stock.addIncome')}</button>
     </div>`);
   updateIncomeTotal();
 }
@@ -2438,7 +2804,7 @@ async function doIncome() {
     await Promise.all([reloadStock(), reloadStockIncomes()]);
     closeModal();
     renderStock();
-    toast('Принято: +' + quantity.toLocaleString('ru-RU') + ' ' + stockUnitLabel(unit));
+    toast(t('stock.incomeAdded') + ': +' + quantity.toLocaleString(appLang === 'uz' ? 'uz-UZ' : 'ru-RU') + ' ' + stockUnitLabel(unit));
   }
   catch(err){ toast(err.message); }
 }
@@ -2449,10 +2815,14 @@ function updateIncomeTotal() {
   if (total) total.value = Math.round(qty * price);
 }
 function stockUnitLabel(unit) {
-  return ({ pcs:'шт', g:'г', kg:'кг', ml:'мл', l:'л' })[unit] || unit || 'г';
+  const labels = appLang === 'uz'
+    ? { pcs:'dona', g:'g', kg:'kg', ml:'ml', l:'l' }
+    : { pcs:'шт', g:'г', kg:'кг', ml:'мл', l:'л' };
+  return labels[unit] || unit || labels.g;
 }
 function stockCategoryLabel(category) {
-  return ({ kitchen:'Кухня', bar:'Бар', drinks:'Напитки', packaging:'Упаковка', other:'Прочее' })[category] || 'Кухня';
+  const map = { kitchen:'stock.kitchen', bar:'stock.bar', drinks:'stock.drinks', packaging:'stock.package', other:'stock.other' };
+  return t(map[category] || 'stock.kitchen');
 }
 function stockCategoryOptions(selected='kitchen') {
   return ['kitchen','bar','drinks','packaging','other']
@@ -2477,10 +2847,11 @@ function renderStockIncomes() {
   if (!tbody) return;
   tbody.innerHTML = stockIncomes.length
     ? stockIncomes.map(i => {
-        const time = new Date(i.created_at).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+        const locale = appLang === 'uz' ? 'uz-UZ' : 'ru-RU';
+        const time = new Date(i.created_at).toLocaleString(locale,{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
         return `<tr>
           <td><strong>${esc(i.ingredient_name || '—')}</strong></td>
-          <td>${Number(i.quantity || 0).toLocaleString('ru-RU')} ${stockUnitLabel(i.unit)}</td>
+          <td>${Number(i.quantity || 0).toLocaleString(locale)} ${stockUnitLabel(i.unit)}</td>
           <td>${fmt(i.purchase_price || 0)}</td>
           <td style="font-weight:600;">${fmt(i.total_amount || 0)}</td>
           <td>${esc(i.comment || '—')}</td>
@@ -2488,7 +2859,7 @@ function renderStockIncomes() {
           <td class="muted-text">${time}</td>
         </tr>`;
       }).join('')
-    : '<tr><td colspan="7" class="empty-state">Приходов пока нет</td></tr>';
+    : `<tr><td colspan="7" class="empty-state">${t('stock.noData')}</td></tr>`;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2501,19 +2872,20 @@ async function renderRecipes() {
     return `<div class="recipe-card">
       <div class="recipe-head" onclick="toggleRecipe(${item.id})">
         <strong>${esc(item.name)}</strong>
-        <span class="muted-text" style="font-size:12px;">${items.length} ингр. ▾</span>
+        <span class="muted-text" style="font-size:12px;">${items.length} ${t('recipes.ingredients')} ▾</span>
       </div>
       <div class="recipe-body" id="rb-${item.id}">
         <div style="padding-top:10px;">
+        ${items.length ? '' : `<div class="empty-state" style="padding:8px 0;">${t('recipes.noIngredients')}</div>`}
         ${items.map(ri => `<div class="recipe-row">
             <span>${esc(ri.ingredient_name)}</span>
-            <div><input class="gram-input" type="number" value="${ri.grams}" onchange="updRec(${ri.id},${item.id},this.value)"> г</div>
+            <div><input class="gram-input" type="number" value="${ri.grams}" onchange="updRec(${ri.id},${item.id},this.value)"> ${t('recipes.grams')}</div>
             <button class="btn btn-icon btn-sm" onclick="remRec(${ri.id},${item.id})">✕</button>
           </div>`).join('')}
         <div style="display:flex;gap:8px;margin-top:10px;align-items:center;">
           <select id="rs-${item.id}" class="inline-control" style="flex:1;">${ingredients.map(i=>`<option value="${i.id}">${esc(i.name)}</option>`).join('')}</select>
-          <input type="number" id="rg-${item.id}" class="inline-control" value="50" style="width:60px;"> г
-          <button class="btn btn-primary btn-sm" onclick="addRecItem(${item.id})">+ Добавить</button>
+          <input type="number" id="rg-${item.id}" class="inline-control" value="50" placeholder="${t('recipes.grams')}" data-i18n-placeholder="recipes.grams" style="width:60px;"> ${t('recipes.grams')}
+          <button class="btn btn-primary btn-sm" onclick="addRecItem(${item.id})">${t('recipes.addIngredient')}</button>
         </div>
         </div>
       </div>
@@ -2522,17 +2894,17 @@ async function renderRecipes() {
 }
 function toggleRecipe(id) { const el = document.getElementById('rb-'+id); el.classList.toggle('open'); }
 async function updRec(recipeId, itemId, val) {
-  try { await api('/stock/recipes/'+recipeId, { method:'PUT', body:{ grams: +val||1 } }); delete recipesData[itemId]; await loadRecipeFor(itemId); renderRecipes(); }
+  try { await api('/stock/recipes/'+recipeId, { method:'PUT', body:{ grams: +val||1 } }); delete recipesData[itemId]; await loadRecipeFor(itemId); renderRecipes(); toast(t('recipes.recipeSaved')); }
   catch(err){ toast(err.message); }
 }
 async function remRec(recipeId, itemId) {
-  try { await api('/stock/recipes/'+recipeId, { method:'DELETE' }); delete recipesData[itemId]; await loadRecipeFor(itemId); renderRecipes(); }
+  try { await api('/stock/recipes/'+recipeId, { method:'DELETE' }); delete recipesData[itemId]; await loadRecipeFor(itemId); renderRecipes(); toast(t('recipes.recipeSaved')); }
   catch(err){ toast(err.message); }
 }
 async function addRecItem(itemId) {
   const ingredient_id = +document.getElementById('rs-'+itemId).value;
   const grams = +document.getElementById('rg-'+itemId).value || 50;
-  try { await api('/stock/recipes', { method:'POST', body:{ menu_item_id:itemId, ingredient_id, grams } }); delete recipesData[itemId]; await loadRecipeFor(itemId); renderRecipes(); }
+  try { await api('/stock/recipes', { method:'POST', body:{ menu_item_id:itemId, ingredient_id, grams } }); delete recipesData[itemId]; await loadRecipeFor(itemId); renderRecipes(); toast(t('recipes.recipeSaved')); }
   catch(err){ toast(err.message); }
 }
 
@@ -2759,43 +3131,43 @@ async function renderStaff() {
   try { await reloadStaff(); } catch(err) { toast(err.message); return; }
   const active = staff.filter(s=>s.active).length;
   document.getElementById('staff-metrics').innerHTML = `
-    <div class="metric"><div class="metric-label">Всего</div><div class="metric-value">${staff.length}</div></div>
-    <div class="metric"><div class="metric-label">Активных</div><div class="metric-value green">${active}</div></div>
-    <div class="metric"><div class="metric-label">Неактивных</div><div class="metric-value amber">${staff.length-active}</div></div>`;
-  const roleMap = {owner:'Владелец',admin:'Администратор',cashier:'Кассир'};
+    <div class="metric"><div class="metric-label">${t('staff.total')}</div><div class="metric-value">${staff.length}</div></div>
+    <div class="metric"><div class="metric-label">${t('staff.activeCount')}</div><div class="metric-value green">${active}</div></div>
+    <div class="metric"><div class="metric-label">${t('staff.inactiveCount')}</div><div class="metric-value amber">${staff.length-active}</div></div>`;
+  const roleMap = {owner:t('staff.owner'),admin:t('staff.admin'),cashier:t('staff.cashier')};
   const roleBadge = {owner:'badge-purple',admin:'badge-blue',cashier:'badge-green'};
-  document.getElementById('staff-tbody').innerHTML = staff.map(s => `<tr>
+  document.getElementById('staff-tbody').innerHTML = staff.length ? staff.map(s => `<tr>
     <td><strong>${esc(s.name)}</strong></td>
     <td class="muted-text">${esc(s.phone||'—')}</td>
     <td><span class="badge ${roleBadge[s.role]}">${roleMap[s.role]}</span></td>
-    <td><span class="badge ${s.active?'badge-green':'badge-gray'}">${s.active?'Активен':'Неактивен'}</span></td>
+    <td><span class="badge ${s.active?'badge-green':'badge-gray'}">${s.active?t('staff.active'):t('staff.inactive')}</span></td>
     <td style="text-align:right;display:flex;gap:4px;justify-content:flex-end;">
       <button class="btn btn-icon btn-sm" onclick="openStaffModal(${s.id})">✏️</button>
       <button class="btn btn-icon btn-sm" onclick="deleteStaff(${s.id})">🗑️</button>
     </td>
-  </tr>`).join('');
+  </tr>`).join('') : `<tr><td colspan="5" class="empty-state">${t('staff.noStaff')}</td></tr>`;
 }
 async function deleteStaff(id) {
-  if (!confirm('Удалить сотрудника?')) return;
-  try { await api('/orders/staff/'+id, { method:'DELETE' }); renderStaff(); }
+  if (!confirm(t('staff.deleteConfirm'))) return;
+  try { await api('/orders/staff/'+id, { method:'DELETE' }); renderStaff(); toast(t('staff.staffDeleted')); }
   catch(err){ toast(err.message); }
 }
 function openStaffModal(id) {
   const s = id ? staff.find(s=>s.id===id) : null;
-  showModal(`<div class="modal-title">${id?'Редактировать':'Новый сотрудник'}</div>
-    <div class="field"><label>Имя</label><input type="text" id="sf-name" value="${s?esc(s.name):''}"></div>
-    <div class="field"><label>Телефон</label><input type="text" id="sf-phone" value="${s?esc(s.phone||''):''}"></div>
+  showModal(`<div class="modal-title">${id?t('staff.editStaff'):t('staff.newStaff')}</div>
+    <div class="field"><label>${t('staff.name')}</label><input type="text" id="sf-name" value="${s?esc(s.name):''}" placeholder="${t('staff.name')}" data-i18n-placeholder="staff.name"></div>
+    <div class="field"><label>${t('staff.phone')}</label><input type="text" id="sf-phone" value="${s?esc(s.phone||''):''}" placeholder="${t('staff.phone')}" data-i18n-placeholder="staff.phone"></div>
     <div class="field-row">
-      <div class="field"><label>Роль</label><select id="sf-role">
-        <option value="cashier"${s&&s.role==='cashier'?' selected':''}>Кассир</option>
-        <option value="admin"${s&&s.role==='admin'?' selected':''}>Администратор</option>
-        <option value="owner"${s&&s.role==='owner'?' selected':''}>Владелец</option>
+      <div class="field"><label>${t('staff.role')}</label><select id="sf-role">
+        <option value="cashier"${s&&s.role==='cashier'?' selected':''}>${t('staff.cashier')}</option>
+        <option value="admin"${s&&s.role==='admin'?' selected':''}>${t('staff.admin')}</option>
+        <option value="owner"${s&&s.role==='owner'?' selected':''}>${t('staff.owner')}</option>
       </select></div>
-      <div class="field"><label>${id?'Новый PIN (если нужно изменить)':'PIN (4 цифры)'}</label><input type="text" id="sf-pin" value="" maxlength="4"></div>
+      <div class="field"><label>${id?t('staff.pinHelp'):t('staff.pin')}</label><input type="text" id="sf-pin" value="" maxlength="4" placeholder="${t('staff.pin')}" data-i18n-placeholder="staff.pin"></div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
-      <button class="btn btn-primary" onclick="saveStaff(${id||0})">Сохранить</button>
+      <button class="btn btn-secondary" onclick="closeModal()">${t('common.cancel')}</button>
+      <button class="btn btn-primary" onclick="saveStaff(${id||0})">${t('staff.saveStaff')}</button>
     </div>`);
 }
 async function saveStaff(id) {
@@ -2803,15 +3175,15 @@ async function saveStaff(id) {
   const phone = document.getElementById('sf-phone').value.trim();
   const role = document.getElementById('sf-role').value;
   const pin = document.getElementById('sf-pin').value.trim();
-  if (!name) { toast('Укажите имя'); return; }
-  if (!id && pin.length !== 4) { toast('Укажите 4-значный PIN'); return; }
-  if (id && pin && pin.length !== 4) { toast('PIN должен быть из 4 цифр'); return; }
+  if (!name) { toast(t('staff.nameRequired')); return; }
+  if (!id && pin.length !== 4) { toast(t('staff.pinRequired')); return; }
+  if (id && pin && pin.length !== 4) { toast(t('staff.pinInvalid')); return; }
   try {
     const body = { name, phone, role };
     if (!id || pin) body.pin = pin;
     if (id) await api('/orders/staff/'+id, { method:'PUT', body });
     else await api('/orders/staff', { method:'POST', body });
-    closeModal(); renderStaff();
+    closeModal(); renderStaff(); toast(t('staff.staffSaved'));
   } catch(err) { toast(err.message); }
 }
 
@@ -2823,29 +3195,29 @@ async function renderAnalytics() {
   const totalRev = orders.reduce((a,o)=>a+o.total,0);
   const avg = orders.length ? Math.round(totalRev/orders.length) : 0;
   document.getElementById('analytics-metrics').innerHTML = `
-    <div class="metric"><div class="metric-label">Выручка (всего)</div><div class="metric-value green">${fmt(totalRev)}</div></div>
-    <div class="metric"><div class="metric-label">Заказов</div><div class="metric-value">${orders.length}</div></div>
-    <div class="metric"><div class="metric-label">Средний чек</div><div class="metric-value">${fmt(avg)}</div></div>
-    <div class="metric"><div class="metric-label">Клиентов</div><div class="metric-value">${clients.length}</div></div>`;
+    <div class="metric"><div class="metric-label">${t('analytics.revenueTotal')}</div><div class="metric-value green">${fmt(totalRev)}</div></div>
+    <div class="metric"><div class="metric-label">${t('analytics.orders')}</div><div class="metric-value">${orders.length}</div></div>
+    <div class="metric"><div class="metric-label">${t('analytics.averageCheck')}</div><div class="metric-value">${fmt(avg)}</div></div>
+    <div class="metric"><div class="metric-label">${t('analytics.clients')}</div><div class="metric-value">${clients.length}</div></div>`;
   const dishCount = {};
   orders.forEach(o => (o.items_json||[]).forEach(i => { dishCount[i.name] = (dishCount[i.name]||0) + i.qty; }));
   const top = Object.entries(dishCount).sort((a,b)=>b[1]-a[1]).slice(0,5);
   const maxD = top[0]?top[0][1]:1;
   document.getElementById('top-dishes').innerHTML = top.length
     ? top.map(([n,c]) => `<div class="bar-row"><span class="bar-label">${esc(n)}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(c/maxD*100)}%"></div></div><span class="bar-count">${c}</span></div>`).join('')
-    : '<p class="empty-state" style="font-size:13px;">Продаж пока нет</p>';
+    : `<p class="empty-state" style="font-size:13px;">${t('analytics.noSales')}</p>`;
   const cash = orders.filter(o=>o.pay_method==='cash').length;
   const card = orders.filter(o=>o.pay_method==='card').length;
   document.getElementById('pay-stats').innerHTML = `
-    <div class="bar-row"><span class="bar-label">Наличные</span><div class="bar-track"><div class="bar-fill" style="width:${orders.length?Math.round(cash/orders.length*100):0}%"></div></div><span class="bar-count">${cash}</span></div>
-    <div class="bar-row"><span class="bar-label">Карта</span><div class="bar-track"><div class="bar-fill" style="width:${orders.length?Math.round(card/orders.length*100):0}%;background:#378ADD"></div></div><span class="bar-count">${card}</span></div>`;
+    <div class="bar-row"><span class="bar-label">${t('analytics.cash')}</span><div class="bar-track"><div class="bar-fill" style="width:${orders.length?Math.round(cash/orders.length*100):0}%"></div></div><span class="bar-count">${cash}</span></div>
+    <div class="bar-row"><span class="bar-label">${t('analytics.card')}</span><div class="bar-track"><div class="bar-fill" style="width:${orders.length?Math.round(card/orders.length*100):0}%;background:#378ADD"></div></div><span class="bar-count">${card}</span></div>`;
   document.getElementById('orders-tbody').innerHTML = orders.length
     ? orders.slice(0,20).map(o=>{
         const itemsStr = (o.items_json||[]).map(i=>esc(i.name)+' ×'+i.qty).join(', ');
-        const time = new Date(o.created_at).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-        return `<tr><td>#${o.id}</td><td class="muted-text" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${itemsStr}</td><td style="font-weight:600;">${fmt(o.total)}</td><td>${o.pay_method==='cash'?'Нал.':'Карта'}</td><td>${esc(o.client_name||'—')}</td><td class="muted-text">${time}</td></tr>`;
+        const time = new Date(o.created_at).toLocaleString(appLang === 'uz' ? 'uz-UZ' : 'ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+        return `<tr><td>#${o.id}</td><td class="muted-text" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${itemsStr}</td><td style="font-weight:600;">${fmt(o.total)}</td><td>${o.pay_method==='cash'?t('analytics.cashShort'):t('analytics.card')}</td><td>${esc(o.client_name||'—')}</td><td class="muted-text">${time}</td></tr>`;
       }).join('')
-    : '<tr><td colspan="6" class="empty-state" style="padding:24px;">Заказов ещё нет — оформите первый на кассе</td></tr>';
+    : `<tr><td colspan="6" class="empty-state" style="padding:24px;">${t('analytics.noOrders')} — ${t('analytics.firstOrderHint')}</td></tr>`;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -3092,13 +3464,10 @@ function renderSettings() {
   document.querySelector('#shift-history-card .card-title').textContent = t('settings.shiftHistory');
   syncAppearanceControls();
 
-  const planMap = appLang === 'uz'
-    ? {start:'Boshlang‘ich',business:'Biznes',network:'Tarmoq'}
-    : {start:'Старт',business:'Бизнес',network:'Сеть'};
-  const statusMap = appLang === 'uz'
-    ? {trial:'Sinov davri',active:'Faol',expired:'Muddati tugagan',blocked:'Bloklangan'}
-    : {trial:'Пробный период',active:'Активна',expired:'Истекла',blocked:'Заблокирована'};
-  const expires = accountInfo?.expires_at ? new Date(accountInfo.expires_at).toLocaleDateString('ru-RU') : '—';
+  const planMap = {start:t('settings.planStart'),business:t('settings.planBusiness'),network:t('settings.planNetwork')};
+  const statusMap = {trial:t('settings.statusTrial'),active:t('settings.statusActive'),expired:t('settings.statusExpired'),blocked:t('settings.statusBlocked')};
+  const locale = appLang === 'uz' ? 'uz-UZ' : 'ru-RU';
+  const expires = accountInfo?.expires_at ? new Date(accountInfo.expires_at).toLocaleDateString(locale) : '—';
   document.getElementById('account-info').innerHTML = `
     ${t('settings.venue')}: <strong>${venueInfo?.name||'—'}</strong><br>
     ${t('settings.plan')}: <strong>${planMap[accountInfo?.plan]||accountInfo?.plan||'—'}</strong><br>
@@ -3177,7 +3546,7 @@ async function reloadShiftHistory() {
 }
 
 function shiftDate(value) {
-  return value ? new Date(value).toLocaleString('ru-RU', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : '—';
+  return value ? new Date(value).toLocaleString(appLang === 'uz' ? 'uz-UZ' : 'ru-RU', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : '—';
 }
 
 function renderShiftHistory() {
