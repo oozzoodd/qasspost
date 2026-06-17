@@ -1139,21 +1139,21 @@
     <!-- КЛИЕНТЫ -->
     <div class="page" id="page-clients">
       <div class="page-header">
-        <div class="page-title">База клиентов</div>
-        <button class="btn btn-primary" onclick="openClientModal(null)">+ Добавить клиента</button>
+        <div class="page-title" data-i18n="clients.title">База клиентов</div>
+        <button class="btn btn-primary" onclick="openClientModal(null)" data-i18n="clients.addClient">+ Добавить клиента</button>
       </div>
       <div class="client-tools">
-        <input class="search-input" id="client-search" placeholder="Поиск по имени или телефону" oninput="searchClients(this.value)">
+        <input class="search-input" id="client-search" placeholder="Поиск по имени или телефону" data-i18n-placeholder="clients.searchPlaceholder" oninput="searchClients(this.value)">
         <div class="view-switch">
-          <button id="view-table" class="active" onclick="setClientView('table')">Таблица</button>
-          <button id="view-kanban" onclick="setClientView('kanban')">Kanban</button>
+          <button id="view-table" class="active" onclick="setClientView('table')" data-i18n="clients.tableView">Таблица</button>
+          <button id="view-kanban" onclick="setClientView('kanban')" data-i18n="clients.kanbanView">Kanban</button>
         </div>
       </div>
       <div class="metrics" id="client-metrics"></div>
       <div class="card" id="clients-table-card">
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Клиент</th><th>Email / Телефон</th><th>Визитов</th><th>Бонусы</th><th>Сумма покупок</th><th></th></tr></thead>
+            <thead><tr><th data-i18n="clients.client">Клиент</th><th data-i18n="clients.emailPhone">Email / Телефон</th><th data-i18n="clients.visits">Визитов</th><th data-i18n="clients.bonus">Бонусы</th><th data-i18n="clients.totalSpent">Сумма покупок</th><th></th></tr></thead>
             <tbody id="clients-tbody"></tbody>
           </table>
         </div>
@@ -1202,14 +1202,14 @@
     <!-- ФИНАНСЫ -->
     <div class="page" id="page-finance">
       <div class="page-header">
-        <div class="page-title">Финансы</div>
+        <div class="page-title" data-i18n="finance.title">Финансы</div>
       </div>
       <div class="finance-toolbar">
         <div class="finance-date-picker" id="finance-date-picker">
           <button type="button" class="finance-date-trigger" id="finance-date-trigger" onclick="toggleFinanceDatePicker(event)" aria-expanded="false">
             <span>
-              <span class="finance-date-trigger-label">Период</span>
-              <span class="finance-date-trigger-value" id="finance-period-label">За сегодня</span>
+              <span class="finance-date-trigger-label" data-i18n="finance.period">Период</span>
+              <span class="finance-date-trigger-value" id="finance-period-label" data-i18n="finance.today">За сегодня</span>
             </span>
             <span class="finance-date-chevron">▾</span>
           </button>
@@ -1223,8 +1223,8 @@
               </div>
               <div class="finance-calendar-months" id="finance-calendar-months"></div>
               <div class="finance-date-footer">
-                <div class="finance-custom-label" id="finance-custom-label">Выберите диапазон дат</div>
-                <button type="button" class="finance-done-btn" onclick="applyFinanceCustomRange()">Готово</button>
+                <div class="finance-custom-label" id="finance-custom-label" data-i18n="finance.selectRange">Выберите диапазон дат</div>
+                <button type="button" class="finance-done-btn" onclick="applyFinanceCustomRange()" data-i18n="finance.done">Готово</button>
               </div>
             </div>
           </div>
@@ -1232,10 +1232,10 @@
       </div>
       <div class="metrics" id="finance-metrics"></div>
       <div class="card">
-        <div class="card-title">История смен</div>
+        <div class="card-title" data-i18n="finance.shiftHistory">История смен</div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>№</th><th>Закрыта</th><th>Выручка</th><th>Расходы</th><th>Закупка</th><th>Прибыль</th><th>Маржа</th><th>Заказов</th></tr></thead>
+            <thead><tr><th data-i18n="finance.number">№</th><th data-i18n="finance.closedAt">Закрыта</th><th data-i18n="finance.revenue">Выручка</th><th data-i18n="finance.expenses">Расходы</th><th data-i18n="finance.stockPurchase">Закупка</th><th data-i18n="finance.profit">Прибыль</th><th data-i18n="finance.margin">Маржа</th><th data-i18n="finance.orders">Заказов</th></tr></thead>
             <tbody id="finance-shifts-tbody"></tbody>
           </table>
         </div>
@@ -1505,7 +1505,81 @@ const I18N = {
     'payment.cash': 'Наличные',
     'payment.card': 'Карта',
     'cashBar.shift': 'Смена',
-    'cashBar.orders': 'Заказов'
+    'cashBar.orders': 'Заказов',
+    'clients.title': 'База клиентов',
+    'clients.addClient': '+ Добавить клиента',
+    'clients.searchPlaceholder': 'Поиск по имени или телефону',
+    'clients.tableView': 'Таблица',
+    'clients.kanbanView': 'Kanban',
+    'clients.client': 'Клиент',
+    'clients.emailPhone': 'Email / Телефон',
+    'clients.visits': 'Визитов',
+    'clients.bonus': 'Бонусы',
+    'clients.totalSpent': 'Сумма покупок',
+    'clients.new': 'Новые',
+    'clients.active': 'Активные',
+    'clients.vip': 'VIP',
+    'clients.needAttention': 'Нуждаются',
+    'clients.rare': 'Редко',
+    'clients.noClients': 'Клиентов пока нет',
+    'clients.profile': 'Карточка клиента',
+    'clients.phone': 'Телефон',
+    'clients.email': 'Email',
+    'clients.status': 'Статус',
+    'clients.receipts': 'Прикреплённые чеки',
+    'clients.noReceipts': 'Чеки не добавлены',
+    'clients.addReceipt': 'Добавить чек',
+    'clients.name': 'Имя',
+    'clients.saveClient': 'Сохранить клиента',
+    'clients.deleteClient': 'Удалить клиента?',
+    'clients.clientAdded': 'Клиент добавлен',
+    'clients.clientSaved': 'Клиент сохранён',
+    'clients.clientDeleted': 'Клиент удалён',
+    'clients.totalClients': 'Всего клиентов',
+    'clients.totalVisits': 'Всего визитов',
+    'clients.bonusIssued': 'Бонусов выдано',
+    'clients.check': 'Чек',
+    'clients.last': 'Последний',
+    'clients.noOrders': 'нет заказов',
+    'clients.noRecentOrders': 'Нет недавних заказов',
+    'clients.lastOrder': 'Последний заказ',
+    'clients.accessUntil': 'Доступ до',
+    'clients.recentOrders': 'Недавние заказы',
+    'clients.editClient': 'Редактировать клиента',
+    'clients.newClient': 'Новый клиент',
+    'clients.inactive': 'Неактивный',
+    'clients.vipUntil': 'Срок VIP / акции',
+    'clients.enterName': 'Введите имя клиента',
+    'clients.receiptAdded': 'Чек добавлен',
+    'finance.title': 'Финансы',
+    'finance.period': 'Период',
+    'finance.today': 'За сегодня',
+    'finance.yesterday': 'За вчера',
+    'finance.last7': 'За последние 7 дней',
+    'finance.last30': 'За последние 30 дней',
+    'finance.thisWeek': 'За эту неделю',
+    'finance.lastWeek': 'За прошлую неделю',
+    'finance.thisMonth': 'За этот месяц',
+    'finance.lastMonth': 'За прошлый месяц',
+    'finance.quarter': 'За квартал',
+    'finance.year': 'За этот год',
+    'finance.selectRange': 'Выберите диапазон дат',
+    'finance.done': 'Готово',
+    'finance.revenue': 'Выручка',
+    'finance.cashExpenses': 'Расходы кассы',
+    'finance.stockIncome': 'Закупка товара',
+    'finance.netProfit': 'Чистая прибыль',
+    'finance.margin': 'Маржа',
+    'finance.shiftHistory': 'История смен',
+    'finance.number': '№',
+    'finance.closedAt': 'Закрыта',
+    'finance.expenses': 'Расходы',
+    'finance.stockPurchase': 'Закупка',
+    'finance.profit': 'Прибыль',
+    'finance.orders': 'Заказов',
+    'finance.loading': 'Загрузка...',
+    'finance.noShifts': 'Смен за период нет',
+    'finance.selectStartDate': 'Выберите дату начала'
   },
   uz: {
     'nav.pos': 'Kassa',
@@ -1594,7 +1668,81 @@ const I18N = {
     'payment.cash': 'Naqd',
     'payment.card': 'Karta',
     'cashBar.shift': 'Smena',
-    'cashBar.orders': 'Buyurtmalar'
+    'cashBar.orders': 'Buyurtmalar',
+    'clients.title': 'Mijozlar bazasi',
+    'clients.addClient': '+ Mijoz qo‘shish',
+    'clients.searchPlaceholder': 'Ism yoki telefon bo‘yicha qidirish',
+    'clients.tableView': 'Jadval',
+    'clients.kanbanView': 'Kanban',
+    'clients.client': 'Mijoz',
+    'clients.emailPhone': 'Email / Telefon',
+    'clients.visits': 'Tashriflar',
+    'clients.bonus': 'Bonuslar',
+    'clients.totalSpent': 'Xaridlar summasi',
+    'clients.new': 'Yangi',
+    'clients.active': 'Faol',
+    'clients.vip': 'VIP',
+    'clients.needAttention': 'Eʼtibor kerak',
+    'clients.rare': 'Kam',
+    'clients.noClients': 'Hozircha mijozlar yo‘q',
+    'clients.profile': 'Mijoz kartasi',
+    'clients.phone': 'Telefon',
+    'clients.email': 'Email',
+    'clients.status': 'Holat',
+    'clients.receipts': 'Biriktirilgan cheklar',
+    'clients.noReceipts': 'Cheklar qo‘shilmagan',
+    'clients.addReceipt': 'Chek qo‘shish',
+    'clients.name': 'Ism',
+    'clients.saveClient': 'Mijozni saqlash',
+    'clients.deleteClient': 'Mijozni o‘chirish?',
+    'clients.clientAdded': 'Mijoz qo‘shildi',
+    'clients.clientSaved': 'Mijoz saqlandi',
+    'clients.clientDeleted': 'Mijoz o‘chirildi',
+    'clients.totalClients': 'Jami mijozlar',
+    'clients.totalVisits': 'Jami tashriflar',
+    'clients.bonusIssued': 'Berilgan bonuslar',
+    'clients.check': 'Chek',
+    'clients.last': 'Oxirgi',
+    'clients.noOrders': 'buyurtmalar yo‘q',
+    'clients.noRecentOrders': 'Yaqinda buyurtmalar yo‘q',
+    'clients.lastOrder': 'Oxirgi buyurtma',
+    'clients.accessUntil': 'Kirish muddati',
+    'clients.recentOrders': 'Yaqindagi buyurtmalar',
+    'clients.editClient': 'Mijozni tahrirlash',
+    'clients.newClient': 'Yangi mijoz',
+    'clients.inactive': 'Nofaol',
+    'clients.vipUntil': 'VIP / aksiya muddati',
+    'clients.enterName': 'Mijoz ismini kiriting',
+    'clients.receiptAdded': 'Chek qo‘shildi',
+    'finance.title': 'Moliya',
+    'finance.period': 'Davr',
+    'finance.today': 'Bugun',
+    'finance.yesterday': 'Kecha',
+    'finance.last7': 'Oxirgi 7 kun',
+    'finance.last30': 'Oxirgi 30 kun',
+    'finance.thisWeek': 'Shu hafta',
+    'finance.lastWeek': 'O‘tgan hafta',
+    'finance.thisMonth': 'Shu oy',
+    'finance.lastMonth': 'O‘tgan oy',
+    'finance.quarter': 'Kvartal',
+    'finance.year': 'Shu yil',
+    'finance.selectRange': 'Sana oralig‘ini tanlang',
+    'finance.done': 'Tayyor',
+    'finance.revenue': 'Tushum',
+    'finance.cashExpenses': 'Kassa xarajatlari',
+    'finance.stockIncome': 'Tovar xaridi',
+    'finance.netProfit': 'Sof foyda',
+    'finance.margin': 'Marja',
+    'finance.shiftHistory': 'Smenalar tarixi',
+    'finance.number': '№',
+    'finance.closedAt': 'Yopilgan',
+    'finance.expenses': 'Xarajatlar',
+    'finance.stockPurchase': 'Xarid',
+    'finance.profit': 'Foyda',
+    'finance.orders': 'Buyurtmalar',
+    'finance.loading': 'Yuklanmoqda...',
+    'finance.noShifts': 'Bu davrda smenalar yo‘q',
+    'finance.selectStartDate': 'Boshlanish sanasini tanlang'
   }
 };
 
@@ -1644,7 +1792,14 @@ function setLang(lang) {
     renderDailyCashBar();
     renderShiftBar();
   }
-  renderFinanceDatePicker();
+  if (document.getElementById('page-clients')?.classList.contains('active')) {
+    renderClients();
+  }
+  if (document.getElementById('page-finance')?.classList.contains('active')) {
+    renderFinance();
+  } else {
+    renderFinanceDatePicker();
+  }
   if (document.getElementById('page-settings')?.classList.contains('active')) {
     renderSettings();
   }
@@ -2388,12 +2543,26 @@ async function reloadClients(query='') {
   const path = '/orders/clients/all' + (query ? '?search=' + encodeURIComponent(query) : '');
   clients = await api(path);
 }
+function getClientStatusKey(c) {
+  if (!c.visits) return 'new';
+  if (c.total_spent >= 200000) return 'vip';
+  if (c.visits >= 5) return 'active';
+  if (c.visits >= 2) return 'needAttention';
+  return 'rare';
+}
+function clientStatusLabel(status) {
+  const map = {
+    new: 'clients.new',
+    active: 'clients.active',
+    vip: 'clients.vip',
+    inactive: 'clients.inactive',
+    needAttention: 'clients.needAttention',
+    rare: 'clients.rare'
+  };
+  return t(map[status] || status || 'clients.new');
+}
 function getClientStatus(c) {
-  if (!c.visits) return 'Новые';
-  if (c.total_spent >= 200000) return 'VIP';
-  if (c.visits >= 5) return 'Активные';
-  if (c.visits >= 2) return 'Нуждаются';
-  return 'Редко';
+  return clientStatusLabel(getClientStatusKey(c));
 }
 function getClientLastOrder(c) {
   const clientOrders = orders.filter(o => o.client_id === c.id);
@@ -2402,9 +2571,9 @@ function getClientLastOrder(c) {
 }
 function renderClients() {
   document.getElementById('client-metrics').innerHTML = `
-    <div class="metric"><div class="metric-label">Всего клиентов</div><div class="metric-value">${clients.length}</div></div>
-    <div class="metric"><div class="metric-label">Всего визитов</div><div class="metric-value">${clients.reduce((a,c)=>a+c.visits,0)}</div></div>
-    <div class="metric"><div class="metric-label">Бонусов выдано</div><div class="metric-value green">${fmt(clients.reduce((a,c)=>a+c.bonus,0))}</div></div>`;
+    <div class="metric"><div class="metric-label">${t('clients.totalClients')}</div><div class="metric-value">${clients.length}</div></div>
+    <div class="metric"><div class="metric-label">${t('clients.totalVisits')}</div><div class="metric-value">${clients.reduce((a,c)=>a+c.visits,0)}</div></div>
+    <div class="metric"><div class="metric-label">${t('clients.bonusIssued')}</div><div class="metric-value green">${fmt(clients.reduce((a,c)=>a+c.bonus,0))}</div></div>`;
   document.getElementById('client-search').value = clientSearchQuery;
   const tableCard = document.getElementById('clients-table-card');
   const kanbanBoard = document.getElementById('clients-kanban');
@@ -2417,7 +2586,7 @@ function renderClients() {
     tableCard.style.display = '';
     kanbanBoard.style.display = 'none';
     kanbanBoard.classList.remove('kanban-visible');
-    document.getElementById('clients-tbody').innerHTML = clients.map(c => {
+    document.getElementById('clients-tbody').innerHTML = clients.length ? clients.map(c => {
       const last = getClientLastOrder(c);
       const lastLabel = last ? new Date(last.created_at).toLocaleDateString('ru-RU') : '—';
       return `<tr>
@@ -2432,33 +2601,38 @@ function renderClients() {
           <button class="btn btn-icon btn-sm" onclick="deleteClient(${c.id})">🗑️</button>
         </td>
       </tr>`;
-    }).join('');
+    }).join('') : `<tr><td colspan="6" class="empty-state">${t('clients.noClients')}</td></tr>`;
   }
 }
 function renderClientKanban() {
-  const columns = ['Новые','Активные','VIP','Нуждаются'];
-  const groups = columns.map(col => ({ title: col, items: clients.filter(c => getClientStatus(c) === col) }));
+  const columns = [
+    { key:'new', title:t('clients.new') },
+    { key:'active', title:t('clients.active') },
+    { key:'vip', title:t('clients.vip') },
+    { key:'needAttention', title:t('clients.needAttention') }
+  ];
+  const groups = columns.map(col => ({ title: col.title, items: clients.filter(c => getClientStatusKey(c) === col.key) }));
   document.getElementById('clients-kanban').innerHTML = groups.map(group => `
     <div class="kanban-column">
       <h4>${group.title} <span class="muted-text" style="font-size:12px;">${group.items.length}</span></h4>
       ${group.items.map(c => {
         const last = getClientLastOrder(c);
-        const lastLabel = last ? new Date(last.created_at).toLocaleDateString('ru-RU') : 'нет заказов';
+        const lastLabel = last ? new Date(last.created_at).toLocaleDateString('ru-RU') : t('clients.noOrders');
         return `<div class="client-card" onclick="openClientProfile(${c.id})">
           <div class="client-card-title"><strong>${esc(c.name)}</strong><span>${esc(c.phone||'—')}</span></div>
           <div class="client-card-meta">
-            <span>Визитов: ${c.visits}</span>
-            <span>Чек: ${fmt(c.total_spent)}</span>
-            <span>Бонусы: ${fmt(c.bonus)}</span>
-            <span>Последний: ${lastLabel}</span>
+            <span>${t('clients.visits')}: ${c.visits}</span>
+            <span>${t('clients.check')}: ${fmt(c.total_spent)}</span>
+            <span>${t('clients.bonus')}: ${fmt(c.bonus)}</span>
+            <span>${t('clients.last')}: ${lastLabel}</span>
           </div>
         </div>`;
       }).join('')}
     </div>`).join('');
 }
 async function deleteClient(id) {
-  if (!confirm('Удалить клиента?')) return;
-  try { await api('/orders/clients/'+id, { method:'DELETE' }); await reloadClients(clientSearchQuery); renderClients(); }
+  if (!confirm(t('clients.deleteClient'))) return;
+  try { await api('/orders/clients/'+id, { method:'DELETE' }); await reloadClients(clientSearchQuery); renderClients(); toast(t('clients.clientDeleted')); }
   catch(err){ toast(err.message); }
 }
 function setClientView(mode) {
@@ -2486,35 +2660,36 @@ function searchClients(value) {
 function openClientProfile(id) {
   const c = getClient(id);
   if (!c) return;
+  const locale = appLang === 'uz' ? 'uz-UZ' : 'ru-RU';
   const last = getClientLastOrder(c);
   const recent = orders.filter(o => o.client_id === c.id).slice(0,5);
   const receipts = clientReceipts[c.id] || [];
-  const receiptHtml = receipts.length ? receipts.map(r => `<div><strong>${esc(r.name)}</strong> · ${new Date(r.uploaded_at).toLocaleDateString('ru-RU')}<div class="receipt-preview">${r.size}</div></div>`).join('') : '<div class="muted-text">Чеки не добавлены</div>';
-  showModal(`<div class="modal-title">Карточка клиента</div>
+  const receiptHtml = receipts.length ? receipts.map(r => `<div><strong>${esc(r.name)}</strong> · ${new Date(r.uploaded_at).toLocaleDateString(locale)}<div class="receipt-preview">${r.size}</div></div>`).join('') : `<div class="muted-text">${t('clients.noReceipts')}</div>`;
+  showModal(`<div class="modal-title">${t('clients.profile')}</div>
     <div class="field"><strong>${esc(c.name)}</strong></div>
-    <div class="field"><label>Телефон</label><div>${esc(c.phone||'—')}</div></div>
+    <div class="field"><label>${t('clients.phone')}</label><div>${esc(c.phone||'—')}</div></div>
     <div class="field-row">
-      <div class="field"><label>Визитов</label><div>${c.visits}</div></div>
-      <div class="field"><label>Бонусы</label><div>${fmt(c.bonus)}</div></div>
+      <div class="field"><label>${t('clients.visits')}</label><div>${c.visits}</div></div>
+      <div class="field"><label>${t('clients.bonus')}</label><div>${fmt(c.bonus)}</div></div>
     </div>
     <div class="field-row">
-      <div class="field"><label>Email</label><div>${esc(c.email||'—')}</div></div>
-      <div class="field"><label>Телефон</label><div>${esc(c.phone||'—')}</div></div>
+      <div class="field"><label>${t('clients.email')}</label><div>${esc(c.email||'—')}</div></div>
+      <div class="field"><label>${t('clients.phone')}</label><div>${esc(c.phone||'—')}</div></div>
     </div>
     <div class="field-row">
-      <div class="field"><label>Сумма покупок</label><div>${fmt(c.total_spent)}</div></div>
-      <div class="field"><label>Последний заказ</label><div>${last ? new Date(last.created_at).toLocaleDateString('ru-RU') : 'нет'}</div></div>
+      <div class="field"><label>${t('clients.totalSpent')}</label><div>${fmt(c.total_spent)}</div></div>
+      <div class="field"><label>${t('clients.lastOrder')}</label><div>${last ? new Date(last.created_at).toLocaleDateString(locale) : t('clients.noOrders')}</div></div>
     </div>
     <div class="field-row">
-      <div class="field"><label>Статус</label><div>${esc(c.status || getClientStatus(c))}</div></div>
-      <div class="field"><label>Доступ до</label><div>${c.expires_at ? new Date(c.expires_at).toLocaleDateString('ru-RU') : '—'}</div></div>
+      <div class="field"><label>${t('clients.status')}</label><div>${esc(c.status ? clientStatusLabel(c.status) : getClientStatus(c))}</div></div>
+      <div class="field"><label>${t('clients.accessUntil')}</label><div>${c.expires_at ? new Date(c.expires_at).toLocaleDateString(locale) : '—'}</div></div>
     </div>
-    <div class="field"><label>Недавние заказы</label>${recent.length ? `<ul class="muted-text" style="padding-left:18px;margin:8px 0;">${recent.map(o=>`<li>#${o.id} ${fmt(o.total)} · ${new Date(o.created_at).toLocaleDateString('ru-RU')}</li>`).join('')}</ul>` : '<div class="muted-text">Нет недавних заказов</div>'}</div>
-    <div class="field"><label>Прикреплённые чеки</label><div class="receipt-list">${receiptHtml}</div></div>
-    <div class="field"><label>Добавить чек</label><input type="file" id="receipt-file" accept="image/*,.pdf" onchange="attachClientReceipt(${c.id})"></div>
+    <div class="field"><label>${t('clients.recentOrders')}</label>${recent.length ? `<ul class="muted-text" style="padding-left:18px;margin:8px 0;">${recent.map(o=>`<li>#${o.id} ${fmt(o.total)} · ${new Date(o.created_at).toLocaleDateString(locale)}</li>`).join('')}</ul>` : `<div class="muted-text">${t('clients.noRecentOrders')}</div>`}</div>
+    <div class="field"><label>${t('clients.receipts')}</label><div class="receipt-list">${receiptHtml}</div></div>
+    <div class="field"><label>${t('clients.addReceipt')}</label><input type="file" id="receipt-file" accept="image/*,.pdf" onchange="attachClientReceipt(${c.id})"></div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal()">Закрыть</button>
-      <button class="btn btn-primary" onclick="openClientModal(${c.id})">Редактировать</button>
+      <button class="btn btn-secondary" onclick="closeModal()">${t('common.close')}</button>
+      <button class="btn btn-primary" onclick="openClientModal(${c.id})">${t('clients.editClient')}</button>
     </div>`);
 }
 function attachClientReceipt(clientId) {
@@ -2528,31 +2703,31 @@ function attachClientReceipt(clientId) {
     clientReceipts[clientId] = list.slice(0, 10);
     localStorage.setItem('qp_client_receipts', JSON.stringify(clientReceipts));
     openClientProfile(clientId);
-    toast('Чек добавлен');
+    toast(t('clients.receiptAdded'));
   };
   reader.readAsDataURL(file);
 }
 function openClientModal(id) {
   const c = id ? getClient(id) : null;
-  showModal(`<div class="modal-title">${id?'Редактировать клиента':'Новый клиент'}</div>
-    <div class="field"><label>Имя</label><input type="text" id="cf-name" value="${c?esc(c.name):''}"></div>
+  showModal(`<div class="modal-title">${id?t('clients.editClient'):t('clients.newClient')}</div>
+    <div class="field"><label>${t('clients.name')}</label><input type="text" id="cf-name" value="${c?esc(c.name):''}" placeholder="${t('clients.name')}" data-i18n-placeholder="clients.name"></div>
     <div class="field-row">
-      <div class="field"><label>Email</label><input type="email" id="cf-email" value="${c?esc(c.email||''):''}"></div>
-      <div class="field"><label>Телефон</label><input type="text" id="cf-phone" value="${c?esc(c.phone||''):''}"></div>
+      <div class="field"><label>${t('clients.email')}</label><input type="email" id="cf-email" value="${c?esc(c.email||''):''}" placeholder="${t('clients.email')}" data-i18n-placeholder="clients.email"></div>
+      <div class="field"><label>${t('clients.phone')}</label><input type="text" id="cf-phone" value="${c?esc(c.phone||''):''}" placeholder="${t('clients.phone')}" data-i18n-placeholder="clients.phone"></div>
     </div>
     <div class="field-row">
-      <div class="field"><label>Статус</label><select id="cf-status">
-        <option value="new"${c&&c.status==='new'?' selected':''}>Новый</option>
-        <option value="active"${c&&c.status==='active'?' selected':''}>Активный</option>
-        <option value="vip"${c&&c.status==='vip'?' selected':''}>VIP</option>
-        <option value="inactive"${c&&c.status==='inactive'?' selected':''}>Неактивный</option>
+      <div class="field"><label>${t('clients.status')}</label><select id="cf-status">
+        <option value="new"${c&&c.status==='new'?' selected':''}>${t('clients.new')}</option>
+        <option value="active"${c&&c.status==='active'?' selected':''}>${t('clients.active')}</option>
+        <option value="vip"${c&&c.status==='vip'?' selected':''}>${t('clients.vip')}</option>
+        <option value="inactive"${c&&c.status==='inactive'?' selected':''}>${t('clients.inactive')}</option>
       </select></div>
-      <div class="field"><label>Срок VIP / акции</label><input type="date" id="cf-expires" value="${c&&c.expires_at?new Date(c.expires_at).toISOString().slice(0,10):''}"></div>
+      <div class="field"><label>${t('clients.vipUntil')}</label><input type="date" id="cf-expires" value="${c&&c.expires_at?new Date(c.expires_at).toISOString().slice(0,10):''}"></div>
     </div>
-    ${c?`<div class="field-row"><div class="field"><label>Бонусы</label><input type="number" id="cf-bonus" value="${c.bonus}"></div><div class="field"><label>Визитов</label><input type="number" id="cf-visits" value="${c.visits}" disabled></div></div>`:''}
+    ${c?`<div class="field-row"><div class="field"><label>${t('clients.bonus')}</label><input type="number" id="cf-bonus" value="${c.bonus}"></div><div class="field"><label>${t('clients.visits')}</label><input type="number" id="cf-visits" value="${c.visits}" disabled></div></div>`:''}
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
-      <button class="btn btn-primary" onclick="saveClient(${id||0})">Сохранить</button>
+      <button class="btn btn-secondary" onclick="closeModal()">${t('common.cancel')}</button>
+      <button class="btn btn-primary" onclick="saveClient(${id||0})">${t('clients.saveClient')}</button>
     </div>`);
 }
 async function saveClient(id) {
@@ -2561,7 +2736,7 @@ async function saveClient(id) {
   const phone = document.getElementById('cf-phone').value.trim();
   const status = document.getElementById('cf-status').value;
   const expires_at = document.getElementById('cf-expires').value || null;
-  if (!name) { toast('Введите имя клиента'); return; }
+  if (!name) { toast(t('clients.enterName')); return; }
   try {
     if (id) {
       const bonus = +document.getElementById('cf-bonus').value || 0;
@@ -2572,6 +2747,7 @@ async function saveClient(id) {
     await reloadClients(clientSearchQuery);
     closeModal();
     renderClients();
+    toast(id ? t('clients.clientSaved') : t('clients.clientAdded'));
   } catch(err) { toast(err.message); }
 }
 
@@ -2676,16 +2852,16 @@ async function renderAnalytics() {
 // FINANCE
 // ═══════════════════════════════════════════════════════════
 const FINANCE_PERIODS = [
-  { key:'today', label:'За сегодня' },
-  { key:'yesterday', label:'За вчера' },
-  { key:'7d', label:'За последние 7 дней' },
-  { key:'30d', label:'За последние 30 дней' },
-  { key:'this_week', label:'За эту неделю' },
-  { key:'last_week', label:'За прошлую неделю' },
-  { key:'this_month', label:'За этот месяц' },
-  { key:'last_month', label:'За прошлый месяц' },
-  { key:'quarter', label:'За квартал' },
-  { key:'year', label:'За этот год' },
+  { key:'today', labelKey:'finance.today' },
+  { key:'yesterday', labelKey:'finance.yesterday' },
+  { key:'7d', labelKey:'finance.last7' },
+  { key:'30d', labelKey:'finance.last30' },
+  { key:'this_week', labelKey:'finance.thisWeek' },
+  { key:'last_week', labelKey:'finance.lastWeek' },
+  { key:'this_month', labelKey:'finance.thisMonth' },
+  { key:'last_month', labelKey:'finance.lastMonth' },
+  { key:'quarter', labelKey:'finance.quarter' },
+  { key:'year', labelKey:'finance.year' },
 ];
 
 async function reloadFinance() {
@@ -2703,11 +2879,11 @@ async function renderFinance() {
   renderFinanceDatePicker();
 
   document.getElementById('finance-metrics').innerHTML = `
-    <div class="metric"><div class="metric-label">Выручка</div><div class="metric-value green">${fmt(financeSummary.revenue || 0)}</div></div>
-    <div class="metric"><div class="metric-label">Расходы кассы</div><div class="metric-value red">${fmt(financeSummary.expenses_total || 0)}</div></div>
-    <div class="metric"><div class="metric-label">Закупка товара</div><div class="metric-value amber">${fmt(financeSummary.stock_income_total || 0)}</div></div>
-    <div class="metric"><div class="metric-label">Чистая прибыль</div><div class="metric-value ${financeSummary.net_profit >= 0 ? 'green' : 'red'}">${fmt(financeSummary.net_profit || 0)}</div></div>
-    <div class="metric"><div class="metric-label">Маржа</div><div class="metric-value">${Number(financeSummary.margin_percent || 0).toLocaleString('ru-RU', { maximumFractionDigits: 2 })}%</div></div>`;
+    <div class="metric"><div class="metric-label">${t('finance.revenue')}</div><div class="metric-value green">${fmt(financeSummary.revenue || 0)}</div></div>
+    <div class="metric"><div class="metric-label">${t('finance.cashExpenses')}</div><div class="metric-value red">${fmt(financeSummary.expenses_total || 0)}</div></div>
+    <div class="metric"><div class="metric-label">${t('finance.stockIncome')}</div><div class="metric-value amber">${fmt(financeSummary.stock_income_total || 0)}</div></div>
+    <div class="metric"><div class="metric-label">${t('finance.netProfit')}</div><div class="metric-value ${financeSummary.net_profit >= 0 ? 'green' : 'red'}">${fmt(financeSummary.net_profit || 0)}</div></div>
+    <div class="metric"><div class="metric-label">${t('finance.margin')}</div><div class="metric-value">${Number(financeSummary.margin_percent || 0).toLocaleString(appLang === 'uz' ? 'uz-UZ' : 'ru-RU', { maximumFractionDigits: 2 })}%</div></div>`;
 
   document.getElementById('finance-shifts-tbody').innerHTML = financeShifts.length
     ? financeShifts.map(s => `<tr>
@@ -2717,10 +2893,10 @@ async function renderFinance() {
         <td>${fmt(s.expenses_total || 0)}</td>
         <td>${fmt(s.stock_income_total || 0)}</td>
         <td style="font-weight:600;">${fmt(s.net_profit || 0)}</td>
-        <td>${Number(s.margin_percent || 0).toLocaleString('ru-RU', { maximumFractionDigits: 2 })}%</td>
+        <td>${Number(s.margin_percent || 0).toLocaleString(appLang === 'uz' ? 'uz-UZ' : 'ru-RU', { maximumFractionDigits: 2 })}%</td>
         <td>${s.orders_count || 0}</td>
       </tr>`).join('')
-    : '<tr><td colspan="8" class="empty-state">Смен за период нет</td></tr>';
+    : `<tr><td colspan="8" class="empty-state">${t('finance.noShifts')}</td></tr>`;
 }
 
 function setFinancePeriod(period) {
@@ -2780,7 +2956,7 @@ function applyFinanceQuickPeriod(period) {
 
 function applyFinanceCustomRange() {
   if (!financeDraftStart) {
-    toast('Выберите дату начала');
+    toast(t('finance.selectStartDate'));
     return;
   }
   financePeriod = 'custom';
@@ -2818,7 +2994,7 @@ function renderFinanceDatePicker() {
 
   label.textContent = financePeriodLabel();
   quick.innerHTML = FINANCE_PERIODS.map(p =>
-    `<button type="button" class="finance-quick-btn ${financePeriod === p.key ? 'active' : ''}" onclick="applyFinanceQuickPeriod('${p.key}')">${p.label}</button>`
+    `<button type="button" class="finance-quick-btn ${financePeriod === p.key ? 'active' : ''}" onclick="applyFinanceQuickPeriod('${p.key}')">${t(p.labelKey)}</button>`
   ).join('');
 
   const firstMonth = new Date(financeCalendarMonth.getFullYear(), financeCalendarMonth.getMonth(), 1);
@@ -2828,7 +3004,7 @@ function renderFinanceDatePicker() {
 
   customLabel.textContent = financeDraftStart
     ? (financeDraftEnd ? `${formatFinanceDate(financeDraftStart)} - ${formatFinanceDate(financeDraftEnd)}` : `${formatFinanceDate(financeDraftStart)} - ...`)
-    : 'Выберите диапазон дат';
+    : t('finance.selectRange');
 }
 
 function renderFinanceCalendarMonth(monthDate) {
@@ -2837,7 +3013,7 @@ function renderFinanceCalendarMonth(monthDate) {
   const firstDay = new Date(year, month, 1);
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const offset = (firstDay.getDay() + 6) % 7;
-  const weekdays = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+  const weekdays = appLang === 'uz' ? ['Du','Se','Ch','Pa','Ju','Sh','Ya'] : ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
   let days = '';
   for (let i = 0; i < offset; i++) days += '<span class="finance-day-blank"></span>';
   for (let day = 1; day <= daysInMonth; day++) {
@@ -2864,7 +3040,8 @@ function financePeriodLabel() {
       ? formatFinanceDate(financeRangeStart)
       : `${formatFinanceDate(financeRangeStart)} - ${formatFinanceDate(end)}`;
   }
-  return FINANCE_PERIODS.find(p => p.key === financePeriod)?.label || 'За сегодня';
+  const period = FINANCE_PERIODS.find(p => p.key === financePeriod);
+  return period ? t(period.labelKey) : t('finance.today');
 }
 
 function financeDateToYmd(date) {
@@ -2884,11 +3061,11 @@ function financeTodayYmd() {
 }
 
 function formatFinanceDate(value) {
-  return parseFinanceYmd(value).toLocaleDateString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric' });
+  return parseFinanceYmd(value).toLocaleDateString(appLang === 'uz' ? 'uz-UZ' : 'ru-RU', { day:'2-digit', month:'2-digit', year:'numeric' });
 }
 
 function financeMonthTitle(date) {
-  return date.toLocaleDateString('ru-RU', { month:'long', year:'numeric' });
+  return date.toLocaleDateString(appLang === 'uz' ? 'uz-UZ' : 'ru-RU', { month:'long', year:'numeric' });
 }
 
 function addFinanceMonths(date, delta) {
