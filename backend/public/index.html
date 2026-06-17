@@ -1002,7 +1002,12 @@ function showScreen(name) {
   ['login','pin','expired','loading'].forEach(s => {
     document.getElementById('screen-'+s).style.display = (s===name) ? 'flex' : 'none';
   });
-  document.getElementById('app').style.display = (name==='app') ? '' : 'none';
+  const app = document.getElementById('app');
+  if (name === 'app') {
+    app.style.removeProperty('display');
+  } else {
+    app.style.setProperty('display', 'none', 'important');
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
