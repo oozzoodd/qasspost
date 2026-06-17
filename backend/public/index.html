@@ -946,12 +946,12 @@
 <div class="auth-screen" id="screen-login">
   <div class="auth-box">
     <div class="auth-logo"><div class="icon">🏪</div><div class="name">QassaPos</div></div>
-    <div class="auth-title">Вход в систему</div>
+    <div class="auth-title" data-i18n="auth.loginTitle">Вход в систему</div>
     <div class="auth-error" id="login-error"></div>
-    <div class="auth-field"><label>Email</label><input type="email" id="login-email" placeholder="demo@qassapos.uz"></div>
-    <div class="auth-field"><label>Пароль</label><input type="password" id="login-password" placeholder="••••••••"></div>
-    <button class="auth-btn" id="login-btn" onclick="doLogin()">Войти</button>
-    <div class="auth-switch">Demo доступ: demo@qassapos.uz / demo1234</div>
+    <div class="auth-field"><label data-i18n="auth.email">Email</label><input type="email" id="login-email" placeholder="demo@qassapos.uz"></div>
+    <div class="auth-field"><label data-i18n="auth.password">Пароль</label><input type="password" id="login-password" placeholder="••••••••"></div>
+    <button class="auth-btn" id="login-btn" onclick="doLogin()" data-i18n="auth.loginBtn">Войти</button>
+    <div class="auth-switch" data-i18n="auth.demoAccess">Demo доступ: demo@qassapos.uz / demo1234</div>
   </div>
 </div>
 
@@ -959,11 +959,11 @@
 <div class="auth-screen" id="screen-pin" style="display:none;">
   <div class="auth-box">
     <div class="auth-logo"><div class="icon">🏪</div><div class="name" id="pin-venue-name">QassaPos</div></div>
-    <div class="auth-title">Введите PIN-код</div>
+    <div class="auth-title" data-i18n="auth.pinTitle">Введите PIN-код</div>
     <div class="auth-error" id="pin-error"></div>
     <div class="pin-display" id="pin-display"></div>
     <div class="pin-grid" id="pin-grid"></div>
-    <div class="auth-switch"><a onclick="logout()">← Выйти из заведения</a></div>
+    <div class="auth-switch"><a onclick="logout()" data-i18n="auth.logoutVenue">← Выйти из заведения</a></div>
   </div>
 </div>
 
@@ -971,15 +971,15 @@
 <div class="auth-screen" id="screen-expired" style="display:none;">
   <div class="auth-box expired-box">
     <div class="expired-icon">⏰</div>
-    <div class="auth-title">Подписка истекла</div>
-    <p class="muted-text" style="font-size:13px;margin-bottom:16px;line-height:1.6;">Доступ к системе временно ограничен. Свяжитесь с поддержкой для продления тарифа.</p>
-    <button class="auth-btn" onclick="logout()">Выйти</button>
+    <div class="auth-title" data-i18n="auth.expiredTitle">Подписка истекла</div>
+    <p class="muted-text" style="font-size:13px;margin-bottom:16px;line-height:1.6;" data-i18n="auth.expiredText">Доступ к системе временно ограничен. Свяжитесь с поддержкой для продления тарифа.</p>
+    <button class="auth-btn" onclick="logout()" data-i18n="auth.logoutBtn">Выйти</button>
   </div>
 </div>
 
 <!-- ═══════════════ LOADING ═══════════════ -->
 <div class="auth-screen" id="screen-loading">
-  <div class="auth-loading">Загрузка...</div>
+  <div class="auth-loading" data-i18n="auth.loading">Загрузка...</div>
 </div>
 
 <!-- ═══════════════ MAIN APP ═══════════════ -->
@@ -1022,15 +1022,15 @@
     <div class="page active" id="page-pos">
       <div class="pos-mobile-backdrop" onclick="closeMobilePanels()"></div>
       <div class="pos-mobile-header">
-        <button class="btn btn-secondary btn-sm" onclick="toggleMobileNav()">Меню</button>
-        <div class="pos-mobile-title" data-i18n="nav.pos">Касса</div>
+        <button class="btn btn-secondary btn-sm" onclick="toggleMobileNav()" data-i18n="pos.mobileMenu">Меню</button>
+        <div class="pos-mobile-title" data-i18n="pos.title">Касса</div>
         <button class="btn btn-secondary btn-sm" onclick="toggleMobileCart()">
           <span data-i18n="pos.order">Заказ</span>
           <span class="pos-mobile-order-meta"><span id="mobile-cart-count">0</span> · <span id="mobile-cart-total">0 сум</span></span>
         </button>
       </div>
       <div class="page-header">
-        <div class="page-title" data-i18n="nav.pos">Касса</div>
+        <div class="page-title" data-i18n="pos.title">Касса</div>
       </div>
       <div id="shift-bar-block"></div>
       <div class="pos-layout">
@@ -1044,23 +1044,23 @@
             <div class="pos-cart-num" id="cart-client-name"></div>
           </div>
           <div class="pos-cart-body" id="cart-body">
-            <div class="cart-empty">Добавьте позиции из меню</div>
+            <div class="cart-empty" data-i18n="pos.addItems">Добавьте позиции из меню</div>
           </div>
           <div class="pos-cart-footer">
-            <div class="total-row"><span>Позиций</span><span id="cart-count">0</span></div>
-            <div class="total-row big"><span>Итого</span><span id="cart-total">0 сум</span></div>
+            <div class="total-row"><span data-i18n="pos.positions">Позиций</span><span id="cart-count">0</span></div>
+            <div class="total-row big"><span data-i18n="pos.total">Итого</span><span id="cart-total">0 сум</span></div>
             <select id="cart-client-sel" class="inline-control" style="width:100%;margin-bottom:8px;font-size:12px;" onchange="selectClient(this.value)">
-              <option value="">— Клиент не выбран —</option>
+              <option value="" data-i18n="pos.noClient">— Клиент не выбран —</option>
             </select>
             <div class="client-picker">
               <div class="client-picker-row">
-                <input id="cart-client-search" type="search" placeholder="Поиск: имя, телефон или email" oninput="renderCartClientOptions(this.value)">
-                <button class="btn btn-secondary btn-sm" onclick="openQuickClientModal()">+ Клиент</button>
+                <input id="cart-client-search" type="search" placeholder="Поиск: имя, телефон или email" data-i18n-placeholder="pos.searchClient" oninput="renderCartClientOptions(this.value)">
+                <button class="btn btn-secondary btn-sm" onclick="openQuickClientModal()" data-i18n="pos.addClient">+ Клиент</button>
               </div>
             </div>
             <div class="pay-methods">
-              <button class="pay-btn" id="pay-cash" onclick="setPay('cash')">💵 <span data-i18n="payment.cash">Наличные</span></button>
-              <button class="pay-btn" id="pay-card" onclick="setPay('card')">💳 <span data-i18n="payment.card">Карта</span></button>
+              <button class="pay-btn" id="pay-cash" onclick="setPay('cash')">💵 <span data-i18n="pos.cash">Наличные</span></button>
+              <button class="pay-btn" id="pay-card" onclick="setPay('card')">💳 <span data-i18n="pos.card">Карта</span></button>
             </div>
             <button class="btn btn-primary" style="width:100%;justify-content:center;" id="checkout-btn" onclick="checkout()" disabled data-i18n="pos.checkout">Оформить заказ</button>
           </div>
@@ -1244,14 +1244,14 @@
 
     <!-- НАСТРОЙКИ -->
     <div class="page" id="page-settings">
-      <div class="page-header"><div class="page-title" data-i18n="nav.settings">Настройки</div></div>
+      <div class="page-header"><div class="page-title" data-i18n="settings.title">Настройки</div></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
         <div class="card">
-          <div class="card-title">Аккаунт</div>
+          <div class="card-title" data-i18n="settings.account">Аккаунт</div>
           <div id="account-info" class="muted-text" style="font-size:13px;line-height:1.8;"></div>
         </div>
         <div class="card">
-          <div class="card-title">Смена</div>
+          <div class="card-title" data-i18n="settings.shift">Смена</div>
           <div class="muted-text" style="font-size:13px;margin-bottom:12px;" id="shift-settings-status"></div>
           <button class="btn" id="shift-toggle-btn" onclick="toggleShift()" style="width:100%;justify-content:center;">Открыть смену</button>
         </div>
@@ -1275,18 +1275,18 @@
       </div>
       <div class="card" id="expenses-card">
         <div class="card-title" data-i18n="settings.expenses">Расходы</div>
-        <div class="muted-text" style="font-size:13px;margin-bottom:12px;">Расходы за смену: <strong id="expenses-summary">0 сум</strong></div>
+        <div class="muted-text" style="font-size:13px;margin-bottom:12px;"><span data-i18n="settings.expensesForShift">Расходы за смену</span>: <strong id="expenses-summary">0 сум</strong></div>
         <div class="field-row">
-          <div class="field"><label>Сумма</label><input type="number" id="expense-amount" min="1" placeholder="0"></div>
-          <div class="field"><label>Категория</label><input type="text" id="expense-category" maxlength="100" placeholder="Закупка, аренда..."></div>
+          <div class="field"><label data-i18n="settings.expenseAmount">Сумма</label><input type="number" id="expense-amount" min="1" placeholder="0"></div>
+          <div class="field"><label data-i18n="settings.expenseCategory">Категория</label><input type="text" id="expense-category" maxlength="100" placeholder="Закупка, аренда..." data-i18n-placeholder="settings.expenseCategoryPlaceholder"></div>
         </div>
-        <div class="field"><label>Комментарий</label><input type="text" id="expense-comment" placeholder="Необязательно"></div>
-        <button class="btn btn-primary" onclick="addCashExpense()">Добавить расход</button>
+        <div class="field"><label data-i18n="settings.expenseComment">Комментарий</label><input type="text" id="expense-comment" placeholder="Необязательно" data-i18n-placeholder="settings.expenseCommentPlaceholder"></div>
+        <button class="btn btn-primary" onclick="addCashExpense()" data-i18n="settings.addExpense">Добавить расход</button>
         <div class="table-wrap" style="margin-top:14px;">
           <table>
             <thead><tr><th>Сумма</th><th>Категория</th><th>Комментарий</th><th>Сотрудник</th><th>Время</th></tr></thead>
             <tbody id="expenses-tbody">
-              <tr><td colspan="5" class="empty-state">Загрузка...</td></tr>
+              <tr><td colspan="5" class="empty-state" data-i18n="common.loading">Загрузка...</td></tr>
             </tbody>
           </table>
         </div>
@@ -1299,7 +1299,7 @@
               <tr><th>№</th><th>Открыта</th><th>Закрыта</th><th>Сотрудник</th><th>Итого</th><th>Наличные</th><th>Карта</th><th>Заказов</th></tr>
             </thead>
             <tbody id="shift-history-tbody">
-              <tr><td colspan="8" class="empty-state">Загрузка...</td></tr>
+              <tr><td colspan="8" class="empty-state" data-i18n="common.loading">Загрузка...</td></tr>
             </tbody>
           </table>
         </div>
@@ -1429,6 +1429,59 @@ const I18N = {
     'nav.finance': 'Финансы',
     'nav.settings': 'Настройки',
     'mobile.stock': 'Склад',
+    'auth.loginTitle': 'Вход в систему',
+    'auth.email': 'Email',
+    'auth.password': 'Пароль',
+    'auth.loginBtn': 'Войти',
+    'auth.demoAccess': 'Demo доступ: demo@qassapos.uz / demo1234',
+    'auth.pinTitle': 'Введите PIN-код',
+    'auth.logoutVenue': '← Выйти из заведения',
+    'auth.logoutBtn': 'Выйти',
+    'auth.expiredTitle': 'Подписка истекла',
+    'auth.expiredText': 'Доступ к системе временно ограничен. Свяжитесь с поддержкой для продления тарифа.',
+    'auth.loading': 'Загрузка...',
+    'auth.fillEmailPassword': 'Заполните email и пароль',
+    'auth.signingIn': 'Входим...',
+    'auth.loginError': 'Ошибка входа',
+    'auth.enterPin4': 'Введите 4 цифры',
+    'pos.title': 'Касса',
+    'pos.mobileMenu': 'Меню',
+    'pos.addItems': 'Добавьте позиции из меню',
+    'pos.positions': 'Позиций',
+    'pos.total': 'Итого',
+    'pos.noClient': '— Клиент не выбран —',
+    'pos.searchClient': 'Поиск: имя, телефон или email',
+    'pos.addClient': '+ Клиент',
+    'pos.cash': 'Наличные',
+    'pos.card': 'Карта',
+    'pos.shiftClosed': 'Смена закрыта',
+    'pos.salesUnavailable': 'Продажи недоступны',
+    'pos.orderCreated': 'Заказ оформлен',
+    'pos.openShiftFirst': 'Сначала откройте смену в настройках',
+    'settings.title': 'Настройки',
+    'settings.account': 'Аккаунт',
+    'settings.shift': 'Смена',
+    'settings.expenseAmount': 'Сумма',
+    'settings.expenseCategory': 'Категория',
+    'settings.expenseCategoryPlaceholder': 'Закупка, аренда...',
+    'settings.expenseComment': 'Комментарий',
+    'settings.expenseCommentPlaceholder': 'Необязательно',
+    'settings.addExpense': 'Добавить расход',
+    'settings.expensesForShift': 'Расходы за смену',
+    'settings.expenseAmountRequired': 'Укажите сумму расхода',
+    'settings.expenseAdded': 'Расход добавлен',
+    'settings.venue': 'Заведение',
+    'settings.plan': 'Тариф',
+    'settings.accessUntil': 'Доступ до',
+    'settings.noExpenses': 'Расходов пока нет',
+    'settings.noClosedShifts': 'Закрытых смен пока нет',
+    'common.save': 'Сохранить',
+    'common.cancel': 'Отмена',
+    'common.close': 'Закрыть',
+    'common.loading': 'Загрузка...',
+    'common.error': 'Ошибка',
+    'common.success': 'Готово',
+    'common.loadingError': 'Ошибка загрузки',
     'settings.appearance': 'Внешний вид',
     'settings.theme': 'Тема',
     'settings.language': 'Язык',
@@ -1465,6 +1518,59 @@ const I18N = {
     'nav.finance': 'Moliya',
     'nav.settings': 'Sozlamalar',
     'mobile.stock': 'Ombor',
+    'auth.loginTitle': 'Tizimga kirish',
+    'auth.email': 'Email',
+    'auth.password': 'Parol',
+    'auth.loginBtn': 'Kirish',
+    'auth.demoAccess': 'Demo kirish: demo@qassapos.uz / demo1234',
+    'auth.pinTitle': 'PIN-kodni kiriting',
+    'auth.logoutVenue': '← Muassasadan chiqish',
+    'auth.logoutBtn': 'Chiqish',
+    'auth.expiredTitle': 'Obuna muddati tugagan',
+    'auth.expiredText': 'Tizimga kirish vaqtincha cheklangan. Tarifni uzaytirish uchun qo‘llab-quvvatlashga murojaat qiling.',
+    'auth.loading': 'Yuklanmoqda...',
+    'auth.fillEmailPassword': 'Email va parolni kiriting',
+    'auth.signingIn': 'Kirilmoqda...',
+    'auth.loginError': 'Kirish xatosi',
+    'auth.enterPin4': '4 ta raqam kiriting',
+    'pos.title': 'Kassa',
+    'pos.mobileMenu': 'Menyu',
+    'pos.addItems': 'Menyudan mahsulot qo‘shing',
+    'pos.positions': 'Pozitsiyalar',
+    'pos.total': 'Jami',
+    'pos.noClient': '— Mijoz tanlanmagan —',
+    'pos.searchClient': 'Qidirish: ism, telefon yoki email',
+    'pos.addClient': '+ Mijoz',
+    'pos.cash': 'Naqd',
+    'pos.card': 'Karta',
+    'pos.shiftClosed': 'Smena yopiq',
+    'pos.salesUnavailable': 'Savdo mavjud emas',
+    'pos.orderCreated': 'Buyurtma rasmiylashtirildi',
+    'pos.openShiftFirst': 'Avval sozlamalarda smenani oching',
+    'settings.title': 'Sozlamalar',
+    'settings.account': 'Akkaunt',
+    'settings.shift': 'Smena',
+    'settings.expenseAmount': 'Summa',
+    'settings.expenseCategory': 'Kategoriya',
+    'settings.expenseCategoryPlaceholder': 'Xarid, ijara...',
+    'settings.expenseComment': 'Izoh',
+    'settings.expenseCommentPlaceholder': 'Ixtiyoriy',
+    'settings.addExpense': 'Xarajat qo‘shish',
+    'settings.expensesForShift': 'Smena xarajatlari',
+    'settings.expenseAmountRequired': 'Xarajat summasini kiriting',
+    'settings.expenseAdded': 'Xarajat qo‘shildi',
+    'settings.venue': 'Muassasa',
+    'settings.plan': 'Tarif',
+    'settings.accessUntil': 'Kirish muddati',
+    'settings.noExpenses': 'Hozircha xarajatlar yo‘q',
+    'settings.noClosedShifts': 'Hozircha yopilgan smenalar yo‘q',
+    'common.save': 'Saqlash',
+    'common.cancel': 'Bekor qilish',
+    'common.close': 'Yopish',
+    'common.loading': 'Yuklanmoqda...',
+    'common.error': 'Xato',
+    'common.success': 'Tayyor',
+    'common.loadingError': 'Yuklash xatosi',
     'settings.appearance': 'Ko‘rinish',
     'settings.theme': 'Mavzu',
     'settings.language': 'Til',
@@ -1519,6 +1625,12 @@ function applyLanguage() {
   document.querySelectorAll('[data-i18n]').forEach(el => {
     el.textContent = t(el.dataset.i18n);
   });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.setAttribute('placeholder', t(el.dataset.i18nPlaceholder));
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    el.setAttribute('title', t(el.dataset.i18nTitle));
+  });
   syncAppearanceControls();
 }
 
@@ -1526,8 +1638,12 @@ function setLang(lang) {
   appLang = ['ru','uz'].includes(lang) ? lang : 'ru';
   localStorage.setItem('qp_lang', appLang);
   applyLanguage();
-  renderDailyCashBar();
-  renderShiftBar();
+  if (document.getElementById('page-pos')?.classList.contains('active')) {
+    renderPos();
+  } else {
+    renderDailyCashBar();
+    renderShiftBar();
+  }
   renderFinanceDatePicker();
   if (document.getElementById('page-settings')?.classList.contains('active')) {
     renderSettings();
@@ -1554,10 +1670,10 @@ async function doLogin() {
   const password = document.getElementById('login-password').value;
   const errEl = document.getElementById('login-error');
   errEl.style.display = 'none';
-  if (!email || !password) { errEl.textContent = 'Заполните email и пароль'; errEl.style.display = 'block'; return; }
+  if (!email || !password) { errEl.textContent = t('auth.fillEmailPassword'); errEl.style.display = 'block'; return; }
 
   const btn = document.getElementById('login-btn');
-  btn.disabled = true; btn.textContent = 'Входим...';
+  btn.disabled = true; btn.textContent = t('auth.signingIn');
 
   try {
     const data = await api('/auth/login', { method: 'POST', body: { email, password } });
@@ -1569,10 +1685,10 @@ async function doLogin() {
     localStorage.setItem('qp_account', JSON.stringify(accountInfo));
     showPinScreen();
   } catch (err) {
-    errEl.textContent = err.message;
+    errEl.textContent = t('auth.loginError') + ': ' + err.message;
     errEl.style.display = 'block';
   } finally {
-    btn.disabled = false; btn.textContent = 'Войти';
+    btn.disabled = false; btn.textContent = t('auth.loginBtn');
   }
 }
 
@@ -1602,7 +1718,7 @@ async function pinPress(key) {
 }
 async function submitPin() {
   const errEl = document.getElementById('pin-error');
-  if (pinInput.length !== 4) { errEl.textContent = 'Введите 4 цифры'; errEl.style.display = 'block'; return; }
+  if (pinInput.length !== 4) { errEl.textContent = t('auth.enterPin4'); errEl.style.display = 'block'; return; }
   try {
     const data = await api('/auth/pin-login', { method: 'POST', body: { venueId: venueInfo.id, pin: pinInput }, token: ownerToken });
     staffToken = data.token;
@@ -1679,7 +1795,7 @@ async function startApp({ silentAuthRestore = false } = {}) {
       clearAuthSession();
       showScreen('login');
       if (!silentAuthRestore) {
-        toast('Ошибка загрузки: ' + err.message);
+        toast(t('common.loadingError') + ': ' + err.message);
       }
     }
   }
@@ -1746,11 +1862,11 @@ async function toggleShift() {
     if (currentShift && !currentShift.closed_at) {
       const closedShift = await api('/orders/shift/close', { method: 'POST' });
       showShiftCloseReport(closedShift);
-      toast('Смена закрыта. Выручка: ' + fmt(closedShift.revenue));
+      toast(t('pos.shiftClosed') + '. ' + t('settings.shiftRevenue') + ': ' + fmt(closedShift.revenue));
       currentShift = null;
     } else {
       currentShift = await api('/orders/shift/open', { method: 'POST' });
-      toast('Смена открыта!');
+      toast(t('shift.opened') + '!');
     }
     dailySummary = await api('/orders/shift/summary');
     renderShiftBar();
@@ -1763,8 +1879,8 @@ function renderShiftBar() {
   const el = document.getElementById('shift-bar-block');
   const open = currentShift && !currentShift.closed_at;
   el.innerHTML = `<div class="shift-bar ${open ? 'open' : 'closed'}">
-    <span>${open ? '✅ ' + t('shift.opened') : '⛔ ' + t('shift.closed')}</span>
-    ${open ? '<span style="font-weight:600;">Выручка: ' + fmt(currentShift.revenue || 0) + '</span>' : ''}
+    <span>${open ? '✅ ' + t('shift.opened') : '⛔ ' + t('pos.shiftClosed') + ' — ' + t('pos.salesUnavailable')}</span>
+    ${open ? '<span style="font-weight:600;">' + t('settings.shiftRevenue') + ': ' + fmt(currentShift.revenue || 0) + '</span>' : ''}
   </div>`;
 }
 function showShiftCloseReport(shift) {
@@ -1830,7 +1946,7 @@ function renderPos() {
 
   renderPosMenu();
   const sel = document.getElementById('cart-client-sel');
-  sel.innerHTML = '<option value="">— Клиент не выбран —</option>' + clients.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  sel.innerHTML = `<option value="">${t('pos.noClient')}</option>` + clients.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
   if (cartClientId) sel.value = cartClientId;
   renderCartClientOptions(document.getElementById('cart-client-search')?.value || '');
   renderCart();
@@ -1842,8 +1958,8 @@ function renderDailyCashBar() {
   if (!el) return;
   el.innerHTML = `
     <div class="daily-cash-item"><div class="daily-cash-label">${t('cashBar.shift')}</div><div class="daily-cash-value">${fmt(dailySummary.total || 0)}</div></div>
-    <div class="daily-cash-item"><div class="daily-cash-label">${t('payment.cash')}</div><div class="daily-cash-value">${fmt(dailySummary.cash || 0)}</div></div>
-    <div class="daily-cash-item"><div class="daily-cash-label">${t('payment.card')}</div><div class="daily-cash-value">${fmt(dailySummary.card || 0)}</div></div>
+    <div class="daily-cash-item"><div class="daily-cash-label">${t('pos.cash')}</div><div class="daily-cash-value">${fmt(dailySummary.cash || 0)}</div></div>
+    <div class="daily-cash-item"><div class="daily-cash-label">${t('pos.card')}</div><div class="daily-cash-value">${fmt(dailySummary.card || 0)}</div></div>
     <div class="daily-cash-item"><div class="daily-cash-label">${t('cashBar.orders')}</div><div class="daily-cash-value">${dailySummary.orders_count || 0}</div></div>`;
 }
 function renderCartClientOptions(query = '') {
@@ -1856,7 +1972,7 @@ function renderCartClientOptions(query = '') {
       return !q || haystack.includes(q);
     })
     .slice(0, 30);
-  sel.innerHTML = '<option value="">— Клиент не выбран —</option>' + filtered.map(c => {
+  sel.innerHTML = `<option value="">${t('pos.noClient')}</option>` + filtered.map(c => {
     const details = [c.phone, c.email].filter(Boolean).map(esc).join(' · ');
     return `<option value="${c.id}">${esc(c.name)}${details ? ' · ' + details : ''} · бонус ${fmt(c.bonus || 0)}</option>`;
   }).join('');
@@ -1921,7 +2037,7 @@ function renderPosMenu() {
 function setPoscat(c) { activePoscat = c; renderPos(); }
 function addToCart(id) {
   const open = currentShift && !currentShift.closed_at;
-  if (!open) { toast('Сначала откройте смену в настройках!'); return; }
+  if (!open) { toast(t('pos.openShiftFirst') + '!'); return; }
   cart[id] = (cart[id] || 0) + 1; renderCart();
 }
 function changeQty(id, d) { cart[id] = (cart[id] || 0) + d; if (cart[id] <= 0) delete cart[id]; renderCart(); }
@@ -1936,7 +2052,7 @@ function renderCart() {
   const keys = Object.keys(cart);
   const body = document.getElementById('cart-body');
   if (!keys.length) {
-    body.innerHTML = '<div class="cart-empty">Добавьте позиции из меню</div>';
+    body.innerHTML = `<div class="cart-empty">${t('pos.addItems')}</div>`;
     document.getElementById('cart-total').textContent = '0 ' + currency;
     document.getElementById('cart-count').textContent = '0';
     document.getElementById('checkout-btn').disabled = true;
@@ -1965,7 +2081,7 @@ async function checkout() {
   const items = keys.map(id => ({ id: +id, qty: cart[id] }));
   try {
     const order = await api('/orders', { method: 'POST', body: { items, pay_method: payMethod, client_id: cartClientId ? +cartClientId : null } });
-    toast('✅ Заказ оформлен! ' + fmt(order.total));
+    toast('✅ ' + t('pos.orderCreated') + '! ' + fmt(order.total));
     ingredients = await api('/stock');
     currentShift = await api('/orders/shift/current');
     dailySummary = await api('/orders/shift/summary');
@@ -1975,7 +2091,7 @@ async function checkout() {
     document.getElementById('pay-card').className = 'pay-btn';
     renderPos();
   } catch (err) {
-    toast('Ошибка: ' + err.message);
+    toast(t('common.error') + ': ' + err.message);
   }
 }
 
@@ -2788,19 +2904,29 @@ function renderSettings() {
   btn.textContent = open ? '⛔ ' + t('shift.close') : '✅ ' + t('shift.open');
   btn.className = 'btn ' + (open ? 'btn-danger' : 'btn-primary');
   document.getElementById('shift-settings-status').innerHTML = `${t('settings.status')}: <strong style="color:var(${open?'--success':'--muted'})">${open?t('shift.openedShort'):t('shift.closedShort')}</strong>${open?'<br>'+t('settings.shiftRevenue')+': <strong>'+fmt(currentShift.revenue||0)+'</strong>':''}`;
+  document.querySelectorAll('#page-settings [data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll('#page-settings [data-i18n-placeholder]').forEach(el => {
+    el.setAttribute('placeholder', t(el.dataset.i18nPlaceholder));
+  });
   document.querySelector('#appearance-card .card-title').textContent = t('settings.appearance');
   document.querySelector('#expenses-card .card-title').textContent = t('settings.expenses');
   document.querySelector('#shift-history-card .card-title').textContent = t('settings.shiftHistory');
   syncAppearanceControls();
 
-  const planMap = {start:'Старт',business:'Бизнес',network:'Сеть'};
-  const statusMap = {trial:'Пробный период',active:'Активна',expired:'Истекла',blocked:'Заблокирована'};
+  const planMap = appLang === 'uz'
+    ? {start:'Boshlang‘ich',business:'Biznes',network:'Tarmoq'}
+    : {start:'Старт',business:'Бизнес',network:'Сеть'};
+  const statusMap = appLang === 'uz'
+    ? {trial:'Sinov davri',active:'Faol',expired:'Muddati tugagan',blocked:'Bloklangan'}
+    : {trial:'Пробный период',active:'Активна',expired:'Истекла',blocked:'Заблокирована'};
   const expires = accountInfo?.expires_at ? new Date(accountInfo.expires_at).toLocaleDateString('ru-RU') : '—';
   document.getElementById('account-info').innerHTML = `
-    Заведение: <strong>${venueInfo?.name||'—'}</strong><br>
-    Тариф: <strong>${planMap[accountInfo?.plan]||accountInfo?.plan||'—'}</strong><br>
-    Статус: <strong>${statusMap[accountInfo?.status]||accountInfo?.status||'—'}</strong><br>
-    Доступ до: <strong>${expires}</strong>`;
+    ${t('settings.venue')}: <strong>${venueInfo?.name||'—'}</strong><br>
+    ${t('settings.plan')}: <strong>${planMap[accountInfo?.plan]||accountInfo?.plan||'—'}</strong><br>
+    ${t('settings.status')}: <strong>${statusMap[accountInfo?.status]||accountInfo?.status||'—'}</strong><br>
+    ${t('settings.accessUntil')}: <strong>${expires}</strong>`;
 
   renderCashExpenses();
   reloadCashExpenses().then(renderCashExpenses).catch(err => {
@@ -2835,7 +2961,7 @@ async function addCashExpense() {
   const comment = commentEl.value.trim();
 
   if (amount <= 0) {
-    toast('Укажите сумму расхода');
+    toast(t('settings.expenseAmountRequired'));
     return;
   }
 
@@ -2846,7 +2972,7 @@ async function addCashExpense() {
     commentEl.value = '';
     await reloadCashExpenses();
     renderCashExpenses();
-    toast('Расход добавлен');
+    toast(t('settings.expenseAdded'));
   } catch (err) {
     toast(err.message);
   }
@@ -2866,7 +2992,7 @@ function renderCashExpenses() {
         <td>${esc(e.staff_name || '—')}</td>
         <td class="muted-text">${shiftDate(e.created_at)}</td>
       </tr>`).join('')
-    : '<tr><td colspan="5" class="empty-state">Расходов пока нет</td></tr>';
+    : `<tr><td colspan="5" class="empty-state">${t('settings.noExpenses')}</td></tr>`;
 }
 
 async function reloadShiftHistory() {
@@ -2899,7 +3025,7 @@ function renderShiftHistory() {
         <td>${fmt(s.card_total || 0)}</td>
         <td>${s.orders_count || 0}</td>
       </tr>`).join('')
-    : '<tr><td colspan="8" class="empty-state">Закрытых смен пока нет</td></tr>';
+    : `<tr><td colspan="8" class="empty-state">${t('settings.noClosedShifts')}</td></tr>`;
 }
 
 // ═══════════════════════════════════════════════════════════
