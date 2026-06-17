@@ -1097,10 +1097,23 @@ function logout() {
   showScreen('login');
 }
 
+function clearAuthSession() {
+  ownerToken = null;
+  staffToken = null;
+  venueInfo = null;
+  accountInfo = null;
+  currentUser = null;
+  localStorage.removeItem('qp_owner_token');
+  localStorage.removeItem('qp_staff_token');
+  localStorage.removeItem('qp_venue');
+  localStorage.removeItem('qp_account');
+  localStorage.removeItem('qp_user');
+}
+
 // ═══════════════════════════════════════════════════════════
 // APP STARTUP
 // ═══════════════════════════════════════════════════════════
-async function startApp() {
+async function startApp({ silentAuthRestore = false } = {}) {
   showScreen('loading');
   try {
     const [menuData, stockData, clientsData, ordersData, shiftData, summaryData] = await Promise.all([
@@ -1128,8 +1141,11 @@ async function startApp() {
     nav('pos', document.querySelector('.nav-item'));
   } catch (err) {
     if (err.message !== 'Подписка истекла') {
-      toast('Ошибка загрузки: ' + err.message);
+      clearAuthSession();
       showScreen('login');
+      if (!silentAuthRestore) {
+        toast('Ошибка загрузки: ' + err.message);
+      }
     }
   }
 }
@@ -2340,7 +2356,7 @@ async function init() {
   renderPinGrid();
   if (staffToken && ownerToken && venueInfo) {
     currentUser = JSON.parse(localStorage.getItem('qp_user') || 'null');
-    if (currentUser) { await startApp(); return; }
+    if (currentUser) { await startApp({ silentAuthRestore: true }); return; }
   }
   if (ownerToken && venueInfo) { showPinScreen(); return; }
   showScreen('login');
