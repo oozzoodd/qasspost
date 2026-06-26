@@ -56,8 +56,8 @@ router.post('/shift/close', async (req, res) => {
     const summaryRes = await client.query(
       `SELECT
          COALESCE(SUM(total), 0)::int AS total,
-         COALESCE(SUM(total) FILTER (WHERE pay_method = 'cash'), 0)::int AS cash,
-         COALESCE(SUM(total) FILTER (WHERE pay_method = 'card'), 0)::int AS card,
+         COALESCE(SUM(CASE WHEN pay_method = 'cash' AND COALESCE(cash_amount, 0) = 0 THEN total ELSE COALESCE(cash_amount, 0) END), 0)::int AS cash,
+         COALESCE(SUM(CASE WHEN pay_method = 'card' AND COALESCE(card_amount, 0) = 0 THEN total ELSE COALESCE(card_amount, 0) END), 0)::int AS card,
          COUNT(*)::int AS orders_count
        FROM orders
        WHERE venue_id = $1 AND shift_id = $2`,
@@ -143,8 +143,8 @@ router.get('/shift/summary', async (req, res) => {
   const r = await pool.query(
     `SELECT
        COALESCE(SUM(total), 0)::int AS total,
-       COALESCE(SUM(total) FILTER (WHERE pay_method = 'cash'), 0)::int AS cash,
-       COALESCE(SUM(total) FILTER (WHERE pay_method = 'card'), 0)::int AS card,
+       COALESCE(SUM(CASE WHEN pay_method = 'cash' AND COALESCE(cash_amount, 0) = 0 THEN total ELSE COALESCE(cash_amount, 0) END), 0)::int AS cash,
+       COALESCE(SUM(CASE WHEN pay_method = 'card' AND COALESCE(card_amount, 0) = 0 THEN total ELSE COALESCE(card_amount, 0) END), 0)::int AS card,
        COUNT(*)::int AS orders_count
      FROM orders
      WHERE venue_id = $1 AND shift_id = $2`,
@@ -216,8 +216,8 @@ router.get('/finance/summary', requireRole('owner', 'admin'), async (req, res) =
   const revenueRes = await pool.query(
     `SELECT
        COALESCE(SUM(total), 0)::int AS revenue,
-       COALESCE(SUM(total) FILTER (WHERE pay_method = 'cash'), 0)::int AS cash_total,
-       COALESCE(SUM(total) FILTER (WHERE pay_method = 'card'), 0)::int AS card_total,
+       COALESCE(SUM(CASE WHEN pay_method = 'cash' AND COALESCE(cash_amount, 0) = 0 THEN total ELSE COALESCE(cash_amount, 0) END), 0)::int AS cash_total,
+       COALESCE(SUM(CASE WHEN pay_method = 'card' AND COALESCE(card_amount, 0) = 0 THEN total ELSE COALESCE(card_amount, 0) END), 0)::int AS card_total,
        COUNT(*)::int AS orders_count
      FROM orders
      WHERE venue_id = $1
@@ -282,6 +282,8 @@ router.get('/finance/shifts', requireRole('owner', 'admin'), async (req, res) =>
        opened_at,
        closed_at,
        COALESCE(revenue, 0)::int AS revenue,
+       COALESCE(cash_total, 0)::int AS cash_total,
+       COALESCE(card_total, 0)::int AS card_total,
        COALESCE(expenses_total, 0)::int AS expenses_total,
        COALESCE(stock_income_total, 0)::int AS stock_income_total,
        COALESCE(net_profit, 0)::int AS net_profit,
@@ -403,8 +405,8 @@ router.get('/today-summary', async (req, res) => {
   const r = await pool.query(
     `SELECT
        COALESCE(SUM(total), 0)::int AS total,
-       COALESCE(SUM(total) FILTER (WHERE pay_method = 'cash'), 0)::int AS cash,
-       COALESCE(SUM(total) FILTER (WHERE pay_method = 'card'), 0)::int AS card,
+       COALESCE(SUM(CASE WHEN pay_method = 'cash' AND COALESCE(cash_amount, 0) = 0 THEN total ELSE COALESCE(cash_amount, 0) END), 0)::int AS cash,
+       COALESCE(SUM(CASE WHEN pay_method = 'card' AND COALESCE(card_amount, 0) = 0 THEN total ELSE COALESCE(card_amount, 0) END), 0)::int AS card,
        COUNT(*)::int AS orders_count
      FROM orders
      WHERE venue_id = $1
@@ -416,14 +418,14 @@ router.get('/today-summary', async (req, res) => {
 });
 
 // POST /orders — создать заказ. Списывает склад автоматически по тех.картам.
-// body: { items: [{ id: menu_item_id, qty }], pay_method, client_id }
+// body: { items: [{ id: menu_item_id, qty }], pay_method, client_id, cash_amount, card_amount }
 router.post('/', async (req, res) => {
   const { venueId, staffId } = req.user;
-  const { items, pay_method, client_id } = req.body;
+  const { items, pay_method, client_id, cash_amount, card_amount } = req.body;
   if (!items || !items.length || !pay_method) {
     return res.status(400).json({ error: 'Укажите items и pay_method' });
   }
-  if (!['cash', 'card'].includes(pay_method)) {
+  if (!['cash', 'card', 'mixed'].includes(pay_method)) {
     return res.status(400).json({ error: 'Неверный способ оплаты' });
   }
   if (!Array.isArray(items) || items.some(item => !Number.isInteger(+item.id) || !Number.isInteger(+item.qty) || +item.qty <= 0 || +item.qty > 99)) {
@@ -473,6 +475,25 @@ router.post('/', async (req, res) => {
       }
     }
 
+    let cashAmount = 0;
+    let cardAmount = 0;
+    if (pay_method === 'cash') {
+      cashAmount = total;
+    } else if (pay_method === 'card') {
+      cardAmount = total;
+    } else {
+      const rawCashAmount = Number(cash_amount);
+      const rawCardAmount = Number(card_amount);
+      if (!Number.isInteger(rawCashAmount) || !Number.isInteger(rawCardAmount) || rawCashAmount < 0 || rawCardAmount < 0) {
+        throw new Error('Укажите корректные суммы оплаты');
+      }
+      cashAmount = rawCashAmount;
+      cardAmount = rawCardAmount;
+      if (cashAmount + cardAmount !== total) {
+        throw new Error('Сумма оплаты не совпадает с итогом заказа');
+      }
+    }
+
     // Бонусы клиента
     if (client_id) {
       const venueRes = await client.query('SELECT bonus_pct FROM venues WHERE id = $1', [venueId]);
@@ -490,9 +511,9 @@ router.post('/', async (req, res) => {
 
     // Сохраняем заказ
     const orderRes = await client.query(
-      `INSERT INTO orders (venue_id, shift_id, staff_id, client_id, total, pay_method, items_json)
-       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
-      [venueId, shiftId, staffId, client_id || null, total, pay_method, JSON.stringify(itemsSnapshot)]
+      `INSERT INTO orders (venue_id, shift_id, staff_id, client_id, total, pay_method, cash_amount, card_amount, items_json)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+      [venueId, shiftId, staffId, client_id || null, total, pay_method, cashAmount, cardAmount, JSON.stringify(itemsSnapshot)]
     );
 
     await client.query('COMMIT');

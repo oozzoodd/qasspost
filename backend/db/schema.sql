@@ -143,7 +143,9 @@ CREATE TABLE IF NOT EXISTS orders (
   staff_id INTEGER REFERENCES staff(id),
   client_id INTEGER REFERENCES clients(id),
   total INTEGER NOT NULL,
-  pay_method VARCHAR(20),                    -- cash | card
+  pay_method VARCHAR(20),                    -- cash | card | mixed
+  cash_amount INTEGER DEFAULT 0,
+  card_amount INTEGER DEFAULT 0,
   items_json JSONB,                          -- [{name, qty, price}, ...]
   created_at TIMESTAMP DEFAULT NOW()
 );

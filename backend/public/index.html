@@ -288,9 +288,16 @@
     .pos-cart-footer { padding: 12px 14px; border-top: 1px solid #E8E8E3; }
     .total-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; color: var(--muted); }
     .total-row.big { font-size: 17px; font-weight: 600; color: var(--text); margin-bottom: 12px; }
-    .pay-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+    .pay-methods { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-bottom: 8px; }
     .pay-btn { padding: 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 12px; cursor: pointer; text-align: center; transition: all 0.15s; }
     .pay-btn.active { border-color: var(--primary); background: var(--primary-soft); color: var(--success); font-weight: 500; }
+    .split-payment { display: none; gap: 6px; margin-bottom: 8px; }
+    .split-payment.open { display: grid; }
+    .split-payment-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .split-payment label { display: grid; gap: 4px; color: var(--muted); font-size: 11px; }
+    .split-payment input { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--input); color: var(--text); font-size: 12px; }
+    .split-payment-note { color: var(--muted); font-size: 12px; }
+    .split-payment-note.error { color: var(--danger); }
     .client-picker { margin-bottom: 8px; display: grid; gap: 6px; }
     .client-picker-row { display: grid; grid-template-columns: 1fr auto; gap: 6px; }
     .client-picker input, .client-picker select { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 8px; font-size: 12px; background: var(--input); color: var(--text); }
@@ -1061,6 +1068,14 @@
             <div class="pay-methods">
               <button class="pay-btn" id="pay-cash" onclick="setPay('cash')">💵 <span data-i18n="pos.cash">Наличные</span></button>
               <button class="pay-btn" id="pay-card" onclick="setPay('card')">💳 <span data-i18n="pos.card">Карта</span></button>
+              <button class="pay-btn" id="pay-mixed" onclick="setPay('mixed')">🧾 <span data-i18n="pos.mixed">Раздельно</span></button>
+            </div>
+            <div class="split-payment" id="split-payment">
+              <div class="split-payment-fields">
+                <label><span data-i18n="pos.cashAmount">Сумма наличными</span><input type="number" id="split-cash-amount" min="0" step="1" value="0" oninput="renderCart()"></label>
+                <label><span data-i18n="pos.cardAmount">Сумма картой</span><input type="number" id="split-card-amount" min="0" step="1" value="0" oninput="renderCart()"></label>
+              </div>
+              <div class="split-payment-note" id="split-payment-note"></div>
             </div>
             <button class="btn btn-primary" style="width:100%;justify-content:center;" id="checkout-btn" onclick="checkout()" disabled data-i18n="pos.checkout">Оформить заказ</button>
           </div>
@@ -1372,6 +1387,8 @@ let financeShifts = [];
 let cart = {};
 let cartClientId = null;
 let payMethod = null;
+let mixedCashAmount = 0;
+let mixedCardAmount = 0;
 let activePoscat = 'all';
 let activeMenuCat = 'all';
 let clientViewMode = 'table';
@@ -1462,6 +1479,13 @@ const I18N = {
     'pos.addClient': '+ Клиент',
     'pos.cash': 'Наличные',
     'pos.card': 'Карта',
+    'pos.mixed': 'Раздельно',
+    'pos.cashAmount': 'Сумма наличными',
+    'pos.cardAmount': 'Сумма картой',
+    'pos.paymentMismatch': 'Сумма оплаты не совпадает',
+    'pos.remainingToPay': 'Осталось оплатить',
+    'pos.overpaid': 'Переплата',
+    'pos.splitPayment': 'Раздельная оплата',
     'pos.shiftClosed': 'Смена закрыта',
     'pos.salesUnavailable': 'Продажи недоступны',
     'pos.orderCreated': 'Заказ оформлен',
@@ -1547,6 +1571,7 @@ const I18N = {
     'pos.checkout': 'Оформить заказ',
     'payment.cash': 'Наличные',
     'payment.card': 'Карта',
+    'pay.mixed': 'Раздельно',
     'cashBar.shift': 'Смена',
     'cashBar.orders': 'Заказов',
     'clients.title': 'База клиентов',
@@ -1798,6 +1823,13 @@ const I18N = {
     'pos.addClient': '+ Mijoz',
     'pos.cash': 'Naqd',
     'pos.card': 'Karta',
+    'pos.mixed': 'Bo‘lib',
+    'pos.cashAmount': 'Naqd summa',
+    'pos.cardAmount': 'Karta summasi',
+    'pos.paymentMismatch': 'To‘lov summasi mos kelmaydi',
+    'pos.remainingToPay': 'To‘lash qoldi',
+    'pos.overpaid': 'Ortiqcha to‘lov',
+    'pos.splitPayment': 'Bo‘lib to‘lash',
     'pos.shiftClosed': 'Smena yopiq',
     'pos.salesUnavailable': 'Savdo mavjud emas',
     'pos.orderCreated': 'Buyurtma rasmiylashtirildi',
@@ -1883,6 +1915,7 @@ const I18N = {
     'pos.checkout': 'Buyurtmani yakunlash',
     'payment.cash': 'Naqd',
     'payment.card': 'Karta',
+    'pay.mixed': 'Bo‘lib',
     'cashBar.shift': 'Smena',
     'cashBar.orders': 'Buyurtmalar',
     'clients.title': 'Mijozlar bazasi',
@@ -2563,11 +2596,60 @@ function addToCart(id) {
 }
 function changeQty(id, d) { cart[id] = (cart[id] || 0) + d; if (cart[id] <= 0) delete cart[id]; renderCart(); }
 function selectClient(id) { cartClientId = id || null; renderCart(); }
+function cartTotal() {
+  return Object.keys(cart).reduce((sum, id) => {
+    const item = getItem(+id);
+    return sum + (item ? item.price * cart[id] : 0);
+  }, 0);
+}
+function syncMixedAmountsFromInputs() {
+  const cashEl = document.getElementById('split-cash-amount');
+  const cardEl = document.getElementById('split-card-amount');
+  if (cashEl) mixedCashAmount = Math.max(0, Math.round(Number(cashEl.value) || 0));
+  if (cardEl) mixedCardAmount = Math.max(0, Math.round(Number(cardEl.value) || 0));
+}
+function paymentAmounts(total = cartTotal()) {
+  if (payMethod === 'cash') return { cash: total, card: 0, diff: 0, valid: true };
+  if (payMethod === 'card') return { cash: 0, card: total, diff: 0, valid: true };
+  if (payMethod === 'mixed') {
+    syncMixedAmountsFromInputs();
+    const paid = mixedCashAmount + mixedCardAmount;
+    return { cash: mixedCashAmount, card: mixedCardAmount, diff: total - paid, valid: paid === total };
+  }
+  return { cash: 0, card: 0, diff: total, valid: false };
+}
+function renderSplitPayment(total) {
+  const box = document.getElementById('split-payment');
+  const cashEl = document.getElementById('split-cash-amount');
+  const cardEl = document.getElementById('split-card-amount');
+  const note = document.getElementById('split-payment-note');
+  if (!box || !cashEl || !cardEl || !note) return;
+  box.classList.toggle('open', payMethod === 'mixed');
+  if (payMethod !== 'mixed') {
+    note.textContent = '';
+    note.classList.remove('error');
+    return;
+  }
+  if (document.activeElement !== cashEl) cashEl.value = mixedCashAmount;
+  if (document.activeElement !== cardEl) cardEl.value = mixedCardAmount;
+  const payment = paymentAmounts(total);
+  note.classList.toggle('error', payment.diff !== 0);
+  note.textContent = payment.diff >= 0
+    ? `${t('pos.remainingToPay')}: ${fmt(payment.diff)}`
+    : `${t('pos.overpaid')}: ${fmt(Math.abs(payment.diff))}`;
+}
 function setPay(m) {
   payMethod = m;
+  const total = cartTotal();
+  if (m === 'mixed' && mixedCashAmount + mixedCardAmount === 0) {
+    mixedCashAmount = total;
+    mixedCardAmount = 0;
+  }
   document.getElementById('pay-cash').className = 'pay-btn' + (m==='cash'?' active':'');
   document.getElementById('pay-card').className = 'pay-btn' + (m==='card'?' active':'');
-  document.getElementById('checkout-btn').disabled = Object.keys(cart).length === 0;
+  document.getElementById('pay-mixed').className = 'pay-btn' + (m==='mixed'?' active':'');
+  renderSplitPayment(total);
+  renderCart();
 }
 function renderCart() {
   const keys = Object.keys(cart);
@@ -2577,6 +2659,7 @@ function renderCart() {
     document.getElementById('cart-total').textContent = fmt(0);
     document.getElementById('cart-count').textContent = '0';
     document.getElementById('checkout-btn').disabled = true;
+    renderSplitPayment(0);
     updateMobileCartButton(0, 0);
     return;
   }
@@ -2593,23 +2676,43 @@ function renderCart() {
     </div>`;}).join('');
   document.getElementById('cart-total').textContent = fmt(total);
   document.getElementById('cart-count').textContent = count;
-  document.getElementById('checkout-btn').disabled = !payMethod;
+  renderSplitPayment(total);
+  const payment = paymentAmounts(total);
+  document.getElementById('checkout-btn').disabled = !payMethod || (payMethod === 'mixed' && !payment.valid);
   updateMobileCartButton(count, total);
 }
 async function checkout() {
   const keys = Object.keys(cart);
   if (!keys.length || !payMethod) return;
   const items = keys.map(id => ({ id: +id, qty: cart[id] }));
+  const total = cartTotal();
+  const payment = paymentAmounts(total);
+  if (!payment.valid) {
+    toast(t('pos.paymentMismatch'));
+    renderCart();
+    return;
+  }
   try {
-    const order = await api('/orders', { method: 'POST', body: { items, pay_method: payMethod, client_id: cartClientId ? +cartClientId : null } });
+    const order = await api('/orders', {
+      method: 'POST',
+      body: {
+        items,
+        pay_method: payMethod,
+        cash_amount: payment.cash,
+        card_amount: payment.card,
+        client_id: cartClientId ? +cartClientId : null
+      }
+    });
     toast('✅ ' + t('pos.orderCreated') + '! ' + fmt(order.total));
     ingredients = await api('/stock');
     currentShift = await api('/orders/shift/current');
     dailySummary = await api('/orders/shift/summary');
     if (cartClientId) clients = await api('/orders/clients/all');
-    cart = {}; cartClientId = null; payMethod = null;
+    cart = {}; cartClientId = null; payMethod = null; mixedCashAmount = 0; mixedCardAmount = 0;
     document.getElementById('pay-cash').className = 'pay-btn';
     document.getElementById('pay-card').className = 'pay-btn';
+    document.getElementById('pay-mixed').className = 'pay-btn';
+    renderSplitPayment(0);
     renderPos();
   } catch (err) {
     toast(t('common.error') + ': ' + err.message);
@@ -3208,14 +3311,17 @@ async function renderAnalytics() {
     : `<p class="empty-state" style="font-size:13px;">${t('analytics.noSales')}</p>`;
   const cash = orders.filter(o=>o.pay_method==='cash').length;
   const card = orders.filter(o=>o.pay_method==='card').length;
+  const mixed = orders.filter(o=>o.pay_method==='mixed').length;
   document.getElementById('pay-stats').innerHTML = `
     <div class="bar-row"><span class="bar-label">${t('analytics.cash')}</span><div class="bar-track"><div class="bar-fill" style="width:${orders.length?Math.round(cash/orders.length*100):0}%"></div></div><span class="bar-count">${cash}</span></div>
-    <div class="bar-row"><span class="bar-label">${t('analytics.card')}</span><div class="bar-track"><div class="bar-fill" style="width:${orders.length?Math.round(card/orders.length*100):0}%;background:#378ADD"></div></div><span class="bar-count">${card}</span></div>`;
+    <div class="bar-row"><span class="bar-label">${t('analytics.card')}</span><div class="bar-track"><div class="bar-fill" style="width:${orders.length?Math.round(card/orders.length*100):0}%;background:#378ADD"></div></div><span class="bar-count">${card}</span></div>
+    <div class="bar-row"><span class="bar-label">${t('pay.mixed')}</span><div class="bar-track"><div class="bar-fill" style="width:${orders.length?Math.round(mixed/orders.length*100):0}%;background:var(--warning)"></div></div><span class="bar-count">${mixed}</span></div>`;
   document.getElementById('orders-tbody').innerHTML = orders.length
     ? orders.slice(0,20).map(o=>{
         const itemsStr = (o.items_json||[]).map(i=>esc(i.name)+' ×'+i.qty).join(', ');
         const time = new Date(o.created_at).toLocaleString(appLang === 'uz' ? 'uz-UZ' : 'ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-        return `<tr><td>#${o.id}</td><td class="muted-text" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${itemsStr}</td><td style="font-weight:600;">${fmt(o.total)}</td><td>${o.pay_method==='cash'?t('analytics.cashShort'):t('analytics.card')}</td><td>${esc(o.client_name||'—')}</td><td class="muted-text">${time}</td></tr>`;
+        const payLabel = o.pay_method === 'mixed' ? t('pay.mixed') : (o.pay_method==='cash'?t('analytics.cashShort'):t('analytics.card'));
+        return `<tr><td>#${o.id}</td><td class="muted-text" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${itemsStr}</td><td style="font-weight:600;">${fmt(o.total)}</td><td>${payLabel}</td><td>${esc(o.client_name||'—')}</td><td class="muted-text">${time}</td></tr>`;
       }).join('')
     : `<tr><td colspan="6" class="empty-state" style="padding:24px;">${t('analytics.noOrders')} — ${t('analytics.firstOrderHint')}</td></tr>`;
 }
