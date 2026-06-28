@@ -146,6 +146,12 @@ CREATE TABLE IF NOT EXISTS orders (
   pay_method VARCHAR(20),                    -- cash | card | mixed
   cash_amount INTEGER DEFAULT 0,
   card_amount INTEGER DEFAULT 0,
+  status VARCHAR(20) DEFAULT 'completed',    -- completed | cancelled
+  bonus_earned INTEGER DEFAULT 0,
+  cancelled_at TIMESTAMP,
+  cancelled_by INTEGER REFERENCES staff(id),
+  cancel_reason TEXT,
+  cancel_food_prepared BOOLEAN DEFAULT false,
   items_json JSONB,                          -- [{name, qty, price}, ...]
   created_at TIMESTAMP DEFAULT NOW()
 );
@@ -161,6 +167,8 @@ CREATE INDEX IF NOT EXISTS idx_stock_incomes_ingredient ON stock_incomes(ingredi
 CREATE INDEX IF NOT EXISTS idx_stock_incomes_created ON stock_incomes(created_at);
 CREATE INDEX IF NOT EXISTS idx_orders_venue ON orders(venue_id);
 CREATE INDEX IF NOT EXISTS idx_orders_created ON orders(created_at);
+CREATE INDEX IF NOT EXISTS idx_orders_venue_status ON orders(venue_id, status);
+CREATE INDEX IF NOT EXISTS idx_orders_shift_status ON orders(shift_id, status);
 CREATE INDEX IF NOT EXISTS idx_cash_expenses_venue ON cash_expenses(venue_id);
 CREATE INDEX IF NOT EXISTS idx_cash_expenses_shift ON cash_expenses(shift_id);
 CREATE INDEX IF NOT EXISTS idx_cash_expenses_created ON cash_expenses(created_at);

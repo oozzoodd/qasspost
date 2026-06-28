@@ -5,6 +5,8 @@ const { requireAuth, requireRole } = require('../middleware/auth');
 const router = express.Router();
 router.use(requireAuth);
 
+const COMPLETED_ORDER_SQL = "(status IS NULL OR status = 'completed')";
+
 // ── СМЕНЫ ────────────────────────────────────────────────────
 
 // GET /orders/shift/current — текущая открытая смена
@@ -60,7 +62,8 @@ router.post('/shift/close', async (req, res) => {
          COALESCE(SUM(CASE WHEN pay_method = 'card' AND COALESCE(card_amount, 0) = 0 THEN total ELSE COALESCE(card_amount, 0) END), 0)::int AS card,
          COUNT(*)::int AS orders_count
        FROM orders
-       WHERE venue_id = $1 AND shift_id = $2`,
+       WHERE venue_id = $1 AND shift_id = $2
+         AND ${COMPLETED_ORDER_SQL}`,
       [req.user.venueId, shift.id]
     );
     const summary = summaryRes.rows[0];
@@ -147,7 +150,8 @@ router.get('/shift/summary', async (req, res) => {
        COALESCE(SUM(CASE WHEN pay_method = 'card' AND COALESCE(card_amount, 0) = 0 THEN total ELSE COALESCE(card_amount, 0) END), 0)::int AS card,
        COUNT(*)::int AS orders_count
      FROM orders
-     WHERE venue_id = $1 AND shift_id = $2`,
+     WHERE venue_id = $1 AND shift_id = $2
+       AND ${COMPLETED_ORDER_SQL}`,
     [req.user.venueId, shiftRes.rows[0].id]
   );
 
@@ -221,6 +225,7 @@ router.get('/finance/summary', requireRole('owner', 'admin'), async (req, res) =
        COUNT(*)::int AS orders_count
      FROM orders
      WHERE venue_id = $1
+       AND ${COMPLETED_ORDER_SQL}
        AND created_at >= ${period.start}
        AND created_at < ${period.end}`,
     params
@@ -410,6 +415,7 @@ router.get('/today-summary', async (req, res) => {
        COUNT(*)::int AS orders_count
      FROM orders
      WHERE venue_id = $1
+       AND ${COMPLETED_ORDER_SQL}
        AND created_at >= CURRENT_DATE
        AND created_at < CURRENT_DATE + INTERVAL '1 day'`,
     [req.user.venueId]
@@ -457,7 +463,7 @@ router.post('/', async (req, res) => {
       if (!itemRes.rows.length) throw new Error('Блюдо не найдено: ' + id);
       const item = itemRes.rows[0];
       total += item.price * qty;
-      itemsSnapshot.push({ name: item.name, qty, price: item.price });
+      itemsSnapshot.push({ id, name: item.name, qty, price: item.price });
 
       // Списываем ингредиенты по тех.карте
       const recipeRes = await client.query('SELECT * FROM recipes WHERE menu_item_id = $1', [id]);
@@ -495,10 +501,11 @@ router.post('/', async (req, res) => {
     }
 
     // Бонусы клиента
+    let bonusEarned = 0;
     if (client_id) {
       const venueRes = await client.query('SELECT bonus_pct FROM venues WHERE id = $1', [venueId]);
       const pct = venueRes.rows[0]?.bonus_pct ?? 5;
-      const bonusEarned = Math.round(total * pct / 100);
+      bonusEarned = Math.round(total * pct / 100);
       await client.query(
         `UPDATE clients SET bonus = bonus + $1, visits = visits + 1, total_spent = total_spent + $2
          WHERE id = $3 AND venue_id = $4`,
@@ -511,9 +518,9 @@ router.post('/', async (req, res) => {
 
     // Сохраняем заказ
     const orderRes = await client.query(
-      `INSERT INTO orders (venue_id, shift_id, staff_id, client_id, total, pay_method, cash_amount, card_amount, items_json)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
-      [venueId, shiftId, staffId, client_id || null, total, pay_method, cashAmount, cardAmount, JSON.stringify(itemsSnapshot)]
+      `INSERT INTO orders (venue_id, shift_id, staff_id, client_id, total, pay_method, cash_amount, card_amount, status, bonus_earned, items_json)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'completed',$9,$10) RETURNING *`,
+      [venueId, shiftId, staffId, client_id || null, total, pay_method, cashAmount, cardAmount, bonusEarned, JSON.stringify(itemsSnapshot)]
     );
 
     await client.query('COMMIT');
@@ -522,6 +529,113 @@ router.post('/', async (req, res) => {
     await client.query('ROLLBACK');
     console.error(err);
     res.status(400).json({ error: err.message || 'Ошибка при создании заказа' });
+  } finally {
+    client.release();
+  }
+});
+
+// POST /orders/:id/cancel — мягкая отмена чека без удаления заказа
+router.post('/:id/cancel', requireRole('owner', 'admin'), async (req, res) => {
+  const orderId = +req.params.id;
+  const foodPrepared = req.body.food_prepared === true;
+  const reason = String(req.body.reason || '').trim();
+
+  if (!Number.isInteger(orderId) || orderId <= 0) {
+    return res.status(400).json({ error: 'Некорректный заказ' });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const orderRes = await client.query(
+      `SELECT o.*, sh.closed_at AS shift_closed_at
+       FROM orders o
+       JOIN shifts sh ON sh.id = o.shift_id AND sh.venue_id = o.venue_id
+       WHERE o.id = $1 AND o.venue_id = $2
+       FOR UPDATE OF o, sh`,
+      [orderId, req.user.venueId]
+    );
+
+    if (!orderRes.rows.length) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Заказ не найден' });
+    }
+
+    const order = orderRes.rows[0];
+    if (order.status === 'cancelled') {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ error: 'Чек уже отменён' });
+    }
+    if (order.shift_closed_at) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ error: 'Отмена недоступна: смена закрыта' });
+    }
+
+    if (!foodPrepared) {
+      const items = Array.isArray(order.items_json)
+        ? order.items_json
+        : JSON.parse(order.items_json || '[]');
+
+      for (const item of items) {
+        const menuItemId = +item.id;
+        const qty = +item.qty;
+        if (!Number.isInteger(menuItemId) || menuItemId <= 0) {
+          throw new Error('Невозможно вернуть склад: в чеке нет id блюда');
+        }
+        if (!Number.isFinite(qty) || qty <= 0) {
+          throw new Error('Невозможно вернуть склад: некорректное количество');
+        }
+
+        const recipeRes = await client.query(
+          `SELECT r.ingredient_id, r.grams
+           FROM recipes r
+           JOIN menu_items m ON m.id = r.menu_item_id
+           WHERE r.menu_item_id = $1 AND m.venue_id = $2`,
+          [menuItemId, req.user.venueId]
+        );
+
+        for (const recipe of recipeRes.rows) {
+          const restoreAmount = recipe.grams * qty;
+          await client.query(
+            `UPDATE ingredients
+             SET stock_grams = stock_grams + $1, updated_at = NOW()
+             WHERE id = $2 AND venue_id = $3`,
+            [restoreAmount, recipe.ingredient_id, req.user.venueId]
+          );
+        }
+      }
+    }
+
+    if (order.client_id) {
+      await client.query(
+        `UPDATE clients
+         SET visits = GREATEST(COALESCE(visits, 0) - 1, 0),
+             total_spent = GREATEST(COALESCE(total_spent, 0) - $1, 0),
+             bonus = GREATEST(COALESCE(bonus, 0) - $2, 0)
+         WHERE id = $3 AND venue_id = $4`,
+        [order.total || 0, order.bonus_earned || 0, order.client_id, req.user.venueId]
+      );
+    }
+
+    const cancelledRes = await client.query(
+      `UPDATE orders
+       SET status = 'cancelled',
+           cancelled_at = NOW(),
+           cancelled_by = $1,
+           cancel_reason = $2,
+           cancel_food_prepared = $3
+       WHERE id = $4 AND venue_id = $5
+       RETURNING *`,
+      [req.user.staffId, reason || null, foodPrepared, orderId, req.user.venueId]
+    );
+
+    await client.query('COMMIT');
+    res.json(cancelledRes.rows[0]);
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error(err);
+    res.status(400).json({ error: err.message || 'Ошибка при отмене чека' });
   } finally {
     client.release();
   }

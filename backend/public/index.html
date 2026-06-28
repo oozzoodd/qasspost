@@ -139,6 +139,8 @@
     td { padding: 11px 10px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
     tr:last-child td { border-bottom: none; }
     tr:hover td { background: var(--table-row); }
+    tr.order-cancelled td { color: var(--muted); background: var(--soft); opacity: 0.78; }
+    tr.order-cancelled:hover td { background: var(--soft); }
 
     .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 500; }
     .badge-green { background: var(--primary-soft); color: var(--success); }
@@ -1210,7 +1212,7 @@
         <div class="card-title" data-i18n="analytics.orderHistory">История заказов</div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>№</th><th data-i18n="analytics.composition">Состав</th><th data-i18n="analytics.amount">Сумма</th><th data-i18n="analytics.payment">Оплата</th><th data-i18n="analytics.client">Клиент</th><th data-i18n="analytics.time">Время</th></tr></thead>
+            <thead><tr><th>№</th><th data-i18n="analytics.composition">Состав</th><th data-i18n="analytics.amount">Сумма</th><th data-i18n="analytics.payment">Оплата</th><th data-i18n="staff.status">Статус</th><th data-i18n="analytics.client">Клиент</th><th data-i18n="analytics.time">Время</th><th></th></tr></thead>
             <tbody id="orders-tbody"></tbody>
           </table>
         </div>
@@ -1576,6 +1578,19 @@ const I18N = {
     'payment.cash': 'Наличные',
     'payment.card': 'Карта',
     'pay.mixed': 'Раздельно',
+    'pay.cashAmount': 'Наличные',
+    'pay.cardAmount': 'Карта',
+    'pay.mixedCount': 'Раздельных чеков',
+    'order.cancel': 'Отменить',
+    'order.cancelReceipt': 'Отменить чек',
+    'order.cancelled': 'Отменён',
+    'order.cancelReason': 'Причина отмены',
+    'order.foodPrepared': 'Блюдо уже приготовлено?',
+    'order.foodPreparedYes': 'Да, приготовлено',
+    'order.foodPreparedNo': 'Нет, не приготовлено',
+    'order.cancelSuccess': 'Чек отменён',
+    'order.cancelConfirm': 'Подтвердить отмену?',
+    'order.cancelNotAllowed': 'Отмена недоступна',
     'cashBar.shift': 'Смена',
     'cashBar.orders': 'Заказов',
     'clients.title': 'База клиентов',
@@ -1782,7 +1797,9 @@ const I18N = {
     'analytics.clients': 'Клиентов',
     'analytics.noSales': 'Продаж пока нет',
     'analytics.firstOrderHint': 'оформите первый на кассе',
-    'analytics.cashShort': 'Нал.'
+    'analytics.cashShort': 'Нал.',
+    'analytics.cancelledOrders': 'Отменённые чеки',
+    'analytics.cancelledAmount': 'Сумма отменённых'
   },
   uz: {
     'nav.pos': 'Kassa',
@@ -1922,6 +1939,19 @@ const I18N = {
     'payment.cash': 'Naqd',
     'payment.card': 'Karta',
     'pay.mixed': 'Bo‘lib',
+    'pay.cashAmount': 'Naqd',
+    'pay.cardAmount': 'Karta',
+    'pay.mixedCount': 'Bo‘lingan cheklar',
+    'order.cancel': 'Bekor qilish',
+    'order.cancelReceipt': 'Chekni bekor qilish',
+    'order.cancelled': 'Bekor qilingan',
+    'order.cancelReason': 'Bekor qilish sababi',
+    'order.foodPrepared': 'Taom tayyorlanganmi?',
+    'order.foodPreparedYes': 'Ha, tayyorlangan',
+    'order.foodPreparedNo': 'Yo‘q, tayyorlanmagan',
+    'order.cancelSuccess': 'Chek bekor qilindi',
+    'order.cancelConfirm': 'Bekor qilishni tasdiqlaysizmi?',
+    'order.cancelNotAllowed': 'Bekor qilish mumkin emas',
     'cashBar.shift': 'Smena',
     'cashBar.orders': 'Buyurtmalar',
     'clients.title': 'Mijozlar bazasi',
@@ -2128,7 +2158,9 @@ const I18N = {
     'analytics.clients': 'Mijozlar',
     'analytics.noSales': 'Hozircha savdolar yo‘q',
     'analytics.firstOrderHint': 'birinchi buyurtmani kassada rasmiylashtiring',
-    'analytics.cashShort': 'Naqd'
+    'analytics.cashShort': 'Naqd',
+    'analytics.cancelledOrders': 'Bekor qilingan cheklar',
+    'analytics.cancelledAmount': 'Bekor qilingan summa'
   }
 };
 
@@ -3316,37 +3348,114 @@ async function saveStaff(id) {
 // ═══════════════════════════════════════════════════════════
 // ANALYTICS
 // ═══════════════════════════════════════════════════════════
+function isCompletedOrder(order) {
+  return !order.status || order.status === 'completed';
+}
+function orderCashAmount(order) {
+  if ((order.cash_amount || 0) > 0) return order.cash_amount || 0;
+  return order.pay_method === 'cash' ? order.total || 0 : 0;
+}
+function orderCardAmount(order) {
+  if ((order.card_amount || 0) > 0) return order.card_amount || 0;
+  return order.pay_method === 'card' ? order.total || 0 : 0;
+}
+function canCancelOrder(order) {
+  return ['owner','admin'].includes(currentUser?.role)
+    && isCompletedOrder(order)
+    && currentShift
+    && !currentShift.closed_at
+    && Number(order.shift_id) === Number(currentShift.id);
+}
+function openCancelOrderModal(id) {
+  const order = orders.find(o => Number(o.id) === Number(id));
+  if (!order || !canCancelOrder(order)) {
+    toast(t('order.cancelNotAllowed'));
+    return;
+  }
+  showModal(`<div class="modal-title">${t('order.cancelReceipt')}</div>
+    <div class="field">
+      <label>${t('order.foodPrepared')}</label>
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><input type="radio" name="cancel-food-prepared" value="false" checked> ${t('order.foodPreparedNo')}</label>
+      <label style="display:flex;align-items:center;gap:8px;"><input type="radio" name="cancel-food-prepared" value="true"> ${t('order.foodPreparedYes')}</label>
+    </div>
+    <div class="field"><label>${t('order.cancelReason')}</label><textarea id="cancel-reason" rows="3" placeholder="${t('order.cancelReason')}"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">${t('common.cancel')}</button>
+      <button class="btn btn-danger" onclick="cancelOrder(${id})">${t('order.cancel')}</button>
+    </div>`);
+}
+async function cancelOrder(id) {
+  if (!confirm(t('order.cancelConfirm'))) return;
+  const foodPrepared = document.querySelector('input[name="cancel-food-prepared"]:checked')?.value === 'true';
+  const reason = document.getElementById('cancel-reason')?.value || '';
+  try {
+    await api('/orders/' + id + '/cancel', { method: 'POST', body: { food_prepared: foodPrepared, reason } });
+    const [ordersData, stockData, clientsData, shiftData, summaryData] = await Promise.all([
+      api('/orders'),
+      api('/stock'),
+      api('/orders/clients/all'),
+      api('/orders/shift/current'),
+      api('/orders/shift/summary'),
+    ]);
+    orders = ordersData;
+    ingredients = stockData;
+    clients = clientsData;
+    currentShift = shiftData;
+    dailySummary = summaryData;
+    closeModal();
+    renderAnalytics();
+    renderDailyCashBar();
+    renderShiftBar();
+    if (document.getElementById('page-stock')?.classList.contains('active')) renderStock();
+    if (document.getElementById('page-clients')?.classList.contains('active')) renderClients();
+    toast(t('order.cancelSuccess'));
+  } catch (err) {
+    toast(t('common.error') + ': ' + err.message);
+  }
+}
 async function renderAnalytics() {
   try { orders = await api('/orders'); } catch(err) { toast(err.message); return; }
-  const totalRev = orders.reduce((a,o)=>a+o.total,0);
-  const avg = orders.length ? Math.round(totalRev/orders.length) : 0;
+  const completedOrders = orders.filter(isCompletedOrder);
+  const cancelledOrders = orders.filter(o => o.status === 'cancelled');
+  const totalRev = completedOrders.reduce((a,o)=>a+o.total,0);
+  const cancelledAmount = cancelledOrders.reduce((a,o)=>a+o.total,0);
+  const avg = completedOrders.length ? Math.round(totalRev/completedOrders.length) : 0;
   document.getElementById('analytics-metrics').innerHTML = `
     <div class="metric"><div class="metric-label">${t('analytics.revenueTotal')}</div><div class="metric-value green">${fmt(totalRev)}</div></div>
-    <div class="metric"><div class="metric-label">${t('analytics.orders')}</div><div class="metric-value">${orders.length}</div></div>
+    <div class="metric"><div class="metric-label">${t('analytics.orders')}</div><div class="metric-value">${completedOrders.length}</div></div>
     <div class="metric"><div class="metric-label">${t('analytics.averageCheck')}</div><div class="metric-value">${fmt(avg)}</div></div>
-    <div class="metric"><div class="metric-label">${t('analytics.clients')}</div><div class="metric-value">${clients.length}</div></div>`;
+    <div class="metric"><div class="metric-label">${t('analytics.clients')}</div><div class="metric-value">${clients.length}</div></div>
+    <div class="metric"><div class="metric-label">${t('analytics.cancelledOrders')}</div><div class="metric-value red">${cancelledOrders.length}</div></div>
+    <div class="metric"><div class="metric-label">${t('analytics.cancelledAmount')}</div><div class="metric-value red">${fmt(cancelledAmount)}</div></div>`;
   const dishCount = {};
-  orders.forEach(o => (o.items_json||[]).forEach(i => { dishCount[i.name] = (dishCount[i.name]||0) + i.qty; }));
+  completedOrders.forEach(o => (o.items_json||[]).forEach(i => { dishCount[i.name] = (dishCount[i.name]||0) + i.qty; }));
   const top = Object.entries(dishCount).sort((a,b)=>b[1]-a[1]).slice(0,5);
   const maxD = top[0]?top[0][1]:1;
   document.getElementById('top-dishes').innerHTML = top.length
     ? top.map(([n,c]) => `<div class="bar-row"><span class="bar-label">${esc(n)}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(c/maxD*100)}%"></div></div><span class="bar-count">${c}</span></div>`).join('')
     : `<p class="empty-state" style="font-size:13px;">${t('analytics.noSales')}</p>`;
-  const cash = orders.filter(o=>o.pay_method==='cash').length;
-  const card = orders.filter(o=>o.pay_method==='card').length;
-  const mixed = orders.filter(o=>o.pay_method==='mixed').length;
+  const cashAmount = completedOrders.reduce((sum, o) => sum + orderCashAmount(o), 0);
+  const cardAmount = completedOrders.reduce((sum, o) => sum + orderCardAmount(o), 0);
+  const mixed = completedOrders.filter(o=>o.pay_method==='mixed').length;
+  const maxPay = Math.max(cashAmount, cardAmount, cancelledAmount, 1);
   document.getElementById('pay-stats').innerHTML = `
-    <div class="bar-row"><span class="bar-label">${t('analytics.cash')}</span><div class="bar-track"><div class="bar-fill" style="width:${orders.length?Math.round(cash/orders.length*100):0}%"></div></div><span class="bar-count">${cash}</span></div>
-    <div class="bar-row"><span class="bar-label">${t('analytics.card')}</span><div class="bar-track"><div class="bar-fill" style="width:${orders.length?Math.round(card/orders.length*100):0}%;background:#378ADD"></div></div><span class="bar-count">${card}</span></div>
-    <div class="bar-row"><span class="bar-label">${t('pay.mixed')}</span><div class="bar-track"><div class="bar-fill" style="width:${orders.length?Math.round(mixed/orders.length*100):0}%;background:var(--warning)"></div></div><span class="bar-count">${mixed}</span></div>`;
+    <div class="bar-row"><span class="bar-label">${t('pay.cashAmount')}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(cashAmount/maxPay*100)}%"></div></div><span class="bar-count">${fmt(cashAmount)}</span></div>
+    <div class="bar-row"><span class="bar-label">${t('pay.cardAmount')}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(cardAmount/maxPay*100)}%;background:#378ADD"></div></div><span class="bar-count">${fmt(cardAmount)}</span></div>
+    <div class="bar-row"><span class="bar-label">${t('pay.mixedCount')}</span><div class="bar-track"><div class="bar-fill" style="width:${completedOrders.length?Math.round(mixed/completedOrders.length*100):0}%;background:var(--warning)"></div></div><span class="bar-count">${mixed}</span></div>
+    <div class="bar-row"><span class="bar-label">${t('analytics.cancelledOrders')}</span><div class="bar-track"><div class="bar-fill" style="width:${orders.length?Math.round(cancelledOrders.length/orders.length*100):0}%;background:var(--danger)"></div></div><span class="bar-count">${cancelledOrders.length}</span></div>
+    <div class="bar-row"><span class="bar-label">${t('analytics.cancelledAmount')}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(cancelledAmount/maxPay*100)}%;background:var(--danger)"></div></div><span class="bar-count">${fmt(cancelledAmount)}</span></div>`;
   document.getElementById('orders-tbody').innerHTML = orders.length
     ? orders.slice(0,20).map(o=>{
         const itemsStr = (o.items_json||[]).map(i=>esc(i.name)+' ×'+i.qty).join(', ');
         const time = new Date(o.created_at).toLocaleString(appLang === 'uz' ? 'uz-UZ' : 'ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
         const payLabel = o.pay_method === 'mixed' ? t('pay.mixed') : (o.pay_method==='cash'?t('analytics.cashShort'):t('analytics.card'));
-        return `<tr><td>#${o.id}</td><td class="muted-text" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${itemsStr}</td><td style="font-weight:600;">${fmt(o.total)}</td><td>${payLabel}</td><td>${esc(o.client_name||'—')}</td><td class="muted-text">${time}</td></tr>`;
+        const cancelled = o.status === 'cancelled';
+        const statusLabel = cancelled ? t('order.cancelled') : t('common.success');
+        const statusBadge = cancelled ? 'badge-red' : 'badge-green';
+        const cancelBtn = canCancelOrder(o) ? `<button class="btn btn-danger btn-sm" onclick="openCancelOrderModal(${o.id})">${t('order.cancel')}</button>` : '';
+        return `<tr class="${cancelled?'order-cancelled':''}"><td>#${o.id}</td><td class="muted-text" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${itemsStr}</td><td style="font-weight:600;">${fmt(o.total)}</td><td>${payLabel}</td><td><span class="badge ${statusBadge}">${statusLabel}</span></td><td>${esc(o.client_name||'—')}</td><td class="muted-text">${time}</td><td style="text-align:right;">${cancelBtn}</td></tr>`;
       }).join('')
-    : `<tr><td colspan="6" class="empty-state" style="padding:24px;">${t('analytics.noOrders')} — ${t('analytics.firstOrderHint')}</td></tr>`;
+    : `<tr><td colspan="8" class="empty-state" style="padding:24px;">${t('analytics.noOrders')} — ${t('analytics.firstOrderHint')}</td></tr>`;
 }
 
 // ═══════════════════════════════════════════════════════════
