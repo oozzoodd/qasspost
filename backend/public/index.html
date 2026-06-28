@@ -1121,6 +1121,9 @@
         </div>
       </div>
       <div class="metrics" id="stock-metrics"></div>
+      <div style="margin-bottom:12px;">
+        <input class="search-input" id="stock-search" placeholder="Поиск товара..." data-i18n-placeholder="stock.searchPlaceholder" oninput="searchStock(this.value)">
+      </div>
       <div class="card">
         <div class="table-wrap">
           <table>
@@ -1365,6 +1368,7 @@ let menuItems = [];
 let menuCatsData = [];
 let ingredients = [];
 let stockIncomes = [];
+let stockSearch = '';
 let recipesData = {};
 let clients = [];
 let staff = [];
@@ -1693,6 +1697,8 @@ const I18N = {
     'stock.time': 'Время',
     'stock.loading': 'Загрузка...',
     'stock.noData': 'Приходов пока нет',
+    'stock.searchPlaceholder': 'Поиск товара...',
+    'stock.notFound': 'Товары не найдены',
     'stock.normal': 'Норма',
     'stock.low': 'Мало',
     'stock.empty': 'Нет',
@@ -2037,6 +2043,8 @@ const I18N = {
     'stock.time': 'Vaqt',
     'stock.loading': 'Yuklanmoqda...',
     'stock.noData': 'Hozircha kirimlar yo‘q',
+    'stock.searchPlaceholder': 'Mahsulot qidirish...',
+    'stock.notFound': 'Mahsulotlar topilmadi',
     'stock.normal': 'Norma',
     'stock.low': 'Kam',
     'stock.empty': 'Yo‘q',
@@ -2800,14 +2808,29 @@ async function saveMenuItem(id) {
 // ═══════════════════════════════════════════════════════════
 async function reloadStock() { ingredients = await api('/stock'); }
 async function reloadStockIncomes() { stockIncomes = await api('/stock/incomes'); }
+function searchStock(value) {
+  stockSearch = (value || '').toLowerCase().trim();
+  renderStock();
+}
 function renderStock() {
   const low = ingredients.filter(i => stockStatus(i) === 'low').length;
   const out = ingredients.filter(i => stockStatus(i) === 'out').length;
+  const filtered = ingredients.filter(ing => {
+    if (!stockSearch) return true;
+    const haystack = [
+      ing.name,
+      ing.category,
+      stockCategoryLabel(ing.category),
+      ing.unit,
+      stockUnitLabel(ing.unit)
+    ].join(' ').toLowerCase();
+    return haystack.includes(stockSearch);
+  });
   document.getElementById('stock-metrics').innerHTML = `
     <div class="metric"><div class="metric-label">${t('stock.totalItems')}</div><div class="metric-value">${ingredients.length}</div></div>
     <div class="metric"><div class="metric-label">${t('stock.lowItems')}</div><div class="metric-value amber">${low}</div></div>
     <div class="metric"><div class="metric-label">${t('stock.emptyItems')}</div><div class="metric-value red">${out}</div></div>`;
-  document.getElementById('stock-tbody').innerHTML = ingredients.map(ing => {
+  document.getElementById('stock-tbody').innerHTML = filtered.length ? filtered.map(ing => {
     const s = stockStatus(ing);
     const pct = Math.min(100, Math.round(ing.stock_grams / (ing.min_grams * 4) * 100));
     const col = s==='ok'?'#1D9E75':s==='low'?'#D97706':'#C0392B';
@@ -2825,7 +2848,7 @@ function renderStock() {
         <button class="btn btn-icon btn-sm" onclick="openIngModal(${ing.id})">✏️</button>
         <button class="btn btn-icon btn-sm" onclick="deleteIng(${ing.id})">🗑️</button>
       </td>
-    </tr>`;}).join('');
+    </tr>`;}).join('') : `<tr><td colspan="8" class="empty-state">${t('stock.notFound')}</td></tr>`;
   renderStockIncomes();
   reloadStockIncomes().then(renderStockIncomes).catch(err => {
     const tbody = document.getElementById('stock-incomes-tbody');
