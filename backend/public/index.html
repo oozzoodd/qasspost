@@ -1105,7 +1105,7 @@
           </div>
           <div class="table-wrap">
             <table id="menu-table">
-              <thead><tr><th data-i18n="menu.dish">Блюдо</th><th data-i18n="menu.price">Цена</th><th data-i18n="menu.category">Категория</th><th data-i18n="menu.status">Статус</th><th></th></tr></thead>
+              <thead><tr><th data-i18n="menu.dish">Товар / Блюдо</th><th data-i18n="menu.price">Цена</th><th data-i18n="menu.category">Категория</th><th data-i18n="menu.itemType">Тип товара</th><th data-i18n="menu.status">Статус</th><th></th></tr></thead>
               <tbody id="menu-tbody"></tbody>
             </table>
           </div>
@@ -1668,30 +1668,38 @@ const I18N = {
     'finance.noShifts': 'Смен за период нет',
     'finance.selectStartDate': 'Выберите дату начала',
     'menu.title': 'Редактор меню',
-    'menu.addDish': '+ Добавить блюдо',
+    'menu.addDish': '+ Добавить товар',
     'menu.categories': 'КАТЕГОРИИ',
     'menu.addCategory': '+ Добавить',
-    'menu.allDishes': 'Все блюда',
-    'menu.dish': 'Блюдо',
+    'menu.allDishes': 'Все товары',
+    'menu.dish': 'Товар / Блюдо',
     'menu.price': 'Цена',
     'menu.category': 'Категория',
     'menu.status': 'Статус',
     'menu.active': 'Активно',
     'menu.hidden': 'Скрыто',
-    'menu.editDish': 'Редактировать блюдо',
-    'menu.newDish': 'Новое блюдо',
+    'menu.editDish': 'Редактировать товар / блюдо',
+    'menu.newDish': 'Новый товар / блюдо',
     'menu.name': 'Название',
     'menu.saveDish': 'Сохранить',
-    'menu.deleteDish': 'Блюдо удалено',
-    'menu.deleteConfirm': 'Удалить блюдо?',
+    'menu.deleteDish': 'Товар удалён',
+    'menu.deleteConfirm': 'Удалить товар?',
     'menu.categoryName': 'Название категории',
     'menu.categoryAdded': 'Категория добавлена',
-    'menu.dishSaved': 'Блюдо сохранено',
-    'menu.dishDeleted': 'Блюдо удалено',
-    'menu.noDishes': 'Блюд пока нет',
+    'menu.dishSaved': 'Товар сохранён',
+    'menu.dishDeleted': 'Товар удалён',
+    'menu.noDishes': 'Товаров пока нет',
     'menu.positions': 'позиций',
     'menu.hide': 'Скрыть',
     'menu.show': 'Показать',
+    'menu.itemType': 'Тип товара',
+    'menu.typeDish': 'Блюдо / с техкартой',
+    'menu.typeStockItem': 'Готовый поштучный товар / без техкарты',
+    'menu.stockIngredient': 'Складской товар',
+    'menu.stockQty': 'Количество списания',
+    'menu.stockItemHint': 'Поштучный товар списывается напрямую со склада.',
+    'menu.dishHint': 'Для блюда используйте техкарту.',
+    'menu.noRecipeNeeded': 'Для этого товара техкарта не нужна.',
     'stock.title': 'Склад',
     'stock.income': 'Приход',
     'stock.addItem': '+ Добавить',
@@ -2029,30 +2037,38 @@ const I18N = {
     'finance.noShifts': 'Bu davrda smenalar yo‘q',
     'finance.selectStartDate': 'Boshlanish sanasini tanlang',
     'menu.title': 'Menyu muharriri',
-    'menu.addDish': '+ Taom qo‘shish',
+    'menu.addDish': '+ Mahsulot qo‘shish',
     'menu.categories': 'KATEGORIYALAR',
     'menu.addCategory': '+ Qo‘shish',
-    'menu.allDishes': 'Barcha taomlar',
-    'menu.dish': 'Taom',
+    'menu.allDishes': 'Barcha mahsulotlar',
+    'menu.dish': 'Tovar / Taom',
     'menu.price': 'Narx',
     'menu.category': 'Kategoriya',
     'menu.status': 'Holat',
     'menu.active': 'Faol',
     'menu.hidden': 'Yashirilgan',
-    'menu.editDish': 'Taomni tahrirlash',
-    'menu.newDish': 'Yangi taom',
+    'menu.editDish': 'Tovar / taomni tahrirlash',
+    'menu.newDish': 'Yangi tovar / taom',
     'menu.name': 'Nomi',
     'menu.saveDish': 'Saqlash',
-    'menu.deleteDish': 'Taom o‘chirildi',
-    'menu.deleteConfirm': 'Taomni o‘chirish?',
+    'menu.deleteDish': 'Mahsulot o‘chirildi',
+    'menu.deleteConfirm': 'Mahsulotni o‘chirish?',
     'menu.categoryName': 'Kategoriya nomi',
     'menu.categoryAdded': 'Kategoriya qo‘shildi',
-    'menu.dishSaved': 'Taom saqlandi',
-    'menu.dishDeleted': 'Taom o‘chirildi',
-    'menu.noDishes': 'Hozircha taomlar yo‘q',
+    'menu.dishSaved': 'Mahsulot saqlandi',
+    'menu.dishDeleted': 'Mahsulot o‘chirildi',
+    'menu.noDishes': 'Hozircha mahsulotlar yo‘q',
     'menu.positions': 'pozitsiya',
     'menu.hide': 'Yashirish',
     'menu.show': 'Ko‘rsatish',
+    'menu.itemType': 'Mahsulot turi',
+    'menu.typeDish': 'Taom / texkarta bilan',
+    'menu.typeStockItem': 'Tayyor donali mahsulot / texkartasiz',
+    'menu.stockIngredient': 'Ombor mahsuloti',
+    'menu.stockQty': 'Ombordan kamayadigan miqdor',
+    'menu.stockItemHint': 'Donali mahsulot ombordan to‘g‘ridan-to‘g‘ri kamayadi.',
+    'menu.dishHint': 'Taom uchun texkartadan foydalaning.',
+    'menu.noRecipeNeeded': 'Bu mahsulot uchun texkarta shart emas.',
     'stock.title': 'Ombor',
     'stock.income': 'Kirim',
     'stock.addItem': '+ Qo‘shish',
@@ -2512,6 +2528,11 @@ function getItem(id) { return menuItems.find(i => i.id === id); }
 function getClient(id) { return clients.find(c => c.id === id); }
 function stockStatus(ing) { if (ing.stock_grams <= 0) return 'out'; if (ing.stock_grams < ing.min_grams) return 'low'; return 'ok'; }
 function canMake(item) {
+  if (menuItemType(item) === 'stock_item') {
+    const ing = getIng(+item.stock_ingredient_id);
+    const stockQty = Number(item.stock_qty || 1);
+    return !!ing && Number.isFinite(stockQty) && stockQty > 0 && ing.stock_grams >= stockQty;
+  }
   const r = recipesData[item.id];
   if (!r) return true;
   return r.every(ri => { const ing = getIng(ri.ingredient_id); return ing && ing.stock_grams >= ri.grams; });
@@ -2528,7 +2549,7 @@ async function loadRecipeFor(itemId) {
   return data;
 }
 async function preloadAllRecipes() {
-  await Promise.all(menuItems.map(item => loadRecipeFor(item.id)));
+  await Promise.all(menuItems.filter(item => menuItemType(item) !== 'stock_item').map(item => loadRecipeFor(item.id)));
 }
 
 function renderPos() {
@@ -2768,6 +2789,24 @@ async function reloadMenu() {
   menuCats = data.categories.map(c => c.name);
   menuItems = data.items;
 }
+function menuItemType(item) {
+  return item?.item_type === 'stock_item' ? 'stock_item' : 'dish';
+}
+function menuItemTypeLabel(item) {
+  return menuItemType(item) === 'stock_item' ? t('menu.typeStockItem') : t('menu.typeDish');
+}
+function menuStockIngredientOptions(selectedId) {
+  return ingredients.map(ing =>
+    `<option value="${ing.id}"${Number(selectedId)===Number(ing.id)?' selected':''}>${esc(ing.name)} (${stockUnitLabel(ing.unit)})</option>`
+  ).join('');
+}
+function toggleMenuItemTypeFields() {
+  const type = document.getElementById('mf-item-type')?.value || 'dish';
+  const fields = document.getElementById('mf-stock-fields');
+  const hint = document.getElementById('mf-type-hint');
+  if (fields) fields.style.display = type === 'stock_item' ? 'grid' : 'none';
+  if (hint) hint.textContent = type === 'stock_item' ? t('menu.stockItemHint') : t('menu.dishHint');
+}
 function renderMenu() {
   document.getElementById('menu-cats-list').innerHTML = ['all',...menuCatsData.map(c=>c.id)].map((c) => {
     const isAll = c === 'all';
@@ -2784,13 +2823,14 @@ function renderMenu() {
     <td><strong>${esc(item.name)}</strong></td>
     <td>${fmt(item.price)}</td>
     <td>${esc(catNameOf(item))}</td>
+    <td><span class="badge ${menuItemType(item)==='stock_item'?'badge-blue':'badge-gray'}">${menuItemTypeLabel(item)}</span></td>
     <td><span class="badge ${item.active?'badge-green':'badge-gray'}">${item.active?t('menu.active'):t('menu.hidden')}</span></td>
     <td style="text-align:right;white-space:nowrap;display:flex;gap:4px;justify-content:flex-end;">
       <button class="btn btn-icon btn-sm" onclick="toggleMenuItem(${item.id})" title="${item.active?t('menu.hide'):t('menu.show')}">${item.active?'👁️':'🚫'}</button>
       <button class="btn btn-icon btn-sm" onclick="openMenuModal(${item.id})">✏️</button>
       <button class="btn btn-icon btn-sm" onclick="deleteMenuItem(${item.id})">🗑️</button>
     </td>
-  </tr>`).join('') : `<tr><td colspan="5" class="empty-state">${t('menu.noDishes')}</td></tr>`;
+  </tr>`).join('') : `<tr><td colspan="6" class="empty-state">${t('menu.noDishes')}</td></tr>`;
 }
 function setMenuCat(c) { activeMenuCat = c === 'all' ? 'all' : +c; renderMenu(); }
 async function toggleMenuItem(id) {
@@ -2812,25 +2852,47 @@ async function addMenuCat() {
 function openMenuModal(id) {
   const item = id ? getItem(id) : null;
   const catOpts = menuCatsData.map(c => `<option value="${c.id}"${item&&item.category_id===c.id?' selected':''}>${esc(c.name)}</option>`).join('');
+  const type = menuItemType(item);
   showModal(`<div class="modal-title">${id ? t('menu.editDish') : t('menu.newDish')}</div>
     <div class="field"><label>${t('menu.name')}</label><input type="text" id="mf-name" value="${item?esc(item.name):''}" placeholder="${t('menu.name')}" data-i18n-placeholder="menu.name"></div>
     <div class="field-row">
       <div class="field"><label>${t('menu.price')} (${t('common.currency')})</label><input type="number" id="mf-price" value="${item?item.price:''}" placeholder="${t('menu.price')}" data-i18n-placeholder="menu.price"></div>
       <div class="field"><label>${t('menu.category')}</label><select id="mf-cat">${catOpts}</select></div>
     </div>
+    <div class="field">
+      <label>${t('menu.itemType')}</label>
+      <select id="mf-item-type" onchange="toggleMenuItemTypeFields()">
+        <option value="dish"${type==='dish'?' selected':''}>${t('menu.typeDish')}</option>
+        <option value="stock_item"${type==='stock_item'?' selected':''}>${t('menu.typeStockItem')}</option>
+      </select>
+      <div class="muted-text" id="mf-type-hint" style="font-size:12px;margin-top:6px;"></div>
+    </div>
+    <div class="field-row" id="mf-stock-fields">
+      <div class="field"><label>${t('menu.stockIngredient')}</label><select id="mf-stock-ingredient">${menuStockIngredientOptions(item?.stock_ingredient_id)}</select></div>
+      <div class="field"><label>${t('menu.stockQty')}</label><input type="number" id="mf-stock-qty" step="0.001" min="0.001" value="${item?.stock_qty || 1}"></div>
+    </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal()">${t('common.cancel')}</button>
       <button class="btn btn-primary" onclick="saveMenuItem(${id||0})">${t('menu.saveDish')}</button>
     </div>`);
+  toggleMenuItemTypeFields();
 }
 async function saveMenuItem(id) {
   const name = document.getElementById('mf-name').value.trim();
   const price = +document.getElementById('mf-price').value || 0;
   const category_id = +document.getElementById('mf-cat').value;
+  const item_type = document.getElementById('mf-item-type').value;
+  const stock_ingredient_id = item_type === 'stock_item' ? +document.getElementById('mf-stock-ingredient').value : null;
+  const stock_qty = item_type === 'stock_item' ? +document.getElementById('mf-stock-qty').value : 1;
   if (!name) return;
+  if (item_type === 'stock_item' && (!stock_ingredient_id || !Number.isFinite(stock_qty) || stock_qty <= 0)) {
+    toast(t('common.invalid'));
+    return;
+  }
+  const body = { name, price, category_id, item_type, stock_ingredient_id, stock_qty };
   try {
-    if (id) await api('/menu/items/'+id, { method:'PUT', body:{ name, price, category_id } });
-    else await api('/menu/items', { method:'POST', body:{ name, price, category_id } });
+    if (id) await api('/menu/items/'+id, { method:'PUT', body });
+    else await api('/menu/items', { method:'POST', body });
     await reloadMenu(); closeModal(); renderMenu(); toast(t('menu.dishSaved'));
   } catch(err) { toast(err.message); }
 }
@@ -3026,6 +3088,17 @@ function renderStockIncomes() {
 async function renderRecipes() {
   await preloadAllRecipes();
   document.getElementById('recipes-list').innerHTML = menuItems.map(item => {
+    if (menuItemType(item) === 'stock_item') {
+      return `<div class="recipe-card">
+        <div class="recipe-head">
+          <strong>${esc(item.name)}</strong>
+          <span class="muted-text" style="font-size:12px;">${t('menu.typeStockItem')}</span>
+        </div>
+        <div class="recipe-body open">
+          <div class="empty-state" style="padding:10px 0;">${t('menu.noRecipeNeeded')}</div>
+        </div>
+      </div>`;
+    }
     const items = recipesData[item.id] || [];
     return `<div class="recipe-card">
       <div class="recipe-head" onclick="toggleRecipe(${item.id})">

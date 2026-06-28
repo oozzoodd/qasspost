@@ -7,6 +7,18 @@ router.use(requireAuth);
 
 const COMPLETED_ORDER_SQL = "(status IS NULL OR status = 'completed')";
 
+function normalizeMenuItemType(item) {
+  return item.item_type === 'stock_item' ? 'stock_item' : 'dish';
+}
+
+function normalizeStockQty(value) {
+  const stockQty = Number(value ?? 1);
+  if (!Number.isFinite(stockQty) || stockQty <= 0) {
+    throw new Error('Количество списания должно быть больше 0');
+  }
+  return stockQty;
+}
+
 // ── СМЕНЫ ────────────────────────────────────────────────────
 
 // GET /orders/shift/current — текущая открытая смена
@@ -462,22 +474,55 @@ router.post('/', async (req, res) => {
       const itemRes = await client.query('SELECT * FROM menu_items WHERE id = $1 AND venue_id = $2', [id, venueId]);
       if (!itemRes.rows.length) throw new Error('Блюдо не найдено: ' + id);
       const item = itemRes.rows[0];
+      const itemType = normalizeMenuItemType(item);
+      const stockIngredientId = item.stock_ingredient_id ? +item.stock_ingredient_id : null;
+      const stockQty = normalizeStockQty(item.stock_qty);
       total += item.price * qty;
-      itemsSnapshot.push({ id, name: item.name, qty, price: item.price });
+      itemsSnapshot.push({
+        id,
+        name: item.name,
+        qty,
+        price: item.price,
+        item_type: itemType,
+        stock_ingredient_id: stockIngredientId,
+        stock_qty: stockQty,
+      });
 
-      // Списываем ингредиенты по тех.карте
-      const recipeRes = await client.query('SELECT * FROM recipes WHERE menu_item_id = $1', [id]);
-      for (const r of recipeRes.rows) {
-        const needed = r.grams * qty;
-        const ingRes = await client.query('SELECT stock_grams FROM ingredients WHERE id = $1 FOR UPDATE', [r.ingredient_id]);
+      if (itemType === 'stock_item') {
+        if (!stockIngredientId) {
+          throw new Error(`Выберите складской товар для "${item.name}"`);
+        }
+        const needed = stockQty * qty;
+        const ingRes = await client.query(
+          'SELECT stock_grams FROM ingredients WHERE id = $1 AND venue_id = $2 FOR UPDATE',
+          [stockIngredientId, venueId]
+        );
+        if (!ingRes.rows.length) {
+          throw new Error(`Складской товар для "${item.name}" не найден`);
+        }
         const current = ingRes.rows[0]?.stock_grams ?? 0;
         if (current < needed) {
-          throw new Error(`Недостаточно ингредиента для "${item.name}"`);
+          throw new Error(`Недостаточно товара на складе для "${item.name}"`);
         }
         await client.query(
-          'UPDATE ingredients SET stock_grams = stock_grams - $1, updated_at = NOW() WHERE id = $2',
-          [needed, r.ingredient_id]
+          'UPDATE ingredients SET stock_grams = stock_grams - $1, updated_at = NOW() WHERE id = $2 AND venue_id = $3',
+          [needed, stockIngredientId, venueId]
         );
+      } else {
+        // Списываем ингредиенты по тех.карте
+        const recipeRes = await client.query('SELECT * FROM recipes WHERE menu_item_id = $1', [id]);
+        for (const r of recipeRes.rows) {
+          const needed = r.grams * qty;
+          const ingRes = await client.query('SELECT stock_grams FROM ingredients WHERE id = $1 FOR UPDATE', [r.ingredient_id]);
+          const current = ingRes.rows[0]?.stock_grams ?? 0;
+          if (current < needed) {
+            throw new Error(`Недостаточно ингредиента для "${item.name}"`);
+          }
+          await client.query(
+            'UPDATE ingredients SET stock_grams = stock_grams - $1, updated_at = NOW() WHERE id = $2',
+            [needed, r.ingredient_id]
+          );
+        }
       }
     }
 
@@ -580,11 +625,28 @@ router.post('/:id/cancel', requireRole('owner', 'admin'), async (req, res) => {
       for (const item of items) {
         const menuItemId = +item.id;
         const qty = +item.qty;
+        const itemType = item.item_type === 'stock_item' ? 'stock_item' : 'dish';
         if (!Number.isInteger(menuItemId) || menuItemId <= 0) {
           throw new Error('Невозможно вернуть склад: в чеке нет id блюда');
         }
         if (!Number.isFinite(qty) || qty <= 0) {
           throw new Error('Невозможно вернуть склад: некорректное количество');
+        }
+
+        if (itemType === 'stock_item') {
+          const stockIngredientId = +item.stock_ingredient_id;
+          const stockQty = normalizeStockQty(item.stock_qty);
+          if (!Number.isInteger(stockIngredientId) || stockIngredientId <= 0) {
+            throw new Error('Невозможно вернуть склад: в чеке нет складского товара');
+          }
+
+          await client.query(
+            `UPDATE ingredients
+             SET stock_grams = stock_grams + $1, updated_at = NOW()
+             WHERE id = $2 AND venue_id = $3`,
+            [stockQty * qty, stockIngredientId, req.user.venueId]
+          );
+          continue;
         }
 
         const recipeRes = await client.query(

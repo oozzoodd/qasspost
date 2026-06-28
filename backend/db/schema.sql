@@ -51,6 +51,10 @@ CREATE TABLE IF NOT EXISTS menu_items (
   category_id INTEGER REFERENCES menu_categories(id) ON DELETE SET NULL,
   name VARCHAR(255) NOT NULL,
   price INTEGER NOT NULL,                    -- цена в минимальных единицах валюты
+  item_type VARCHAR(20) DEFAULT 'dish' CHECK (item_type IN ('dish','stock_item')),
+  stock_ingredient_id INTEGER,
+  stock_qty NUMERIC(12,3) DEFAULT 1 CHECK (stock_qty > 0),
+  CHECK (item_type <> 'stock_item' OR stock_ingredient_id IS NOT NULL),
   active BOOLEAN DEFAULT true,
   created_at TIMESTAMP DEFAULT NOW()
 );
@@ -66,6 +70,20 @@ CREATE TABLE IF NOT EXISTS ingredients (
   min_grams INTEGER DEFAULT 300,
   updated_at TIMESTAMP DEFAULT NOW()
 );
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'menu_items' AND column_name = 'stock_ingredient_id'
+  ) AND NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'menu_items_stock_ingredient_fk'
+  ) THEN
+    ALTER TABLE menu_items
+    ADD CONSTRAINT menu_items_stock_ingredient_fk
+    FOREIGN KEY (stock_ingredient_id) REFERENCES ingredients(id);
+  END IF;
+END $$;
 
 -- Тех.карты: связь блюдо <-> ингредиент
 CREATE TABLE IF NOT EXISTS recipes (
@@ -160,6 +178,15 @@ CREATE TABLE IF NOT EXISTS orders (
 CREATE INDEX IF NOT EXISTS idx_venues_account ON venues(account_id);
 CREATE INDEX IF NOT EXISTS idx_staff_venue ON staff(venue_id);
 CREATE INDEX IF NOT EXISTS idx_menu_items_venue ON menu_items(venue_id);
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'menu_items' AND column_name = 'stock_ingredient_id'
+  ) THEN
+    CREATE INDEX IF NOT EXISTS idx_menu_items_stock_ingredient ON menu_items(stock_ingredient_id);
+  END IF;
+END $$;
 CREATE INDEX IF NOT EXISTS idx_ingredients_venue ON ingredients(venue_id);
 CREATE INDEX IF NOT EXISTS idx_ingredients_venue_category ON ingredients(venue_id, category);
 CREATE INDEX IF NOT EXISTS idx_stock_incomes_venue ON stock_incomes(venue_id);
