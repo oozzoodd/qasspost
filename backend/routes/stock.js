@@ -13,6 +13,14 @@ function toStockDeltaGrams(quantity, unit) {
   return Math.round(quantity);
 }
 
+function parseNonNegativeStock(value) {
+  const stock = Number(value);
+  if (!Number.isFinite(stock) || stock < 0) {
+    throw new Error('Остаток не может быть отрицательным');
+  }
+  return stock;
+}
+
 // GET /stock — список ингредиентов
 router.get('/', async (req, res) => {
   const r = await pool.query('SELECT * FROM ingredients WHERE venue_id = $1 ORDER BY name', [req.user.venueId]);
@@ -52,9 +60,15 @@ router.post('/', requireRole('owner', 'admin'), async (req, res) => {
   if (!STOCK_CATEGORIES.has(category) || !INCOME_UNITS.has(unit)) {
     return res.status(400).json({ error: 'Проверьте категорию и единицу измерения' });
   }
+  let normalizedStockGrams;
+  try {
+    normalizedStockGrams = parseNonNegativeStock(stock_grams);
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
   const r = await pool.query(
     'INSERT INTO ingredients (venue_id, name, category, unit, stock_grams, min_grams) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
-    [req.user.venueId, name, category, unit, stock_grams, min_grams]
+    [req.user.venueId, name, category, unit, normalizedStockGrams, min_grams]
   );
   res.json(r.rows[0]);
 });
@@ -68,6 +82,14 @@ router.put('/:id', requireRole('owner', 'admin'), async (req, res) => {
   if (unit && !INCOME_UNITS.has(unit)) {
     return res.status(400).json({ error: 'Неверная единица измерения' });
   }
+  let normalizedStockGrams = null;
+  if (stock_grams !== undefined && stock_grams !== null && stock_grams !== '') {
+    try {
+      normalizedStockGrams = parseNonNegativeStock(stock_grams);
+    } catch (err) {
+      return res.status(400).json({ error: err.message });
+    }
+  }
   const r = await pool.query(
     `UPDATE ingredients SET
        name = COALESCE($1, name),
@@ -77,7 +99,7 @@ router.put('/:id', requireRole('owner', 'admin'), async (req, res) => {
        unit = COALESCE($5, unit),
        updated_at = NOW()
      WHERE id = $6 AND venue_id = $7 RETURNING *`,
-    [name, stock_grams, min_grams, category, unit, req.params.id, req.user.venueId]
+    [name, normalizedStockGrams, min_grams, category, unit, req.params.id, req.user.venueId]
   );
   if (!r.rows.length) return res.status(404).json({ error: 'Не найдено' });
   res.json(r.rows[0]);
@@ -196,11 +218,14 @@ router.post('/recipes', requireRole('owner', 'admin'), async (req, res) => {
     if (!menu_item_id || !ingredient_id || !grams) return res.status(400).json({ error: 'Заполните все поля' });
 
     // Проверяем что блюдо и ингредиент принадлежат нашему заведению
-    const itemCheck = await pool.query('SELECT id FROM menu_items WHERE id = $1 AND venue_id = $2', [menu_item_id, req.user.venueId]);
+    const itemCheck = await pool.query('SELECT id, item_type FROM menu_items WHERE id = $1 AND venue_id = $2', [menu_item_id, req.user.venueId]);
     const ingCheck = await pool.query('SELECT id FROM ingredients WHERE id = $1 AND venue_id = $2', [ingredient_id, req.user.venueId]);
 
     if (!itemCheck.rows.length || !ingCheck.rows.length) {
       return res.status(403).json({ error: 'Доступ запрещён. Неверное блюдо или ингредиент.' });
+    }
+    if (itemCheck.rows[0].item_type === 'stock_item') {
+      return res.status(400).json({ error: 'Для поштучного товара техкарта не нужна' });
     }
 
     const r = await pool.query(

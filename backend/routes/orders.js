@@ -411,7 +411,7 @@ router.get('/expenses/summary', async (req, res) => {
 router.get('/', async (req, res) => {
   const r = await pool.query(
     `SELECT o.*, c.name as client_name FROM orders o
-     LEFT JOIN clients c ON c.id = o.client_id
+     LEFT JOIN clients c ON c.id = o.client_id AND c.venue_id = o.venue_id
      WHERE o.venue_id = $1 ORDER BY o.created_at DESC LIMIT 50`,
     [req.user.venueId]
   );
@@ -465,6 +465,22 @@ router.post('/', async (req, res) => {
     }
     const shiftId = shiftRes.rows[0].id;
 
+    const normalizedClientId = client_id ? Number(client_id) : null;
+    if (client_id && (!Number.isInteger(normalizedClientId) || normalizedClientId <= 0)) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Клиент не найден' });
+    }
+    if (normalizedClientId) {
+      const clientCheck = await client.query(
+        'SELECT id FROM clients WHERE id = $1 AND venue_id = $2',
+        [normalizedClientId, venueId]
+      );
+      if (!clientCheck.rows.length) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: 'Клиент не найден' });
+      }
+    }
+
     let total = 0;
     const itemsSnapshot = [];
 
@@ -510,17 +526,26 @@ router.post('/', async (req, res) => {
         );
       } else {
         // Списываем ингредиенты по тех.карте
-        const recipeRes = await client.query('SELECT * FROM recipes WHERE menu_item_id = $1', [id]);
+        const recipeRes = await client.query(
+          `SELECT r.ingredient_id, r.grams, i.stock_grams
+           FROM recipes r
+           JOIN ingredients i ON i.id = r.ingredient_id AND i.venue_id = $2
+           WHERE r.menu_item_id = $1
+           FOR UPDATE OF i`,
+          [id, venueId]
+        );
+        if (!recipeRes.rows.length) {
+          throw new Error(`Заполните техкарту для товара: ${item.name}`);
+        }
         for (const r of recipeRes.rows) {
           const needed = r.grams * qty;
-          const ingRes = await client.query('SELECT stock_grams FROM ingredients WHERE id = $1 FOR UPDATE', [r.ingredient_id]);
-          const current = ingRes.rows[0]?.stock_grams ?? 0;
+          const current = r.stock_grams ?? 0;
           if (current < needed) {
             throw new Error(`Недостаточно ингредиента для "${item.name}"`);
           }
           await client.query(
-            'UPDATE ingredients SET stock_grams = stock_grams - $1, updated_at = NOW() WHERE id = $2',
-            [needed, r.ingredient_id]
+            'UPDATE ingredients SET stock_grams = stock_grams - $1, updated_at = NOW() WHERE id = $2 AND venue_id = $3',
+            [needed, r.ingredient_id, venueId]
           );
         }
       }
@@ -547,14 +572,14 @@ router.post('/', async (req, res) => {
 
     // Бонусы клиента
     let bonusEarned = 0;
-    if (client_id) {
+    if (normalizedClientId) {
       const venueRes = await client.query('SELECT bonus_pct FROM venues WHERE id = $1', [venueId]);
       const pct = venueRes.rows[0]?.bonus_pct ?? 5;
       bonusEarned = Math.round(total * pct / 100);
       await client.query(
         `UPDATE clients SET bonus = bonus + $1, visits = visits + 1, total_spent = total_spent + $2
          WHERE id = $3 AND venue_id = $4`,
-        [bonusEarned, total, client_id, venueId]
+        [bonusEarned, total, normalizedClientId, venueId]
       );
     }
 
@@ -565,7 +590,7 @@ router.post('/', async (req, res) => {
     const orderRes = await client.query(
       `INSERT INTO orders (venue_id, shift_id, staff_id, client_id, total, pay_method, cash_amount, card_amount, status, bonus_earned, items_json)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'completed',$9,$10) RETURNING *`,
-      [venueId, shiftId, staffId, client_id || null, total, pay_method, cashAmount, cardAmount, bonusEarned, JSON.stringify(itemsSnapshot)]
+      [venueId, shiftId, staffId, normalizedClientId, total, pay_method, cashAmount, cardAmount, bonusEarned, JSON.stringify(itemsSnapshot)]
     );
 
     await client.query('COMMIT');

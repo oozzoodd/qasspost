@@ -2487,9 +2487,10 @@ async function toggleShift() {
 function renderShiftBar() {
   const el = document.getElementById('shift-bar-block');
   const open = currentShift && !currentShift.closed_at;
+  const shiftRevenue = dailySummary?.total || 0;
   el.innerHTML = `<div class="shift-bar ${open ? 'open' : 'closed'}">
     <span>${open ? '✅ ' + t('shift.opened') : '⛔ ' + t('pos.shiftClosed') + ' — ' + t('pos.salesUnavailable')}</span>
-    ${open ? '<span style="font-weight:600;">' + t('settings.shiftRevenue') + ': ' + fmt(currentShift.revenue || 0) + '</span>' : ''}
+    ${open ? '<span style="font-weight:600;">' + t('settings.shiftRevenue') + ': ' + fmt(shiftRevenue) + '</span>' : ''}
   </div>`;
 }
 function showShiftCloseReport(shift) {
@@ -2528,14 +2529,15 @@ function getItem(id) { return menuItems.find(i => i.id === id); }
 function getClient(id) { return clients.find(c => c.id === id); }
 function stockStatus(ing) { if (ing.stock_grams <= 0) return 'out'; if (ing.stock_grams < ing.min_grams) return 'low'; return 'ok'; }
 function canMake(item) {
+  const nextQty = (cart[item.id] || 0) + 1;
   if (menuItemType(item) === 'stock_item') {
     const ing = getIng(+item.stock_ingredient_id);
     const stockQty = Number(item.stock_qty || 1);
-    return !!ing && Number.isFinite(stockQty) && stockQty > 0 && ing.stock_grams >= stockQty;
+    return !!ing && Number.isFinite(stockQty) && stockQty > 0 && ing.stock_grams >= stockQty * nextQty;
   }
   const r = recipesData[item.id];
   if (!r) return true;
-  return r.every(ri => { const ing = getIng(ri.ingredient_id); return ing && ing.stock_grams >= ri.grams; });
+  return r.every(ri => { const ing = getIng(ri.ingredient_id); return ing && ing.stock_grams >= ri.grams * nextQty; });
 }
 function catNameOf(item) {
   const c = menuCatsData.find(c => c.id === item.category_id);
@@ -2653,9 +2655,18 @@ function setPoscat(c) { activePoscat = c; renderPos(); }
 function addToCart(id) {
   const open = currentShift && !currentShift.closed_at;
   if (!open) { toast(t('pos.openShiftFirst') + '!'); return; }
-  cart[id] = (cart[id] || 0) + 1; renderCart();
+  const item = getItem(id);
+  if (!item || !canMake(item)) { toast(t('pos.noStock')); renderPosMenu(); return; }
+  cart[id] = (cart[id] || 0) + 1; renderCart(); renderPosMenu();
 }
-function changeQty(id, d) { cart[id] = (cart[id] || 0) + d; if (cart[id] <= 0) delete cart[id]; renderCart(); }
+function changeQty(id, d) {
+  const item = getItem(id);
+  if (d > 0 && (!item || !canMake(item))) { toast(t('pos.noStock')); renderPosMenu(); return; }
+  cart[id] = (cart[id] || 0) + d;
+  if (cart[id] <= 0) delete cart[id];
+  renderCart();
+  renderPosMenu();
+}
 function selectClient(id) { cartClientId = id || null; renderCart(); }
 function cartTotal() {
   return Object.keys(cart).reduce((sum, id) => {
@@ -3521,7 +3532,9 @@ async function renderAnalytics() {
     ? orders.slice(0,20).map(o=>{
         const itemsStr = (o.items_json||[]).map(i=>esc(i.name)+' ×'+i.qty).join(', ');
         const time = new Date(o.created_at).toLocaleString(appLang === 'uz' ? 'uz-UZ' : 'ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-        const payLabel = o.pay_method === 'mixed' ? t('pay.mixed') : (o.pay_method==='cash'?t('analytics.cashShort'):t('analytics.card'));
+        const payLabel = o.pay_method === 'mixed'
+          ? `${t('pay.mixed')}<br><span class="muted-text" style="font-size:12px;">${t('pay.cashAmount')}: ${fmt(orderCashAmount(o))}<br>${t('pay.cardAmount')}: ${fmt(orderCardAmount(o))}</span>`
+          : (o.pay_method==='cash'?t('analytics.cashShort'):t('analytics.card'));
         const cancelled = o.status === 'cancelled';
         const statusLabel = cancelled ? t('order.cancelled') : t('common.success');
         const statusBadge = cancelled ? 'badge-red' : 'badge-green';
@@ -3760,10 +3773,11 @@ function addFinanceMonths(date, delta) {
 // ═══════════════════════════════════════════════════════════
 function renderSettings() {
   const open = currentShift && !currentShift.closed_at;
+  const shiftRevenue = dailySummary?.total || 0;
   const btn = document.getElementById('shift-toggle-btn');
   btn.textContent = open ? '⛔ ' + t('shift.close') : '✅ ' + t('shift.open');
   btn.className = 'btn ' + (open ? 'btn-danger' : 'btn-primary');
-  document.getElementById('shift-settings-status').innerHTML = `${t('settings.status')}: <strong style="color:var(${open?'--success':'--muted'})">${open?t('shift.openedShort'):t('shift.closedShort')}</strong>${open?'<br>'+t('settings.shiftRevenue')+': <strong>'+fmt(currentShift.revenue||0)+'</strong>':''}`;
+  document.getElementById('shift-settings-status').innerHTML = `${t('settings.status')}: <strong style="color:var(${open?'--success':'--muted'})">${open?t('shift.openedShort'):t('shift.closedShort')}</strong>${open?'<br>'+t('settings.shiftRevenue')+': <strong>'+fmt(shiftRevenue)+'</strong>':''}`;
   document.querySelectorAll('#page-settings [data-i18n]').forEach(el => {
     el.textContent = t(el.dataset.i18n);
   });
