@@ -3,6 +3,8 @@ node_modules/
 
 # ── Секреты и окружение ──────────────────────
 .env
+.env.*
+!.env.example
 .env.local
 .env.*.local
 backend/.env
@@ -11,11 +13,15 @@ backend/.env
 # ── Логи ─────────────────────────────────────
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 logs/
 
 # ── Сборка / временное ───────────────────────
 dist/
 build/
+coverage/
 tmp/
 *.tmp
 
@@ -24,4 +30,5 @@ tmp/
 Thumbs.db
 .vscode/
 .idea/
+.claude/
 *.swp

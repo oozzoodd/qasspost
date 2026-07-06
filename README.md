@@ -87,10 +87,14 @@ https://qassapos-production.up.railway.app
 
 ---
 
-## Шаг 7. Подключаем фронтенд к серверу
+## Шаг 7. Frontend
 
-В файле `frontend/index.html` нужно заменить локальные данные на запросы к API.
-Это отдельный этап — пиши мне "подключаем фронтенд" и продолжим.
+Frontend уже подключён к серверу.
+Express раздаёт статические файлы из `backend/public/`.
+
+Рабочие файлы frontend:
+- `backend/public/index.html` — касса
+- `backend/public/admin.html` — админ-панель
 
 ---
 
@@ -151,8 +155,9 @@ qassapos/
 │       ├── stock.js          ← склад и тех.карты
 │       ├── orders.js         ← заказы, смены, клиенты, сотрудники
 │       └── admin.js          ← твоя панель управления клиентами
-└── frontend/
-    └── index.html           ← интерфейс кассы (то что видит клиент)
+│   └── public/
+│       ├── index.html       ← рабочий frontend кассы
+│       └── admin.html       ← рабочая админ-панель
 ```
 
 ---
