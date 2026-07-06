@@ -1430,8 +1430,11 @@ async function api(path, { method = 'GET', body, token } = {}) {
 // HELPERS
 // ═══════════════════════════════════════════════════════════
 const fmt = n => Math.round(n).toLocaleString(appLang === 'uz' ? 'uz-UZ' : 'ru-RU') + ' ' + t('common.currency');
-const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
-  ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, c =>
+    ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+const esc = escapeHtml;
 function toast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -2558,8 +2561,8 @@ function renderPos() {
   renderShiftBar();
   renderDailyCashBar();
   const cats = ['all', ...menuCats];
-  document.getElementById('pos-cats').innerHTML = cats.map(c =>
-    `<button class="cat-tab ${activePoscat===c?'active':''}" onclick="setPoscat('${c}')">${c==='all'?t('pos.all'):c}</button>`).join('');
+  document.getElementById('pos-cats').innerHTML = cats.map((c, idx) =>
+    `<button class="cat-tab ${activePoscat===c?'active':''}" onclick="setPoscatByIndex(${idx})">${c==='all'?t('pos.all'):esc(c)}</button>`).join('');
 
   renderPosMenu();
   const sel = document.getElementById('cart-client-sel');
@@ -2652,6 +2655,10 @@ function renderPosMenu() {
 }
 
 function setPoscat(c) { activePoscat = c; renderPos(); }
+function setPoscatByIndex(index) {
+  activePoscat = index === 0 ? 'all' : menuCats[index - 1];
+  renderPos();
+}
 function addToCart(id) {
   const open = currentShift && !currentShift.closed_at;
   if (!open) { toast(t('pos.openShiftFirst') + '!'); return; }
@@ -3278,7 +3285,7 @@ function openClientProfile(id) {
   const last = getClientLastOrder(c);
   const recent = orders.filter(o => o.client_id === c.id).slice(0,5);
   const receipts = clientReceipts[c.id] || [];
-  const receiptHtml = receipts.length ? receipts.map(r => `<div><strong>${esc(r.name)}</strong> · ${new Date(r.uploaded_at).toLocaleDateString(locale)}<div class="receipt-preview">${r.size}</div></div>`).join('') : `<div class="muted-text">${t('clients.noReceipts')}</div>`;
+  const receiptHtml = receipts.length ? receipts.map(r => `<div><strong>${esc(r.name)}</strong> · ${new Date(r.uploaded_at).toLocaleDateString(locale)}<div class="receipt-preview">${esc(r.size)}</div></div>`).join('') : `<div class="muted-text">${t('clients.noReceipts')}</div>`;
   showModal(`<div class="modal-title">${t('clients.profile')}</div>
     <div class="field"><strong>${esc(c.name)}</strong></div>
     <div class="field"><label>${t('clients.phone')}</label><div>${esc(c.phone||'—')}</div></div>
@@ -3794,9 +3801,9 @@ function renderSettings() {
   const locale = appLang === 'uz' ? 'uz-UZ' : 'ru-RU';
   const expires = accountInfo?.expires_at ? new Date(accountInfo.expires_at).toLocaleDateString(locale) : '—';
   document.getElementById('account-info').innerHTML = `
-    ${t('settings.venue')}: <strong>${venueInfo?.name||'—'}</strong><br>
-    ${t('settings.plan')}: <strong>${planMap[accountInfo?.plan]||accountInfo?.plan||'—'}</strong><br>
-    ${t('settings.status')}: <strong>${statusMap[accountInfo?.status]||accountInfo?.status||'—'}</strong><br>
+    ${t('settings.venue')}: <strong>${esc(venueInfo?.name || '—')}</strong><br>
+    ${t('settings.plan')}: <strong>${esc(planMap[accountInfo?.plan] || accountInfo?.plan || '—')}</strong><br>
+    ${t('settings.status')}: <strong>${esc(statusMap[accountInfo?.status] || accountInfo?.status || '—')}</strong><br>
     ${t('settings.accessUntil')}: <strong>${expires}</strong>`;
 
   renderCashExpenses();
