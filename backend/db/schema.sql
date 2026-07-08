@@ -66,8 +66,8 @@ CREATE TABLE IF NOT EXISTS ingredients (
   name VARCHAR(255) NOT NULL,
   category VARCHAR(50) DEFAULT 'kitchen',
   unit VARCHAR(10) DEFAULT 'g',
-  stock_grams INTEGER DEFAULT 0,
-  min_grams INTEGER DEFAULT 300,
+  stock_grams NUMERIC(12,3) DEFAULT 0,
+  min_grams NUMERIC(12,3) DEFAULT 300,
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS recipes (
   id SERIAL PRIMARY KEY,
   menu_item_id INTEGER REFERENCES menu_items(id) ON DELETE CASCADE,
   ingredient_id INTEGER REFERENCES ingredients(id) ON DELETE CASCADE,
-  grams INTEGER NOT NULL
+  grams NUMERIC(12,3) NOT NULL CHECK (grams > 0)
 );
 
 -- История приходов товара
@@ -101,7 +101,7 @@ CREATE TABLE IF NOT EXISTS stock_incomes (
   staff_id INTEGER REFERENCES staff(id),
   quantity NUMERIC(12,3) NOT NULL CHECK (quantity > 0),
   unit VARCHAR(10) NOT NULL CHECK (unit IN ('pcs','g','kg','ml','l')),
-  stock_delta_grams INTEGER NOT NULL CHECK (stock_delta_grams > 0),
+  stock_delta_grams NUMERIC(12,3) NOT NULL CHECK (stock_delta_grams > 0),
   purchase_price INTEGER DEFAULT 0 CHECK (purchase_price >= 0),
   total_amount INTEGER DEFAULT 0 CHECK (total_amount >= 0),
   comment TEXT,

@@ -9,8 +9,8 @@ const INCOME_UNITS = new Set(['pcs', 'g', 'kg', 'ml', 'l']);
 const STOCK_CATEGORIES = new Set(['kitchen', 'bar', 'drinks', 'packaging', 'other']);
 
 function toStockDeltaGrams(quantity, unit) {
-  if (unit === 'kg' || unit === 'l') return Math.round(quantity * 1000);
-  return Math.round(quantity);
+  const delta = (unit === 'kg' || unit === 'l') ? quantity * 1000 : quantity;
+  return Number(delta.toFixed(3));
 }
 
 function parseNonNegativeStock(value) {
@@ -18,7 +18,7 @@ function parseNonNegativeStock(value) {
   if (!Number.isFinite(stock) || stock < 0) {
     throw new Error('Остаток не может быть отрицательным');
   }
-  return stock;
+  return Number(stock.toFixed(3));
 }
 
 // GET /stock — список ингредиентов
@@ -55,20 +55,20 @@ router.get('/incomes', requireRole('owner', 'admin'), async (req, res) => {
 
 // POST /stock — новый ингредиент (owner, admin)
 router.post('/', requireRole('owner', 'admin'), async (req, res) => {
-  const { name, stock_grams = 0, min_grams = 300, category = 'kitchen', unit = 'g' } = req.body;
+  const { name, min_grams = 300, category = 'kitchen', unit = 'g' } = req.body;
   if (!name) return res.status(400).json({ error: 'Укажите название' });
   if (!STOCK_CATEGORIES.has(category) || !INCOME_UNITS.has(unit)) {
     return res.status(400).json({ error: 'Проверьте категорию и единицу измерения' });
   }
-  let normalizedStockGrams;
+  let normalizedMinGrams;
   try {
-    normalizedStockGrams = parseNonNegativeStock(stock_grams);
+    normalizedMinGrams = parseNonNegativeStock(min_grams);
   } catch (err) {
     return res.status(400).json({ error: err.message });
   }
   const r = await pool.query(
     'INSERT INTO ingredients (venue_id, name, category, unit, stock_grams, min_grams) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
-    [req.user.venueId, name, category, unit, normalizedStockGrams, min_grams]
+    [req.user.venueId, name, category, unit, 0, normalizedMinGrams]
   );
   res.json(r.rows[0]);
 });
@@ -199,10 +199,10 @@ router.get('/recipes/:menuItemId', async (req, res) => {
     if (!itemCheck.rows.length) return res.status(403).json({ error: 'Доступ запрещён' });
 
     const r = await pool.query(
-      `SELECT r.id, r.ingredient_id, r.grams, i.name as ingredient_name, i.stock_grams
-       FROM recipes r JOIN ingredients i ON i.id = r.ingredient_id
+      `SELECT r.id, r.ingredient_id, r.grams, i.name as ingredient_name, i.stock_grams, i.unit
+       FROM recipes r JOIN ingredients i ON i.id = r.ingredient_id AND i.venue_id = $2
        WHERE r.menu_item_id = $1`,
-      [req.params.menuItemId]
+      [req.params.menuItemId, req.user.venueId]
     );
     res.json(r.rows);
   } catch (err) {
@@ -215,9 +215,12 @@ router.get('/recipes/:menuItemId', async (req, res) => {
 router.post('/recipes', requireRole('owner', 'admin'), async (req, res) => {
   try {
     const { menu_item_id, ingredient_id, grams } = req.body;
+    const amount = Number(grams);
     if (!menu_item_id || !ingredient_id || !grams) return res.status(400).json({ error: 'Заполните все поля' });
 
     // Проверяем что блюдо и ингредиент принадлежат нашему заведению
+    if (!Number.isFinite(amount) || amount <= 0) return res.status(400).json({ error: 'Укажите корректное количество' });
+
     const itemCheck = await pool.query('SELECT id, item_type FROM menu_items WHERE id = $1 AND venue_id = $2', [menu_item_id, req.user.venueId]);
     const ingCheck = await pool.query('SELECT id FROM ingredients WHERE id = $1 AND venue_id = $2', [ingredient_id, req.user.venueId]);
 
@@ -230,7 +233,7 @@ router.post('/recipes', requireRole('owner', 'admin'), async (req, res) => {
 
     const r = await pool.query(
       'INSERT INTO recipes (menu_item_id, ingredient_id, grams) VALUES ($1,$2,$3) RETURNING *',
-      [menu_item_id, ingredient_id, grams]
+      [menu_item_id, ingredient_id, Number(amount.toFixed(3))]
     );
     res.json(r.rows[0]);
   } catch (err) {
@@ -242,7 +245,8 @@ router.post('/recipes', requireRole('owner', 'admin'), async (req, res) => {
 // PUT /stock/recipes/:id — изменить граммовку
 router.put('/recipes/:id', requireRole('owner', 'admin'), async (req, res) => {
   try {
-    const { grams } = req.body;
+    const amount = Number(req.body.grams);
+    if (!Number.isFinite(amount) || amount <= 0) return res.status(400).json({ error: 'Укажите корректное количество' });
 
     // Проверяем, что рецепт относится к нашему заведению
     const check = await pool.query(
@@ -253,7 +257,7 @@ router.put('/recipes/:id', requireRole('owner', 'admin'), async (req, res) => {
     );
     if (!check.rows.length) return res.status(403).json({ error: 'Доступ запрещён' });
 
-    const r = await pool.query('UPDATE recipes SET grams = $1 WHERE id = $2 RETURNING *', [grams, req.params.id]);
+    const r = await pool.query('UPDATE recipes SET grams = $1 WHERE id = $2 RETURNING *', [Number(amount.toFixed(3)), req.params.id]);
     res.json(r.rows[0]);
   } catch (err) {
     console.error(err);

@@ -1372,6 +1372,7 @@ let ingredients = [];
 let stockIncomes = [];
 let stockSearch = '';
 let recipesData = {};
+let openRecipeItemId = null;
 let clients = [];
 let staff = [];
 let orders = [];
@@ -2982,10 +2983,10 @@ function openIngModal(id) {
       <div class="field"><label>${t('stock.category')}</label><select id="if-category">${stockCategoryOptions(category)}</select></div>
       <div class="field"><label>${t('stock.storageUnit')}</label><select id="if-unit">${stockUnitOptions(unit)}</select></div>
     </div>
-    <div class="field-row">
-      <div class="field"><label>${t('stock.balance')}</label><input type="number" id="if-stock" step="0.001" value="${ing?stockDisplayQty(ing.stock_grams, unit):''}" placeholder="${t('stock.quantity')}" data-i18n-placeholder="stock.quantity"></div>
-      <div class="field"><label>${t('stock.minBalance')}</label><input type="number" id="if-min" step="0.001" value="${ing?stockDisplayQty(ing.min_grams, unit):300}" placeholder="${t('stock.minimum')}" data-i18n-placeholder="stock.minimum"></div>
-    </div>
+    ${id ? `<div class="field-row">
+      <div class="field"><label>${t('stock.balance')}</label><input type="number" id="if-stock" step="0.001" value="${stockDisplayQty(ing.stock_grams, unit)}" placeholder="${t('stock.quantity')}" data-i18n-placeholder="stock.quantity"></div>
+      <div class="field"><label>${t('stock.minBalance')}</label><input type="number" id="if-min" step="0.001" value="${stockDisplayQty(ing.min_grams, unit)}" placeholder="${t('stock.minimum')}" data-i18n-placeholder="stock.minimum"></div>
+    </div>` : `<div class="field"><label>${t('stock.minBalance')}</label><input type="number" id="if-min" step="0.001" value="300" placeholder="${t('stock.minimum')}" data-i18n-placeholder="stock.minimum"></div>`}
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal()">${t('common.cancel')}</button>
       <button class="btn btn-primary" onclick="saveIng(${id||0})">${t('stock.saveItem')}</button>
@@ -2995,12 +2996,13 @@ async function saveIng(id) {
   const name = document.getElementById('if-name').value.trim();
   const category = document.getElementById('if-category').value;
   const unit = document.getElementById('if-unit').value;
-  const stock_grams = stockInputToBase(+document.getElementById('if-stock').value || 0, unit);
+  const stockInput = document.getElementById('if-stock');
+  const stock_grams = stockInput ? stockInputToBase(+stockInput.value || 0, unit) : 0;
   const min_grams = stockInputToBase(+document.getElementById('if-min').value || 0, unit) || 300;
   if (!name) return;
   try {
     if (id) await api('/stock/'+id, { method:'PUT', body:{ name, category, unit, stock_grams, min_grams } });
-    else await api('/stock', { method:'POST', body:{ name, category, unit, stock_grams, min_grams } });
+    else await api('/stock', { method:'POST', body:{ name, category, unit, min_grams } });
     await reloadStock(); closeModal(); renderStock(); toast(t('stock.itemSaved'));
   } catch(err) { toast(err.message); }
 }
@@ -3078,7 +3080,8 @@ function stockDisplayQty(value, unit) {
 }
 function stockInputToBase(value, unit) {
   const n = Number(value) || 0;
-  return (unit === 'kg' || unit === 'l') ? Math.round(n * 1000) : Math.round(n);
+  const amount = (unit === 'kg' || unit === 'l') ? n * 1000 : n;
+  return Number(amount.toFixed(3));
 }
 function renderStockIncomes() {
   const tbody = document.getElementById('stock-incomes-tbody');
@@ -3103,6 +3106,18 @@ function renderStockIncomes() {
 // ═══════════════════════════════════════════════════════════
 // RECIPES
 // ═══════════════════════════════════════════════════════════
+function recipeUnitForIngredientId(ingredientId) {
+  return getIng(+ingredientId)?.unit || 'g';
+}
+function recipeDisplayQty(value, unit) {
+  return stockDisplayQty(value, unit);
+}
+function updateRecipeUnitLabel(itemId) {
+  const select = document.getElementById('rs-' + itemId);
+  const label = document.getElementById('ru-' + itemId);
+  if (!select || !label) return;
+  label.textContent = stockUnitLabel(recipeUnitForIngredientId(select.value));
+}
 async function renderRecipes() {
   await preloadAllRecipes();
   document.getElementById('recipes-list').innerHTML = menuItems.map(item => {
@@ -3118,22 +3133,27 @@ async function renderRecipes() {
       </div>`;
     }
     const items = recipesData[item.id] || [];
+    const initialUnit = recipeUnitForIngredientId(ingredients[0]?.id);
     return `<div class="recipe-card">
       <div class="recipe-head" onclick="toggleRecipe(${item.id})">
         <strong>${esc(item.name)}</strong>
         <span class="muted-text" style="font-size:12px;">${items.length} ${t('recipes.ingredients')} ▾</span>
       </div>
-      <div class="recipe-body" id="rb-${item.id}">
+      <div class="recipe-body ${openRecipeItemId === item.id ? 'open' : ''}" id="rb-${item.id}">
         <div style="padding-top:10px;">
         ${items.length ? '' : `<div class="empty-state" style="padding:8px 0;">${t('recipes.noIngredients')}</div>`}
-        ${items.map(ri => `<div class="recipe-row">
+        ${items.map(ri => {
+          const unit = recipeUnitForIngredientId(ri.ingredient_id);
+          return `<div class="recipe-row">
             <span>${esc(ri.ingredient_name)}</span>
-            <div><input class="gram-input" type="number" value="${ri.grams}" onchange="updRec(${ri.id},${item.id},this.value)"> ${t('recipes.grams')}</div>
+            <div><input class="gram-input" type="number" step="0.001" value="${recipeDisplayQty(ri.grams, unit)}" onchange="updRec(${ri.id},${item.id},this.value,${ri.ingredient_id})"> ${stockUnitLabel(unit)}</div>
             <button class="btn btn-icon btn-sm" onclick="remRec(${ri.id},${item.id})">✕</button>
-          </div>`).join('')}
+          </div>`;
+        }).join('')}
         <div style="display:flex;gap:8px;margin-top:10px;align-items:center;">
-          <select id="rs-${item.id}" class="inline-control" style="flex:1;">${ingredients.map(i=>`<option value="${i.id}">${esc(i.name)}</option>`).join('')}</select>
-          <input type="number" id="rg-${item.id}" class="inline-control" value="50" placeholder="${t('recipes.grams')}" data-i18n-placeholder="recipes.grams" style="width:60px;"> ${t('recipes.grams')}
+          <select id="rs-${item.id}" class="inline-control" onchange="updateRecipeUnitLabel(${item.id})" style="flex:1;">${ingredients.map(i=>`<option value="${i.id}">${esc(i.name)} - ${stockUnitLabel(i.unit)}</option>`).join('')}</select>
+          <input type="number" id="rg-${item.id}" class="inline-control" step="0.001" value="1" placeholder="${t('stock.quantity')}" data-i18n-placeholder="stock.quantity" style="width:80px;">
+          <span class="muted-text" id="ru-${item.id}" style="min-width:32px;">${stockUnitLabel(initialUnit)}</span>
           <button class="btn btn-primary btn-sm" onclick="addRecItem(${item.id})">${t('recipes.addIngredient')}</button>
         </div>
         </div>
@@ -3141,18 +3161,28 @@ async function renderRecipes() {
     </div>`;
   }).join('');
 }
-function toggleRecipe(id) { const el = document.getElementById('rb-'+id); el.classList.toggle('open'); }
-async function updRec(recipeId, itemId, val) {
-  try { await api('/stock/recipes/'+recipeId, { method:'PUT', body:{ grams: +val||1 } }); delete recipesData[itemId]; await loadRecipeFor(itemId); renderRecipes(); toast(t('recipes.recipeSaved')); }
+function toggleRecipe(id) {
+  const el = document.getElementById('rb-'+id);
+  const opened = el.classList.toggle('open');
+  openRecipeItemId = opened ? id : null;
+}
+async function updRec(recipeId, itemId, val, ingredientId) {
+  const amount = Number(val);
+  const grams = stockInputToBase(Number.isFinite(amount) ? amount : 1, recipeUnitForIngredientId(ingredientId));
+  openRecipeItemId = itemId;
+  try { await api('/stock/recipes/'+recipeId, { method:'PUT', body:{ grams } }); delete recipesData[itemId]; await loadRecipeFor(itemId); renderRecipes(); toast(t('recipes.recipeSaved')); }
   catch(err){ toast(err.message); }
 }
 async function remRec(recipeId, itemId) {
+  openRecipeItemId = itemId;
   try { await api('/stock/recipes/'+recipeId, { method:'DELETE' }); delete recipesData[itemId]; await loadRecipeFor(itemId); renderRecipes(); toast(t('recipes.recipeSaved')); }
   catch(err){ toast(err.message); }
 }
 async function addRecItem(itemId) {
   const ingredient_id = +document.getElementById('rs-'+itemId).value;
-  const grams = +document.getElementById('rg-'+itemId).value || 50;
+  const amount = Number(document.getElementById('rg-'+itemId).value);
+  const grams = stockInputToBase(Number.isFinite(amount) ? amount : 1, recipeUnitForIngredientId(ingredient_id));
+  openRecipeItemId = itemId;
   try { await api('/stock/recipes', { method:'POST', body:{ menu_item_id:itemId, ingredient_id, grams } }); delete recipesData[itemId]; await loadRecipeFor(itemId); renderRecipes(); toast(t('recipes.recipeSaved')); }
   catch(err){ toast(err.message); }
 }
