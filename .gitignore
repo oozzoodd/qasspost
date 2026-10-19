@@ -32,3 +32,6 @@ Thumbs.db
 .idea/
 .claude/
 *.swp
+
+# ── Локальный запуск (база и секреты) ────────
+local/data/
