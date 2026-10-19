@@ -1,6 +1,8 @@
 const express = require('express');
 const pool = require('../db/pool');
 const { requireAuth, requireRole } = require('../middleware/auth');
+const { isValidPin, hashPin, findByPin } = require('../utils/pin');
+const { TZ_DAY_START, localToStored } = require('../utils/time');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -199,25 +201,32 @@ function isValidDateParam(value) {
   return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
 
+// Периоды отчётов. Календарные границы (сутки, неделя, месяц…) — по Ташкенту.
 function financePeriodSql(query) {
   const period = query.period || 'today';
+  const day = TZ_DAY_START;
+  const local = (start, end) => ({ start: localToStored(start), end: localToStored(end), params: [] });
   const ranges = {
-    today: { start: 'CURRENT_DATE', end: "CURRENT_DATE + INTERVAL '1 day'", params: [] },
-    yesterday: { start: "CURRENT_DATE - INTERVAL '1 day'", end: 'CURRENT_DATE', params: [] },
+    today: local(day, `${day} + INTERVAL '1 day'`),
+    yesterday: local(`${day} - INTERVAL '1 day'`, day),
     '7d': { start: "NOW() - INTERVAL '7 days'", end: 'NOW()', params: [] },
     '30d': { start: "NOW() - INTERVAL '30 days'", end: 'NOW()', params: [] },
-    this_week: { start: "date_trunc('week', CURRENT_DATE)", end: "date_trunc('week', CURRENT_DATE) + INTERVAL '7 days'", params: [] },
-    last_week: { start: "date_trunc('week', CURRENT_DATE) - INTERVAL '7 days'", end: "date_trunc('week', CURRENT_DATE)", params: [] },
-    this_month: { start: "date_trunc('month', CURRENT_DATE)", end: "date_trunc('month', CURRENT_DATE) + INTERVAL '1 month'", params: [] },
-    last_month: { start: "date_trunc('month', CURRENT_DATE) - INTERVAL '1 month'", end: "date_trunc('month', CURRENT_DATE)", params: [] },
-    quarter: { start: "date_trunc('quarter', CURRENT_DATE)", end: "date_trunc('quarter', CURRENT_DATE) + INTERVAL '3 months'", params: [] },
-    year: { start: "date_trunc('year', CURRENT_DATE)", end: "date_trunc('year', CURRENT_DATE) + INTERVAL '1 year'", params: [] },
+    this_week: local(`date_trunc('week', ${day})`, `date_trunc('week', ${day}) + INTERVAL '7 days'`),
+    last_week: local(`date_trunc('week', ${day}) - INTERVAL '7 days'`, `date_trunc('week', ${day})`),
+    this_month: local(`date_trunc('month', ${day})`, `date_trunc('month', ${day}) + INTERVAL '1 month'`),
+    last_month: local(`date_trunc('month', ${day}) - INTERVAL '1 month'`, `date_trunc('month', ${day})`),
+    quarter: local(`date_trunc('quarter', ${day})`, `date_trunc('quarter', ${day}) + INTERVAL '3 months'`),
+    year: local(`date_trunc('year', ${day})`, `date_trunc('year', ${day}) + INTERVAL '1 year'`),
   };
 
   if (period === 'custom') {
     const { start, end } = query;
     if (!isValidDateParam(start) || !isValidDateParam(end) || start > end) return null;
-    return { start: '$2::date', end: "($3::date + INTERVAL '1 day')", params: [start, end] };
+    return {
+      start: localToStored('$2::date::timestamp'),
+      end: localToStored("$3::date + INTERVAL '1 day'"),
+      params: [start, end],
+    };
   }
 
   return ranges[period] || null;
@@ -428,11 +437,59 @@ router.get('/today-summary', async (req, res) => {
      FROM orders
      WHERE venue_id = $1
        AND ${COMPLETED_ORDER_SQL}
-       AND created_at >= CURRENT_DATE
-       AND created_at < CURRENT_DATE + INTERVAL '1 day'`,
+       AND created_at >= ${localToStored(TZ_DAY_START)}
+       AND created_at < ${localToStored(`${TZ_DAY_START} + INTERVAL '1 day'`)}`,
     [req.user.venueId]
   );
   res.json(r.rows[0]);
+});
+
+// GET /orders/analytics — итоги по ВСЕМ заказам точки (а не по последним 50)
+router.get('/analytics', requireRole('owner', 'admin'), async (req, res) => {
+  const totalsRes = await pool.query(
+    `SELECT
+       COALESCE(SUM(total) FILTER (WHERE ${COMPLETED_ORDER_SQL}), 0)::bigint AS revenue,
+       (COUNT(*) FILTER (WHERE ${COMPLETED_ORDER_SQL}))::int AS orders_count,
+       (COUNT(*) FILTER (WHERE status = 'cancelled'))::int AS cancelled_count,
+       COALESCE(SUM(total) FILTER (WHERE status = 'cancelled'), 0)::bigint AS cancelled_amount,
+       COALESCE(SUM(CASE WHEN COALESCE(cash_amount, 0) > 0 THEN cash_amount WHEN pay_method = 'cash' THEN total ELSE 0 END)
+         FILTER (WHERE ${COMPLETED_ORDER_SQL}), 0)::bigint AS cash_amount,
+       COALESCE(SUM(CASE WHEN COALESCE(card_amount, 0) > 0 THEN card_amount WHEN pay_method = 'card' THEN total ELSE 0 END)
+         FILTER (WHERE ${COMPLETED_ORDER_SQL}), 0)::bigint AS card_amount,
+       (COUNT(*) FILTER (WHERE ${COMPLETED_ORDER_SQL} AND pay_method = 'mixed'))::int AS mixed_count,
+       COUNT(*)::int AS all_count
+     FROM orders
+     WHERE venue_id = $1`,
+    [req.user.venueId]
+  );
+
+  const topRes = await pool.query(
+    `SELECT item->>'name' AS name, SUM(COALESCE((item->>'qty')::numeric, 0))::int AS qty
+     FROM orders o
+     CROSS JOIN LATERAL jsonb_array_elements(
+       CASE WHEN jsonb_typeof(o.items_json) = 'array' THEN o.items_json ELSE '[]'::jsonb END
+     ) AS item
+     WHERE o.venue_id = $1 AND ${COMPLETED_ORDER_SQL}
+     GROUP BY item->>'name'
+     ORDER BY qty DESC
+     LIMIT 5`,
+    [req.user.venueId]
+  );
+
+  const t = totalsRes.rows[0];
+  const revenue = Number(t.revenue);
+  res.json({
+    revenue,
+    orders_count: t.orders_count,
+    average_check: t.orders_count ? Math.round(revenue / t.orders_count) : 0,
+    cancelled_count: t.cancelled_count,
+    cancelled_amount: Number(t.cancelled_amount),
+    cash_amount: Number(t.cash_amount),
+    card_amount: Number(t.card_amount),
+    mixed_count: t.mixed_count,
+    all_count: t.all_count,
+    top_dishes: topRes.rows,
+  });
 });
 
 // POST /orders — создать заказ. Списывает склад автоматически по тех.картам.
@@ -778,23 +835,35 @@ router.get('/staff/all', requireRole('owner', 'admin'), async (req, res) => {
   res.json(r.rows);
 });
 
+// PIN должен быть уникальным в точке, иначе вход по PIN не различит сотрудников
+async function pinTaken(venueId, pin, exceptStaffId = null) {
+  const r = await pool.query('SELECT id, pin FROM staff WHERE venue_id = $1 AND id <> COALESCE($2, -1)', [venueId, exceptStaffId]);
+  return Boolean(await findByPin(r.rows, pin));
+}
+
 router.post('/staff', requireRole('owner'), async (req, res) => {
   const { name, phone, role, pin } = req.body;
   if (!name || !pin) return res.status(400).json({ error: 'Укажите имя и PIN' });
+  if (!isValidPin(pin)) return res.status(400).json({ error: 'PIN должен состоять из 4 цифр' });
+  if (await pinTaken(req.user.venueId, pin)) return res.status(409).json({ error: 'Этот PIN уже занят другим сотрудником' });
   const r = await pool.query(
     'INSERT INTO staff (venue_id,name,phone,role,pin) VALUES ($1,$2,$3,$4,$5) RETURNING id,name,phone,role,active',
-    [req.user.venueId, name, phone || null, role || 'cashier', pin]
+    [req.user.venueId, name, phone || null, role || 'cashier', await hashPin(pin)]
   );
   res.json(r.rows[0]);
 });
 
 router.put('/staff/:id', requireRole('owner'), async (req, res) => {
   const { name, phone, role, pin, active } = req.body;
+  if (pin && !isValidPin(pin)) return res.status(400).json({ error: 'PIN должен состоять из 4 цифр' });
+  if (pin && await pinTaken(req.user.venueId, pin, Number(req.params.id) || null)) {
+    return res.status(409).json({ error: 'Этот PIN уже занят другим сотрудником' });
+  }
   const r = await pool.query(
     `UPDATE staff SET name=COALESCE($1,name), phone=COALESCE($2,phone), role=COALESCE($3,role),
        pin=COALESCE($4,pin), active=COALESCE($5,active)
      WHERE id=$6 AND venue_id=$7 RETURNING id,name,phone,role,active`,
-    [name, phone, role, pin || null, active, req.params.id, req.user.venueId]
+    [name, phone, role, pin ? await hashPin(pin) : null, active, req.params.id, req.user.venueId]
   );
   if (!r.rows.length) return res.status(404).json({ error: 'Не найдено' });
   res.json(r.rows[0]);

@@ -1,19 +1,18 @@
 // Запуск: node db/init.js
 // Создаёт все таблицы + одного demo владельца со стартовыми данными.
 
-const fs = require('fs');
-const path = require('path');
 const bcrypt = require('bcryptjs');
 const pool = require('./pool');
+const migrate = require('./migrate');
+const { hashPin } = require('../utils/pin');
 
 async function init() {
   console.log('📦 Создаю таблицы...');
-  const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
-  await pool.query(schema);
+  await migrate();
   console.log('✅ Таблицы созданы');
 
   // Проверяем — может demo уже есть
-  const existing = await pool.query('SELECT id FROM accounts WHERE email = $1', ['demo@qassapos.uz']);
+  const existing = await pool.query('SELECT id FROM accounts WHERE email = $1', ['demo@vzlyot.post']);
   if (existing.rows.length) {
     console.log('ℹ️  Demo аккаунт уже существует, пропускаю');
     process.exit(0);
@@ -25,7 +24,7 @@ async function init() {
   const accRes = await pool.query(
     `INSERT INTO accounts (name, email, password_hash, plan, status, expires_at)
      VALUES ($1,$2,$3,$4,$5, NOW() + INTERVAL '30 days') RETURNING id`,
-    ['Демо Бургерная', 'demo@qassapos.uz', passwordHash, 'business', 'trial']
+    ['Демо Бургерная', 'demo@vzlyot.post', passwordHash, 'business', 'trial']
   );
   const accountId = accRes.rows[0].id;
 
@@ -35,13 +34,13 @@ async function init() {
   );
   const venueId = venueRes.rows[0].id;
 
-  // Сотрудники
+  // Сотрудники (PIN хранится хешем)
   await pool.query(
     `INSERT INTO staff (venue_id, name, phone, role, pin) VALUES
-     ($1,'Владелец','+998901111111','owner','1111'),
-     ($1,'Санжар Холиков','+998902222222','admin','2222'),
-     ($1,'Нилуфар Тошева','+998903333333','cashier','3333')`,
-    [venueId]
+     ($1,'Владелец','+998901111111','owner',$2),
+     ($1,'Санжар Холиков','+998902222222','admin',$3),
+     ($1,'Нилуфар Тошева','+998903333333','cashier',$4)`,
+    [venueId, await hashPin('1111'), await hashPin('2222'), await hashPin('3333')]
   );
 
   // Категории
@@ -126,8 +125,9 @@ async function init() {
 
   console.log('✅ Demo данные созданы!');
   console.log('');
-  console.log('   Логин:  demo@qassapos.uz');
+  console.log('   Логин:  demo@vzlyot.post');
   console.log('   Пароль: demo1234');
+  console.log('   PIN:    1111 (владелец), 2222 (админ), 3333 (кассир)');
   console.log('');
   process.exit(0);
 }

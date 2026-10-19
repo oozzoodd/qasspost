@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════
--- QassaPos Database Schema
+-- vzlyot.post Database Schema
 -- ═══════════════════════════════════════════════════════════
 
 -- Аккаунты владельцев (тех кто покупает подписку у тебя)
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS staff (
   name VARCHAR(255) NOT NULL,
   phone VARCHAR(50),
   role VARCHAR(20) DEFAULT 'cashier',       -- owner | admin | cashier
-  pin VARCHAR(4) NOT NULL,
+  pin VARCHAR(100) NOT NULL,                -- bcrypt-хеш 4-значного PIN
   active BOOLEAN DEFAULT true,
   created_at TIMESTAMP DEFAULT NOW()
 );

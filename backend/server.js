@@ -10,6 +10,7 @@ const menuRoutes = require('./routes/menu');
 const stockRoutes = require('./routes/stock');
 const ordersRoutes = require('./routes/orders');
 const adminRoutes = require('./routes/admin');
+const migrate = require('./db/migrate');
 
 const app = express();
 app.use(helmet({
@@ -39,14 +40,14 @@ const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
-app.use(['/auth/login', '/auth/pin-login', '/auth/register', '/admin'], authLimiter);
+app.use(['/auth/login', '/auth/pin-login', '/auth/owner-pin', '/auth/register', '/admin'], authLimiter);
 
 // Раздача статических файлов фронтенда (касса и админка)
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Проверка что сервер живой (Railway health check)
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'QassaPos API', version: '1.0.0' });
+  res.json({ status: 'ok', service: 'vzlyot.post API', version: '1.0.0' });
 });
 
 app.use('/auth', authRoutes);
@@ -65,6 +66,10 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 QassaPos API запущен на порту ${PORT}`);
-});
+migrate()
+  .catch(err => console.error('❌ Миграция базы не удалась:', err.message))
+  .finally(() => {
+    app.listen(PORT, () => {
+      console.log(`🚀 vzlyot.post API запущен на порту ${PORT}`);
+    });
+  });

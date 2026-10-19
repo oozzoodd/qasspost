@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>QassaPos</title>
+  <title>vzlyot.post</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -954,24 +954,25 @@
 <!-- ═══════════════ AUTH: OWNER LOGIN ═══════════════ -->
 <div class="auth-screen" id="screen-login">
   <div class="auth-box">
-    <div class="auth-logo"><div class="icon">🏪</div><div class="name">QassaPos</div></div>
+    <div class="auth-logo"><div class="icon">🏪</div><div class="name">vzlyot.post</div></div>
     <div class="auth-title" data-i18n="auth.loginTitle">Вход в систему</div>
     <div class="auth-error" id="login-error"></div>
-    <div class="auth-field"><label data-i18n="auth.email">Email</label><input type="email" id="login-email" placeholder="demo@qassapos.uz"></div>
+    <div class="auth-field"><label data-i18n="auth.email">Email</label><input type="email" id="login-email" placeholder="demo@vzlyot.post"></div>
     <div class="auth-field"><label data-i18n="auth.password">Пароль</label><input type="password" id="login-password" placeholder="••••••••"></div>
     <button class="auth-btn" id="login-btn" onclick="doLogin()" data-i18n="auth.loginBtn">Войти</button>
-    <div class="auth-switch" data-i18n="auth.demoAccess">Demo доступ: demo@qassapos.uz / demo1234</div>
+    <div class="auth-switch" data-i18n="auth.demoAccess">Demo доступ: demo@vzlyot.post / demo1234</div>
   </div>
 </div>
 
 <!-- ═══════════════ AUTH: PIN LOGIN (staff) ═══════════════ -->
 <div class="auth-screen" id="screen-pin" style="display:none;">
   <div class="auth-box">
-    <div class="auth-logo"><div class="icon">🏪</div><div class="name" id="pin-venue-name">QassaPos</div></div>
+    <div class="auth-logo"><div class="icon">🏪</div><div class="name" id="pin-venue-name">vzlyot.post</div></div>
     <div class="auth-title" data-i18n="auth.pinTitle">Введите PIN-код</div>
     <div class="auth-error" id="pin-error"></div>
     <div class="pin-display" id="pin-display"></div>
     <div class="pin-grid" id="pin-grid"></div>
+    <div class="auth-switch"><a onclick="openOwnerPinModal()" data-i18n="auth.ownerPinLink">Владелец: задать или сбросить PIN</a></div>
     <div class="auth-switch"><a onclick="logout()" data-i18n="auth.logoutVenue">← Выйти из заведения</a></div>
   </div>
 </div>
@@ -996,7 +997,7 @@
   <aside class="sidebar">
     <div class="sidebar-logo">
       <div class="logo-icon">🏪</div>
-      <span class="logo-name" id="brand-name">QassaPos</span>
+      <span class="logo-name" id="brand-name">vzlyot.post</span>
     </div>
     <nav class="nav">
       <div class="nav-group-label" data-i18n="sidebar.main">Основное</div>
@@ -1454,7 +1455,7 @@ const I18N = {
     'nav.analytics': 'Аналитика',
     'nav.finance': 'Финансы',
     'nav.settings': 'Настройки',
-    'common.appTitle': 'QassaPos — Кассовая система',
+    'common.appTitle': 'vzlyot.post — Кассовая система',
     'common.currency': 'сум',
     'mobile.stock': 'Склад',
     'mobile.menuLabel': 'Мобильное меню',
@@ -1467,9 +1468,14 @@ const I18N = {
     'auth.email': 'Email',
     'auth.password': 'Пароль',
     'auth.loginBtn': 'Войти',
-    'auth.demoAccess': 'Demo доступ: demo@qassapos.uz / demo1234',
+    'auth.demoAccess': 'Demo доступ: demo@vzlyot.post / demo1234',
     'auth.pinTitle': 'Введите PIN-код',
     'auth.logoutVenue': '← Выйти из заведения',
+    'auth.ownerPinLink': 'Владелец: задать или сбросить PIN',
+    'auth.ownerPinTitle': 'PIN владельца',
+    'auth.ownerPinHint': 'Подтвердите email и паролем владельца и придумайте новый PIN из 4 цифр.',
+    'auth.newPin': 'Новый PIN (4 цифры)',
+    'auth.pinSaved': 'PIN сохранён. Теперь войдите с ним.',
     'auth.logoutBtn': 'Выйти',
     'auth.expiredTitle': 'Подписка истекла',
     'auth.expiredText': 'Доступ к системе временно ограничен. Свяжитесь с поддержкой для продления тарифа.',
@@ -1823,7 +1829,7 @@ const I18N = {
     'nav.analytics': 'Analitika',
     'nav.finance': 'Moliya',
     'nav.settings': 'Sozlamalar',
-    'common.appTitle': 'QassaPos — Kassa tizimi',
+    'common.appTitle': 'vzlyot.post — Kassa tizimi',
     'common.currency': 'so‘m',
     'mobile.stock': 'Ombor',
     'mobile.menuLabel': 'Mobil menyu',
@@ -1836,9 +1842,14 @@ const I18N = {
     'auth.email': 'Email',
     'auth.password': 'Parol',
     'auth.loginBtn': 'Kirish',
-    'auth.demoAccess': 'Demo kirish: demo@qassapos.uz / demo1234',
+    'auth.demoAccess': 'Demo kirish: demo@vzlyot.post / demo1234',
     'auth.pinTitle': 'PIN-kodni kiriting',
     'auth.logoutVenue': '← Muassasadan chiqish',
+    'auth.ownerPinLink': 'Egasi: PIN o‘rnatish yoki tiklash',
+    'auth.ownerPinTitle': 'Egasining PIN-kodi',
+    'auth.ownerPinHint': 'Egasining email va parolini tasdiqlang hamda 4 xonali yangi PIN o‘ylab toping.',
+    'auth.newPin': 'Yangi PIN (4 raqam)',
+    'auth.pinSaved': 'PIN saqlandi. Endi u bilan kiring.',
     'auth.logoutBtn': 'Chiqish',
     'auth.expiredTitle': 'Obuna muddati tugagan',
     'auth.expiredText': 'Tizimga kirish vaqtincha cheklangan. Tarifni uzaytirish uchun qo‘llab-quvvatlashga murojaat qiling.',
@@ -2306,7 +2317,7 @@ async function doLogin() {
 }
 
 function showPinScreen() {
-  document.getElementById('pin-venue-name').textContent = venueInfo?.name || 'QassaPos';
+  document.getElementById('pin-venue-name').textContent = venueInfo?.name || 'vzlyot.post';
   pinInput = '';
   renderPinDisplay();
   showScreen('pin');
@@ -2343,6 +2354,33 @@ async function submitPin() {
     errEl.textContent = err.message;
     errEl.style.display = 'block';
     pinInput = ''; renderPinDisplay();
+  }
+}
+
+// Владелец задаёт свой PIN по email + паролю (при первом входе или если забыл)
+function openOwnerPinModal() {
+  showModal(`<div class="modal-title">${t('auth.ownerPinTitle')}</div>
+    <p class="muted-text" style="font-size:13px;margin-bottom:12px;">${t('auth.ownerPinHint')}</p>
+    <div class="field"><label>${t('auth.email')}</label><input type="email" id="op-email" autocomplete="username" value="${esc(accountInfo?.email || '')}"></div>
+    <div class="field"><label>${t('auth.password')}</label><input type="password" id="op-password" autocomplete="current-password"></div>
+    <div class="field"><label>${t('auth.newPin')}</label><input type="password" id="op-pin" inputmode="numeric" maxlength="4" autocomplete="off"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">${t('common.cancel')}</button>
+      <button class="btn btn-primary" onclick="saveOwnerPin()">${t('common.save')}</button>
+    </div>`);
+}
+async function saveOwnerPin() {
+  const email = document.getElementById('op-email').value.trim();
+  const password = document.getElementById('op-password').value;
+  const pin = document.getElementById('op-pin').value.trim();
+  if (!email || !password) { toast(t('auth.fillEmailPassword')); return; }
+  if (!/^\d{4}$/.test(pin)) { toast(t('staff.pinInvalid')); return; }
+  try {
+    await api('/auth/owner-pin', { method: 'POST', body: { email, password, pin } });
+    closeModal();
+    toast(t('auth.pinSaved'));
+  } catch (err) {
+    toast(err.message);
   }
 }
 
@@ -2397,7 +2435,7 @@ async function startApp({ silentAuthRestore = false } = {}) {
     currentShift = shiftData;
     dailySummary = summaryData;
 
-    document.getElementById('brand-name').textContent = venueInfo?.name || 'QassaPos';
+    document.getElementById('brand-name').textContent = venueInfo?.name || 'vzlyot.post';
 
     applyRolePermissions();
     setupUserCard();
@@ -3535,35 +3573,34 @@ async function cancelOrder(id) {
   }
 }
 async function renderAnalytics() {
-  try { orders = await api('/orders'); } catch(err) { toast(err.message); return; }
-  const completedOrders = orders.filter(isCompletedOrder);
-  const cancelledOrders = orders.filter(o => o.status === 'cancelled');
-  const totalRev = completedOrders.reduce((a,o)=>a+o.total,0);
-  const cancelledAmount = cancelledOrders.reduce((a,o)=>a+o.total,0);
-  const avg = completedOrders.length ? Math.round(totalRev/completedOrders.length) : 0;
+  // Итоги считает сервер по всем заказам; список /orders — только последние для таблицы
+  let stats;
+  try {
+    [orders, stats] = await Promise.all([api('/orders'), api('/orders/analytics')]);
+  } catch(err) { toast(err.message); return; }
+  const totalRev = stats.revenue;
+  const cancelledAmount = stats.cancelled_amount;
   document.getElementById('analytics-metrics').innerHTML = `
     <div class="metric"><div class="metric-label">${t('analytics.revenueTotal')}</div><div class="metric-value green">${fmt(totalRev)}</div></div>
-    <div class="metric"><div class="metric-label">${t('analytics.orders')}</div><div class="metric-value">${completedOrders.length}</div></div>
-    <div class="metric"><div class="metric-label">${t('analytics.averageCheck')}</div><div class="metric-value">${fmt(avg)}</div></div>
+    <div class="metric"><div class="metric-label">${t('analytics.orders')}</div><div class="metric-value">${stats.orders_count}</div></div>
+    <div class="metric"><div class="metric-label">${t('analytics.averageCheck')}</div><div class="metric-value">${fmt(stats.average_check)}</div></div>
     <div class="metric"><div class="metric-label">${t('analytics.clients')}</div><div class="metric-value">${clients.length}</div></div>
-    <div class="metric"><div class="metric-label">${t('analytics.cancelledOrders')}</div><div class="metric-value red">${cancelledOrders.length}</div></div>
+    <div class="metric"><div class="metric-label">${t('analytics.cancelledOrders')}</div><div class="metric-value red">${stats.cancelled_count}</div></div>
     <div class="metric"><div class="metric-label">${t('analytics.cancelledAmount')}</div><div class="metric-value red">${fmt(cancelledAmount)}</div></div>`;
-  const dishCount = {};
-  completedOrders.forEach(o => (o.items_json||[]).forEach(i => { dishCount[i.name] = (dishCount[i.name]||0) + i.qty; }));
-  const top = Object.entries(dishCount).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const top = stats.top_dishes.map(d => [d.name, d.qty]);
   const maxD = top[0]?top[0][1]:1;
   document.getElementById('top-dishes').innerHTML = top.length
     ? top.map(([n,c]) => `<div class="bar-row"><span class="bar-label">${esc(n)}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(c/maxD*100)}%"></div></div><span class="bar-count">${c}</span></div>`).join('')
     : `<p class="empty-state" style="font-size:13px;">${t('analytics.noSales')}</p>`;
-  const cashAmount = completedOrders.reduce((sum, o) => sum + orderCashAmount(o), 0);
-  const cardAmount = completedOrders.reduce((sum, o) => sum + orderCardAmount(o), 0);
-  const mixed = completedOrders.filter(o=>o.pay_method==='mixed').length;
+  const cashAmount = stats.cash_amount;
+  const cardAmount = stats.card_amount;
+  const mixed = stats.mixed_count;
   const maxPay = Math.max(cashAmount, cardAmount, cancelledAmount, 1);
   document.getElementById('pay-stats').innerHTML = `
     <div class="bar-row"><span class="bar-label">${t('pay.cashAmount')}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(cashAmount/maxPay*100)}%"></div></div><span class="bar-count">${fmt(cashAmount)}</span></div>
     <div class="bar-row"><span class="bar-label">${t('pay.cardAmount')}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(cardAmount/maxPay*100)}%;background:#378ADD"></div></div><span class="bar-count">${fmt(cardAmount)}</span></div>
-    <div class="bar-row"><span class="bar-label">${t('pay.mixedCount')}</span><div class="bar-track"><div class="bar-fill" style="width:${completedOrders.length?Math.round(mixed/completedOrders.length*100):0}%;background:var(--warning)"></div></div><span class="bar-count">${mixed}</span></div>
-    <div class="bar-row"><span class="bar-label">${t('analytics.cancelledOrders')}</span><div class="bar-track"><div class="bar-fill" style="width:${orders.length?Math.round(cancelledOrders.length/orders.length*100):0}%;background:var(--danger)"></div></div><span class="bar-count">${cancelledOrders.length}</span></div>
+    <div class="bar-row"><span class="bar-label">${t('pay.mixedCount')}</span><div class="bar-track"><div class="bar-fill" style="width:${stats.orders_count?Math.round(mixed/stats.orders_count*100):0}%;background:var(--warning)"></div></div><span class="bar-count">${mixed}</span></div>
+    <div class="bar-row"><span class="bar-label">${t('analytics.cancelledOrders')}</span><div class="bar-track"><div class="bar-fill" style="width:${stats.all_count?Math.round(stats.cancelled_count/stats.all_count*100):0}%;background:var(--danger)"></div></div><span class="bar-count">${stats.cancelled_count}</span></div>
     <div class="bar-row"><span class="bar-label">${t('analytics.cancelledAmount')}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(cancelledAmount/maxPay*100)}%;background:var(--danger)"></div></div><span class="bar-count">${fmt(cancelledAmount)}</span></div>`;
   document.getElementById('orders-tbody').innerHTML = orders.length
     ? orders.slice(0,20).map(o=>{

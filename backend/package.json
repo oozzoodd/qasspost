@@ -1,7 +1,7 @@
 {
-  "name": "qassapos-backend",
+  "name": "vzlyot-post-backend",
   "version": "1.0.0",
-  "description": "Backend API for QassaPos - POS system for fast food points",
+  "description": "Backend API for vzlyot.post - POS system for fast food points",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

@@ -1,4 +1,4 @@
-# QassaPos — Инструкция по запуску
+# vzlyot.post — Инструкция по запуску
 
 Полная пошаговая инструкция, как развернуть систему с нуля.
 Идём по порядку, ничего не пропускаем.
@@ -8,19 +8,19 @@
 ## Шаг 1. GitHub — создаём репозиторий
 
 1. Заходишь на github.com → New repository
-2. Название: `qassapos`
+2. Название: `vzlyot.post`
 3. Private (чтобы код был скрыт от посторонних)
 4. Создаёшь
 
 Затем у себя на компьютере (или прямо здесь, в Claude):
 
 ```bash
-cd qassapos
+cd vzlyot.post
 git init
 git add .
 git commit -m "Первый коммит: backend + frontend"
 git branch -M main
-git remote add origin https://github.com/ТВОЙ_АККАУНТ/qassapos.git
+git remote add origin https://github.com/ТВОЙ_АККАУНТ/vzlyot.post.git
 git push -u origin main
 ```
 
@@ -29,7 +29,7 @@ git push -u origin main
 ## Шаг 2. Railway — создаём проект
 
 1. Заходишь на railway.app, входишь через GitHub
-2. New Project → Deploy from GitHub repo → выбираешь `qassapos`
+2. New Project → Deploy from GitHub repo → выбираешь `vzlyot.post`
 3. Railway найдёт папку `backend` — укажи Root Directory: `backend`
 
 ---
@@ -57,17 +57,32 @@ git push -u origin main
 
 ## Шаг 5. Инициализация базы данных
 
-После первого деплоя нужно создать таблицы и demo-данные один раз.
+Таблицы и обновления базы применяются **сами при каждом запуске сервера**
+(`db/migrate.js`: `schema.sql` + файлы из `db/migrations/`, затем шифрование PIN).
 
-В Railway: открой вкладку сервиса → Settings → найди "Run command" или используй Railway CLI:
+Demo-данные нужно создать один раз вручную. В Railway: открой вкладку сервиса → Settings → найди "Run command" или используй Railway CLI:
 
 ```bash
 railway run npm run init-db
 ```
 
-Это создаст все таблицы и demo-аккаунт:
-- Email: `demo@qassapos.uz`
+Это создаст demo-аккаунт:
+- Email: `demo@vzlyot.post`
 - Пароль: `demo1234`
+- PIN: `1111` (владелец), `2222` (админ), `3333` (кассир)
+
+---
+
+## PIN-коды сотрудников
+
+- PIN хранится в базе только в зашифрованном виде (bcrypt), в ответах API его нет.
+- PIN — ровно 4 цифры и не может совпадать с PIN другого сотрудника той же точки.
+- При регистрации владелец получает свой PIN (поле `pin`) или случайный — он приходит в ответе как `ownerPin`. Общего «0000» больше нет.
+- Забыл PIN или первый вход — на экране PIN ссылка **«Владелец: задать или сбросить PIN»** (нужны email и пароль владельца, `POST /auth/owner-pin`).
+
+## Время в отчётах
+
+«Сегодня», «вчера», неделя, месяц и т.д. считаются по Ташкенту (`utils/time.js`), а не по UTC сервера.
 
 ---
 
@@ -75,12 +90,12 @@ railway run npm run init-db
 
 Railway даст тебе публичный URL вида:
 ```
-https://qassapos-production.up.railway.app
+https://vzlyot-post-production.up.railway.app
 ```
 
 Открой его в браузере — должен ответить:
 ```json
-{"status":"ok","service":"QassaPos API","version":"1.0.0"}
+{"status":"ok","service":"vzlyot.post API","version":"1.0.0"}
 ```
 
 Если видишь это — сервер работает! 🎉
@@ -138,7 +153,7 @@ curl -X POST https://твой-сервер.up.railway.app/admin/accounts/5/block
 ## Структура проекта
 
 ```
-qassapos/
+vzlyot.post/
 ├── backend/
 │   ├── server.js          ← главный файл, запускает сервер
 │   ├── package.json       ← зависимости
