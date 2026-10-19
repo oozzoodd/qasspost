@@ -97,6 +97,7 @@
     .nav-item.active { background: var(--primary-soft); color: var(--success); font-weight: 500; }
     .nav-item .icon { font-size: 17px; width: 20px; text-align: center; }
     .nav-item.locked { opacity: 0.4; cursor: not-allowed; }
+    .role-cashier .admin-only { display: none !important; }
     .sidebar-bottom { padding: 12px; border-top: 1px solid var(--border); }
     .user-card { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 8px; cursor: pointer; }
     .user-card:hover { background: var(--soft); }
@@ -579,9 +580,11 @@
         right: 0;
         bottom: 0;
         z-index: 220;
-        display: grid;
-        grid-template-columns: repeat(6, minmax(0, 1fr));
-        gap: 0;
+        /* Разделов больше, чем влезает: лента прокручивается вбок */
+        display: flex;
+        overflow-x: auto;
+        scrollbar-width: none;
+        gap: 2px;
         width: 100%;
         max-width: 100%;
         padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
@@ -590,7 +593,9 @@
         box-shadow: 0 -6px 20px rgba(0,0,0,0.08);
       }
       .mobile-bottom-nav button {
-        min-width: 0;
+        flex: 1 0 auto;
+        min-width: 72px;
+        padding: 0 8px;
         min-height: 44px;
         border: none;
         border-radius: 8px;
@@ -601,6 +606,7 @@
         font-weight: 600;
         cursor: pointer;
       }
+      .mobile-bottom-nav .mobile-nav-switch { color: var(--danger); }
       .mobile-bottom-nav button.active {
         background: var(--primary-soft);
         color: var(--success);
@@ -1007,7 +1013,7 @@
       <div class="nav-item" data-roles="owner,admin" onclick="nav('stock',this)"><span class="icon">📦</span><span data-i18n="nav.stock">Остатки</span></div>
       <div class="nav-item" data-roles="owner,admin" onclick="nav('recipes',this)"><span class="icon">📋</span><span data-i18n="nav.recipes">Тех.карты</span></div>
       <div class="nav-group-label" data-i18n="sidebar.business">Бизнес</div>
-      <div class="nav-item" data-roles="owner,admin" onclick="nav('clients',this)"><span class="icon">👥</span><span data-i18n="nav.clients">Клиенты</span></div>
+      <div class="nav-item" onclick="nav('clients',this)"><span class="icon">👥</span><span data-i18n="nav.clients">Клиенты</span></div>
       <div class="nav-item" data-roles="owner" onclick="nav('staff',this)"><span class="icon">👤</span><span data-i18n="nav.staff">Сотрудники</span></div>
       <div class="nav-item" data-roles="owner,admin" onclick="nav('analytics',this)"><span class="icon">📊</span><span data-i18n="nav.analytics">Аналитика</span></div>
       <div class="nav-item" data-roles="owner,admin" onclick="nav('finance',this)"><span class="icon">💰</span><span data-i18n="nav.finance">Финансы</span></div>
@@ -1274,7 +1280,7 @@
         <div class="card">
           <div class="card-title" data-i18n="settings.shift">Смена</div>
           <div class="muted-text" style="font-size:13px;margin-bottom:12px;" id="shift-settings-status"></div>
-          <button class="btn" id="shift-toggle-btn" onclick="toggleShift()" style="width:100%;justify-content:center;" data-i18n="shift.open">Открыть смену</button>
+          <button class="btn" id="shift-toggle-btn" onclick="toggleShift()" style="width:100%;justify-content:center;">Открыть смену</button>
         </div>
       </div>
       <div class="card appearance-card" id="appearance-card">
@@ -1332,9 +1338,13 @@
     <button type="button" data-page="pos" onclick="showPage('pos')" data-i18n="nav.pos">Касса</button>
     <button type="button" data-page="menu" onclick="showPage('menu')" data-i18n="nav.menu">Меню</button>
     <button type="button" data-page="stock" onclick="showPage('stock')" data-i18n="mobile.stock">Склад</button>
+    <button type="button" data-page="recipes" onclick="showPage('recipes')" data-i18n="nav.recipes">Тех.карты</button>
     <button type="button" data-page="clients" onclick="showPage('clients')" data-i18n="nav.clients">Клиенты</button>
+    <button type="button" data-page="staff" onclick="showPage('staff')" data-i18n="nav.staff">Сотрудники</button>
     <button type="button" data-page="analytics" onclick="showPage('analytics')" data-i18n="nav.analytics">Аналитика</button>
+    <button type="button" data-page="finance" onclick="showPage('finance')" data-i18n="nav.finance">Финансы</button>
     <button type="button" data-page="settings" onclick="showPage('settings')" data-i18n="nav.settings">Настройки</button>
+    <button type="button" class="mobile-nav-switch" onclick="staffLogout()" data-i18n="mobile.switchStaff">Сменить</button>
   </nav>
 </div>
 
@@ -1458,6 +1468,7 @@ const I18N = {
     'common.appTitle': 'vzlyot.post — Кассовая система',
     'common.currency': 'сум',
     'mobile.stock': 'Склад',
+    'mobile.switchStaff': 'Сменить',
     'mobile.menuLabel': 'Мобильное меню',
     'sidebar.main': 'Основное',
     'sidebar.stock': 'Склад',
@@ -1509,6 +1520,7 @@ const I18N = {
     'pos.all': 'Все',
     'pos.bonus': 'бонус',
     'pos.noStock': 'Нет остатка',
+    'pos.noRecipe': 'Нет техкарты',
     'pos.quickClientTitle': 'Новый клиент',
     'pos.quickClientAdded': 'Клиент добавлен и выбран',
     'settings.title': 'Настройки',
@@ -1574,6 +1586,7 @@ const I18N = {
     'settings.shiftRevenue': 'Выручка за смену',
     'shift.open': 'Открыть смену',
     'shift.close': 'Закрыть смену',
+    'shift.closeConfirm': 'Закрыть смену? Продажи будут недоступны до открытия новой.',
     'shift.opened': 'Смена открыта',
     'shift.closed': 'Смена закрыта — продажи недоступны',
     'shift.openedShort': 'Открыта',
@@ -1635,7 +1648,7 @@ const I18N = {
     'clients.totalClients': 'Всего клиентов',
     'clients.totalVisits': 'Всего визитов',
     'clients.bonusIssued': 'Бонусов выдано',
-    'clients.check': 'Чек',
+    'clients.check': 'Сумма покупок',
     'clients.last': 'Последний',
     'clients.noOrders': 'нет заказов',
     'clients.noRecentOrders': 'Нет недавних заказов',
@@ -1787,6 +1800,7 @@ const I18N = {
     'staff.staffSaved': 'Сотрудник сохранён',
     'staff.staffDeleted': 'Сотрудник удалён',
     'staff.deleteConfirm': 'Удалить сотрудника?',
+    'staff.staffDeactivated': 'У сотрудника есть история продаж — он отключён и больше не сможет войти',
     'staff.noStaff': 'Сотрудников пока нет',
     'staff.total': 'Всего',
     'staff.activeCount': 'Активных',
@@ -1832,6 +1846,7 @@ const I18N = {
     'common.appTitle': 'vzlyot.post — Kassa tizimi',
     'common.currency': 'so‘m',
     'mobile.stock': 'Ombor',
+    'mobile.switchStaff': 'Almashtirish',
     'mobile.menuLabel': 'Mobil menyu',
     'sidebar.main': 'Asosiy',
     'sidebar.stock': 'Ombor',
@@ -1883,6 +1898,7 @@ const I18N = {
     'pos.all': 'Barchasi',
     'pos.bonus': 'bonus',
     'pos.noStock': 'Qoldiq yo‘q',
+    'pos.noRecipe': 'Texkarta yo‘q',
     'pos.quickClientTitle': 'Yangi mijoz',
     'pos.quickClientAdded': 'Mijoz qo‘shildi va tanlandi',
     'settings.title': 'Sozlamalar',
@@ -1948,6 +1964,7 @@ const I18N = {
     'settings.shiftRevenue': 'Smena tushumi',
     'shift.open': 'Smenani ochish',
     'shift.close': 'Smenani yopish',
+    'shift.closeConfirm': 'Smena yopilsinmi? Yangi smena ochilmaguncha savdo qilib bo‘lmaydi.',
     'shift.opened': 'Smena ochiq',
     'shift.closed': 'Smena yopiq — savdo mavjud emas',
     'shift.openedShort': 'Ochiq',
@@ -2009,7 +2026,7 @@ const I18N = {
     'clients.totalClients': 'Jami mijozlar',
     'clients.totalVisits': 'Jami tashriflar',
     'clients.bonusIssued': 'Berilgan bonuslar',
-    'clients.check': 'Chek',
+    'clients.check': 'Xaridlar summasi',
     'clients.last': 'Oxirgi',
     'clients.noOrders': 'buyurtmalar yo‘q',
     'clients.noRecentOrders': 'Yaqinda buyurtmalar yo‘q',
@@ -2161,6 +2178,7 @@ const I18N = {
     'staff.staffSaved': 'Xodim saqlandi',
     'staff.staffDeleted': 'Xodim o‘chirildi',
     'staff.deleteConfirm': 'Xodimni o‘chirish?',
+    'staff.staffDeactivated': 'Xodimda savdo tarixi bor — u o‘chirib qo‘yildi va endi kira olmaydi',
     'staff.noStaff': 'Hozircha xodimlar yo‘q',
     'staff.total': 'Jami',
     'staff.activeCount': 'Faol',
@@ -2460,20 +2478,29 @@ function setupUserCard() {
   document.getElementById('user-avatar').textContent = initials[currentUser.role] || '??';
 }
 
+// Права пересчитываются при каждом входе: после смены сотрудника меню не
+// должно оставаться «чужим». Роли раздела берутся из data-roles в боковом меню.
+function pageAllowed(page) {
+  const item = Array.from(document.querySelectorAll('.nav-item[data-roles]'))
+    .find(el => (el.getAttribute('onclick') || '').includes(`nav('${page}'`));
+  return !item || !currentUser || item.dataset.roles.split(',').includes(currentUser.role);
+}
 function applyRolePermissions() {
   document.querySelectorAll('.nav-item[data-roles]').forEach(el => {
-    const roles = el.dataset.roles.split(',');
-    if (!roles.includes(currentUser.role)) {
-      el.classList.add('locked');
-      el.onclick = () => toast(t('common.accessDenied'));
-    }
+    el.classList.toggle('locked', !el.dataset.roles.split(',').includes(currentUser.role));
   });
+  document.querySelectorAll('.mobile-bottom-nav button[data-page]').forEach(btn => {
+    btn.style.display = pageAllowed(btn.dataset.page) ? '' : 'none';
+  });
+  // Кассир видит клиентов, но править и удалять их могут только владелец и админ
+  document.getElementById('app').classList.toggle('role-cashier', currentUser.role === 'cashier');
 }
 
 // ═══════════════════════════════════════════════════════════
 // NAVIGATION
 // ═══════════════════════════════════════════════════════════
 function nav(page, el) {
+  if (!pageAllowed(page)) { toast(t('common.accessDenied')); return; }
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
@@ -2511,6 +2538,7 @@ document.addEventListener('click', e => {
 async function toggleShift() {
   try {
     if (currentShift && !currentShift.closed_at) {
+      if (!confirm(t('shift.closeConfirm'))) return;
       const closedShift = await api('/orders/shift/close', { method: 'POST' });
       showShiftCloseReport(closedShift);
       toast(t('pos.shiftClosed') + '. ' + t('settings.shiftRevenue') + ': ' + fmt(closedShift.revenue));
@@ -2532,7 +2560,9 @@ function renderShiftBar() {
   const shiftRevenue = dailySummary?.total || 0;
   el.innerHTML = `<div class="shift-bar ${open ? 'open' : 'closed'}">
     <span>${open ? '✅ ' + t('shift.opened') : '⛔ ' + t('pos.shiftClosed') + ' — ' + t('pos.salesUnavailable')}</span>
-    ${open ? '<span style="font-weight:600;">' + t('settings.shiftRevenue') + ': ' + fmt(shiftRevenue) + '</span>' : ''}
+    ${open
+      ? '<span style="font-weight:600;">' + t('settings.shiftRevenue') + ': ' + fmt(shiftRevenue) + '</span>'
+      : '<button class="btn btn-primary btn-sm" onclick="toggleShift()">' + t('shift.open') + '</button>'}
   </div>`;
 }
 function showShiftCloseReport(shift) {
@@ -2569,7 +2599,14 @@ function showShiftCloseReport(shift) {
 function getIng(id) { return ingredients.find(i => i.id === id); }
 function getItem(id) { return menuItems.find(i => i.id === id); }
 function getClient(id) { return clients.find(c => c.id === id); }
-function stockStatus(ing) { if (ing.stock_grams <= 0) return 'out'; if (ing.stock_grams < ing.min_grams) return 'low'; return 'ok'; }
+// База отдаёт NUMERIC строкой ("4480.000") — сравниваем как числа, не как текст
+function stockStatus(ing) {
+  const stock = Number(ing.stock_grams) || 0;
+  const min = Number(ing.min_grams) || 0;
+  if (stock <= 0) return 'out';
+  if (stock < min) return 'low';
+  return 'ok';
+}
 function canMake(item) {
   const nextQty = (cart[item.id] || 0) + 1;
   if (menuItemType(item) === 'stock_item') {
@@ -2577,9 +2614,20 @@ function canMake(item) {
     const stockQty = Number(item.stock_qty || 1);
     return !!ing && Number.isFinite(stockQty) && stockQty > 0 && ing.stock_grams >= stockQty * nextQty;
   }
+  if (!hasRecipe(item)) return false;
   const r = recipesData[item.id];
   if (!r) return true;
   return r.every(ri => { const ing = getIng(ri.ingredient_id); return ing && ing.stock_grams >= ri.grams * nextQty; });
+}
+// Блюдо без техкарты продать нельзя — помечаем его на кассе заранее
+function hasRecipe(item) {
+  if (menuItemType(item) === 'stock_item') return true;
+  const r = recipesData[item.id];
+  if (r) return r.length > 0;
+  return item.recipe_count !== 0;
+}
+function unavailableReason(item) {
+  return hasRecipe(item) ? t('pos.noStock') : t('pos.noRecipe');
 }
 function catNameOf(item) {
   const c = menuCatsData.find(c => c.id === item.category_id);
@@ -2689,7 +2737,7 @@ function renderPosMenu() {
     const ok = canMake(item);
     return `<div class="menu-card ${ok?'':'no-stock'}" ${ok?`onclick="addToCart(${item.id})"`:''}>
       <div class="menu-card-name">${esc(item.name)}</div>
-      <div class="menu-card-price">${ok ? fmt(item.price) : t('pos.noStock')}</div>
+      <div class="menu-card-price">${ok ? fmt(item.price) : unavailableReason(item)}</div>
     </div>`;}).join('');
 }
 
@@ -2702,12 +2750,12 @@ function addToCart(id) {
   const open = currentShift && !currentShift.closed_at;
   if (!open) { toast(t('pos.openShiftFirst') + '!'); return; }
   const item = getItem(id);
-  if (!item || !canMake(item)) { toast(t('pos.noStock')); renderPosMenu(); return; }
+  if (!item || !canMake(item)) { toast(item ? unavailableReason(item) : t('pos.noStock')); renderPosMenu(); return; }
   cart[id] = (cart[id] || 0) + 1; renderCart(); renderPosMenu();
 }
 function changeQty(id, d) {
   const item = getItem(id);
-  if (d > 0 && (!item || !canMake(item))) { toast(t('pos.noStock')); renderPosMenu(); return; }
+  if (d > 0 && (!item || !canMake(item))) { toast(item ? unavailableReason(item) : t('pos.noStock')); renderPosMenu(); return; }
   cart[id] = (cart[id] || 0) + d;
   if (cart[id] <= 0) delete cart[id];
   renderCart();
@@ -3052,11 +3100,11 @@ function openIncomeModal(id = null) {
   showModal(`<div class="modal-title">${t('stock.income')}</div>
     <div class="field"><label>${t('stock.item')}</label><select id="inc-ing" onchange="setIncomeUnitFromIngredient()">${opts}</select></div>
     <div class="field-row">
-      <div class="field"><label>${t('stock.quantity')}</label><input type="number" id="inc-qty" step="0.001" min="0" value="1" placeholder="${t('stock.quantity')}" data-i18n-placeholder="stock.quantity" oninput="updateIncomeTotal()"></div>
+      <div class="field"><label>${t('stock.quantity')}</label><input type="number" id="inc-qty" step="0.001" min="0" value="1" onfocus="this.select()" placeholder="${t('stock.quantity')}" data-i18n-placeholder="stock.quantity" oninput="updateIncomeTotal()"></div>
       <div class="field"><label>${t('stock.measureUnit')}</label><select id="inc-unit">${stockUnitOptions(selectedIng.unit || 'g')}</select></div>
     </div>
     <div class="field-row">
-      <div class="field"><label>${t('stock.purchasePrice')}</label><input type="number" id="inc-price" min="0" value="0" placeholder="${t('stock.purchasePrice')}" data-i18n-placeholder="stock.purchasePrice" oninput="updateIncomeTotal()"></div>
+      <div class="field"><label>${t('stock.purchasePrice')}</label><input type="number" id="inc-price" min="0" value="0" onfocus="this.select()" placeholder="${t('stock.purchasePrice')}" data-i18n-placeholder="stock.purchasePrice" oninput="updateIncomeTotal()"></div>
       <div class="field"><label>${t('stock.totalIncome')}</label><input type="number" id="inc-total" value="0" readonly></div>
     </div>
     <div class="field"><label>${t('stock.comment')}</label><input type="text" id="inc-comment" placeholder="${t('stock.optional')}" data-i18n-placeholder="stock.optional"></div>
@@ -3255,7 +3303,8 @@ function getClientStatus(c) {
 }
 function getClientLastOrder(c) {
   const clientOrders = orders.filter(o => o.client_id === c.id);
-  if (!clientOrders.length) return null;
+  // Сервер присылает дату последнего чека; список orders есть не на каждой странице
+  if (!clientOrders.length) return c.last_order_at ? { created_at: c.last_order_at } : null;
   return clientOrders.reduce((last, o) => !last || new Date(o.created_at) > new Date(last.created_at) ? o : last, null);
 }
 function renderClients() {
@@ -3286,8 +3335,8 @@ function renderClients() {
         <td>${fmt(c.total_spent)}</td>
         <td style="text-align:right;display:flex;gap:4px;justify-content:flex-end;white-space:nowrap;">
           <button class="btn btn-icon btn-sm" onclick="openClientProfile(${c.id})">👁️</button>
-          <button class="btn btn-icon btn-sm" onclick="openClientModal(${c.id})">✏️</button>
-          <button class="btn btn-icon btn-sm" onclick="deleteClient(${c.id})">🗑️</button>
+          <button class="btn btn-icon btn-sm admin-only" onclick="openClientModal(${c.id})">✏️</button>
+          <button class="btn btn-icon btn-sm admin-only" onclick="deleteClient(${c.id})">🗑️</button>
         </td>
       </tr>`;
     }).join('') : `<tr><td colspan="6" class="empty-state">${t('clients.noClients')}</td></tr>`;
@@ -3298,7 +3347,8 @@ function renderClientKanban() {
     { key:'new', title:t('clients.new') },
     { key:'active', title:t('clients.active') },
     { key:'vip', title:t('clients.vip') },
-    { key:'needAttention', title:t('clients.needAttention') }
+    { key:'needAttention', title:t('clients.needAttention') },
+    { key:'rare', title:t('clients.rare') }
   ];
   const groups = columns.map(col => ({ title: col.title, items: clients.filter(c => getClientStatusKey(c) === col.key) }));
   document.getElementById('clients-kanban').innerHTML = groups.map(group => `
@@ -3378,7 +3428,7 @@ function openClientProfile(id) {
     <div class="field"><label>${t('clients.addReceipt')}</label><input type="file" id="receipt-file" accept="image/*,.pdf" onchange="attachClientReceipt(${c.id})"></div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal()">${t('common.close')}</button>
-      <button class="btn btn-primary" onclick="openClientModal(${c.id})">${t('clients.editClient')}</button>
+      <button class="btn btn-primary admin-only" onclick="openClientModal(${c.id})">${t('clients.editClient')}</button>
     </div>`);
 }
 function attachClientReceipt(clientId) {
@@ -3466,7 +3516,11 @@ async function renderStaff() {
 }
 async function deleteStaff(id) {
   if (!confirm(t('staff.deleteConfirm'))) return;
-  try { await api('/orders/staff/'+id, { method:'DELETE' }); renderStaff(); toast(t('staff.staffDeleted')); }
+  try {
+    const r = await api('/orders/staff/'+id, { method:'DELETE' });
+    renderStaff();
+    toast(r.deactivated ? t('staff.staffDeactivated') : t('staff.staffDeleted'));
+  }
   catch(err){ toast(err.message); }
 }
 function openStaffModal(id) {
@@ -3846,18 +3900,20 @@ function addFinanceMonths(date, delta) {
 // SETTINGS
 // ═══════════════════════════════════════════════════════════
 function renderSettings() {
-  const open = currentShift && !currentShift.closed_at;
-  const shiftRevenue = dailySummary?.total || 0;
-  const btn = document.getElementById('shift-toggle-btn');
-  btn.textContent = open ? '⛔ ' + t('shift.close') : '✅ ' + t('shift.open');
-  btn.className = 'btn ' + (open ? 'btn-danger' : 'btn-primary');
-  document.getElementById('shift-settings-status').innerHTML = `${t('settings.status')}: <strong style="color:var(${open?'--success':'--muted'})">${open?t('shift.openedShort'):t('shift.closedShort')}</strong>${open?'<br>'+t('settings.shiftRevenue')+': <strong>'+fmt(shiftRevenue)+'</strong>':''}`;
+  // Сначала переводим статичные подписи, потом рисуем живые данные смены,
+  // иначе перевод затирает кнопку и статус
   document.querySelectorAll('#page-settings [data-i18n]').forEach(el => {
     el.textContent = t(el.dataset.i18n);
   });
   document.querySelectorAll('#page-settings [data-i18n-placeholder]').forEach(el => {
     el.setAttribute('placeholder', t(el.dataset.i18nPlaceholder));
   });
+  const open = currentShift && !currentShift.closed_at;
+  const shiftRevenue = dailySummary?.total || 0;
+  const btn = document.getElementById('shift-toggle-btn');
+  btn.textContent = open ? '⛔ ' + t('shift.close') : '✅ ' + t('shift.open');
+  btn.className = 'btn ' + (open ? 'btn-danger' : 'btn-primary');
+  document.getElementById('shift-settings-status').innerHTML = `${t('settings.status')}: <strong style="color:var(${open?'--success':'--muted'})">${open?t('shift.openedShort'):t('shift.closedShort')}</strong>${open?'<br>'+t('settings.shiftRevenue')+': <strong>'+fmt(shiftRevenue)+'</strong>':''}`;
   document.querySelector('#appearance-card .card-title').textContent = t('settings.appearance');
   document.querySelector('#expenses-card .card-title').textContent = t('settings.expenses');
   document.querySelector('#shift-history-card .card-title').textContent = t('settings.shiftHistory');
@@ -3976,6 +4032,17 @@ function renderShiftHistory() {
 // ═══════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════
+// Клавиатура на экранах входа: Enter — войти, цифры/Backspace/Enter — PIN
+document.addEventListener('keydown', e => {
+  if (document.getElementById('modal-bg').classList.contains('open')) return;
+  const isShown = name => document.getElementById('screen-' + name)?.style.display === 'flex';
+  if (isShown('login') && e.key === 'Enter') { e.preventDefault(); doLogin(); return; }
+  if (!isShown('pin')) return;
+  if (/^[0-9]$/.test(e.key)) pinPress(e.key);
+  else if (e.key === 'Backspace') pinPress('←');
+  else if (e.key === 'Enter') pinPress('✓');
+});
+
 async function init() {
   applyTheme(appTheme);
   applyLanguage();

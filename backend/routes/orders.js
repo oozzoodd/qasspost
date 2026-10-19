@@ -790,17 +790,22 @@ router.post('/:id/cancel', requireRole('owner', 'admin'), async (req, res) => {
 router.get('/clients/all', async (req, res) => {
   const search = (req.query.search || '').trim();
   const params = [req.user.venueId];
-  let sql = 'SELECT * FROM clients WHERE venue_id = $1';
+  // last_order_at — дата последнего чека клиента (для карточек и Kanban)
+  let sql = `SELECT c.*,
+               (SELECT MAX(o.created_at) FROM orders o
+                 WHERE o.client_id = c.id AND o.venue_id = c.venue_id AND ${COMPLETED_ORDER_SQL}) AS last_order_at
+             FROM clients c WHERE c.venue_id = $1`;
   if (search) {
     params.push(`%${search}%`);
-    sql += ' AND (name ILIKE $2 OR phone ILIKE $2 OR email ILIKE $2)';
+    sql += ' AND (c.name ILIKE $2 OR c.phone ILIKE $2 OR c.email ILIKE $2)';
   }
-  sql += ' ORDER BY id DESC';
+  sql += ' ORDER BY c.id DESC';
   const r = await pool.query(sql, params);
   res.json(r.rows);
 });
 
-router.post('/clients', requireRole('owner', 'admin'), async (req, res) => {
+// Добавить клиента может и кассир — прямо с кассы, чтобы начислять бонусы
+router.post('/clients', async (req, res) => {
   const { name, phone, email, status, last_payment_at, expires_at } = req.body;
   if (!name) return res.status(400).json({ error: 'Укажите имя' });
   const r = await pool.query(
@@ -823,7 +828,9 @@ router.put('/clients/:id', requireRole('owner', 'admin'), async (req, res) => {
   res.json(r.rows[0]);
 });
 
+// Удаление клиента: его чеки остаются в отчётах, просто без привязки к клиенту
 router.delete('/clients/:id', requireRole('owner', 'admin'), async (req, res) => {
+  await pool.query('UPDATE orders SET client_id = NULL WHERE client_id=$1 AND venue_id=$2', [req.params.id, req.user.venueId]);
   await pool.query('DELETE FROM clients WHERE id=$1 AND venue_id=$2', [req.params.id, req.user.venueId]);
   res.json({ ok: true });
 });
@@ -869,7 +876,25 @@ router.put('/staff/:id', requireRole('owner'), async (req, res) => {
   res.json(r.rows[0]);
 });
 
+// Удаление сотрудника. С историей (смены, чеки, расходы, приходы) — только
+// отключаем: история остаётся, войти по PIN он больше не сможет.
 router.delete('/staff/:id', requireRole('owner'), async (req, res) => {
+  const staffRes = await pool.query('SELECT id, role FROM staff WHERE id=$1 AND venue_id=$2', [req.params.id, req.user.venueId]);
+  if (!staffRes.rows.length) return res.status(404).json({ error: 'Не найдено' });
+  if (staffRes.rows[0].role === 'owner') return res.status(400).json({ error: 'Владельца удалить нельзя' });
+
+  const historyRes = await pool.query(
+    `SELECT EXISTS (SELECT 1 FROM shifts WHERE staff_id = $1)
+         OR EXISTS (SELECT 1 FROM orders WHERE staff_id = $1 OR cancelled_by = $1)
+         OR EXISTS (SELECT 1 FROM cash_expenses WHERE staff_id = $1)
+         OR EXISTS (SELECT 1 FROM stock_incomes WHERE staff_id = $1) AS has_history`,
+    [req.params.id]
+  );
+  if (historyRes.rows[0].has_history) {
+    await pool.query('UPDATE staff SET active = false WHERE id=$1 AND venue_id=$2', [req.params.id, req.user.venueId]);
+    return res.json({ ok: true, deactivated: true });
+  }
+
   await pool.query('DELETE FROM staff WHERE id=$1 AND venue_id=$2', [req.params.id, req.user.venueId]);
   res.json({ ok: true });
 });

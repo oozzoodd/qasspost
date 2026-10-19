@@ -1,4 +1,5 @@
 require('dotenv').config();
+require('./utils/async-routes'); // до роутеров: ошибки async-обработчиков не роняют сервер
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -62,8 +63,20 @@ app.use((req, res) => res.status(404).json({ error: 'Маршрут не най�
 // Общий обработчик ошибок
 app.use((err, req, res, next) => {
   console.error(err);
+  if (res.headersSent) return next(err);
+  // 23503 — запись используется в других (продажи, смены, приходы)
+  if (err.code === '23503') {
+    return res.status(409).json({ error: 'Нельзя удалить: запись уже используется в продажах, сменах или приходах' });
+  }
+  // 22P02 / 22003 / 23502 — неверный формат или пустое обязательное поле
+  if (['22P02', '22003', '23502', '22007', '22008'].includes(err.code)) {
+    return res.status(400).json({ error: 'Проверьте введённые данные' });
+  }
   res.status(500).json({ error: 'Внутренняя ошибка сервера' });
 });
+
+// Последняя страховка: ошибка вне запроса не должна останавливать кассу
+process.on('unhandledRejection', err => console.error('Необработанная ошибка:', err));
 
 const PORT = process.env.PORT || 3000;
 migrate()

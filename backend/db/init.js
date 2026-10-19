@@ -75,6 +75,21 @@ async function init() {
     ingIds[name] = r.rows[0].id;
   }
 
+  // Напитки — готовый поштучный товар: списываются штуками, техкарта не нужна
+  const drinks = [
+    ['Кола 0.5л (бут.)', 48, 12],
+    ['Чай (пакетик)', 100, 20],
+    ['Вода 0.5л (бут.)', 48, 12],
+  ];
+  for (const [name, stock, min] of drinks) {
+    const r = await pool.query(
+      `INSERT INTO ingredients (venue_id, name, category, unit, stock_grams, min_grams)
+       VALUES ($1,$2,'drinks','pcs',$3,$4) RETURNING id`,
+      [venueId, name, stock, min]
+    );
+    ingIds[name] = r.rows[0].id;
+  }
+
   // Блюда
   const items = [
     ['Классик бургер', 18000, 'Бургеры'],
@@ -83,15 +98,16 @@ async function init() {
     ['Шаурма классик', 20000, 'Шаурма'],
     ['Шаурма с сыром', 24000, 'Шаурма'],
     ['Хот-дог классик', 12000, 'Хот-доги'],
-    ['Кола 0.5л', 8000, 'Напитки'],
-    ['Чай', 5000, 'Напитки'],
-    ['Вода', 4000, 'Напитки'],
+    ['Кола 0.5л', 8000, 'Напитки', 'Кола 0.5л (бут.)'],
+    ['Чай', 5000, 'Напитки', 'Чай (пакетик)'],
+    ['Вода', 4000, 'Напитки', 'Вода 0.5л (бут.)'],
   ];
   const itemIds = {};
-  for (const [name, price, cat] of items) {
+  for (const [name, price, cat, stockItem] of items) {
     const r = await pool.query(
-      `INSERT INTO menu_items (venue_id, category_id, name, price) VALUES ($1,$2,$3,$4) RETURNING id`,
-      [venueId, catIds[cat], name, price]
+      `INSERT INTO menu_items (venue_id, category_id, name, price, item_type, stock_ingredient_id, stock_qty)
+       VALUES ($1,$2,$3,$4,$5,$6,1) RETURNING id`,
+      [venueId, catIds[cat], name, price, stockItem ? 'stock_item' : 'dish', stockItem ? ingIds[stockItem] : null]
     );
     itemIds[name] = r.rows[0].id;
   }

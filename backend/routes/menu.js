@@ -50,7 +50,12 @@ async function assertStockIngredientBelongsToVenue(venueId, ingredientId) {
 router.get('/', async (req, res) => {
   const { venueId } = req.user;
   const cats = await pool.query('SELECT * FROM menu_categories WHERE venue_id = $1 ORDER BY sort_order, id', [venueId]);
-  const items = await pool.query('SELECT * FROM menu_items WHERE venue_id = $1 ORDER BY id', [venueId]);
+  // recipe_count — сколько ингредиентов в техкарте: блюдо без техкарты продать нельзя
+  const items = await pool.query(
+    `SELECT m.*, (SELECT COUNT(*) FROM recipes r WHERE r.menu_item_id = m.id)::int AS recipe_count
+     FROM menu_items m WHERE m.venue_id = $1 ORDER BY m.id`,
+    [venueId]
+  );
   res.json({ categories: cats.rows, items: items.rows });
 });
 
