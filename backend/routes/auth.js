@@ -7,6 +7,7 @@ const { isValidPin, isPinHash, hashPin, findByPin } = require('../utils/pin');
 const { normalizePhone } = require('../utils/phone');
 const { TRIAL_DAYS, featuresOf } = require('../config/plans');
 const { createAccount, AccountError } = require('../utils/accounts');
+const { sheetRegistration } = require('../utils/sheets');
 
 const router = express.Router();
 
@@ -49,6 +50,7 @@ router.post('/register', async (req, res) => {
       pin: req.body.pin,
     });
     await pool.query('UPDATE accounts SET last_login_at = NOW() WHERE id = $1', [account.id]);
+    sheetRegistration({ account, venue, source: 'Сайт' }); // в вашу Google Таблицу, не ждём ответа
 
     const claims = { accountId: account.id, venueId: venue.id, staffId: staff.id, role: 'owner' };
     res.json({

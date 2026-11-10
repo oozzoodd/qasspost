@@ -14,6 +14,7 @@ const { normalizePhone } = require('../utils/phone');
 const { APP_TIMEZONE } = require('../utils/time');
 const { isValidPlan, publicPlans, PLANS } = require('../config/plans');
 const { createAccount, AccountError, MIN_PASSWORD_LENGTH } = require('../utils/accounts');
+const { sheetRegistration, sheetPayment, sheetPing } = require('../utils/sheets');
 
 const router = express.Router();
 
@@ -88,6 +89,11 @@ async function loadAccount(id) {
   const r = await pool.query(`${ACCOUNT_LIST_SQL} WHERE a.id = $1`, [id]);
   return r.rows[0] || null;
 }
+
+// POST /admin/sheets/ping — проверить связь с Google Таблицей (ничего не записывает)
+router.post('/sheets/ping', async (req, res) => {
+  res.json(await sheetPing());
+});
 
 // GET /admin/plans — тарифы и цены (из config/plans.js)
 router.get('/plans', (req, res) => res.json(publicPlans()));
@@ -184,7 +190,7 @@ router.post('/accounts', async (req, res) => {
   const generated = !req.body.password;
   const password = generated ? crypto.randomBytes(6).toString('base64url') : String(req.body.password);
   try {
-    const { account, ownerPin } = await createAccount({
+    const { account, venue, ownerPin } = await createAccount({
       name: req.body.name,
       venueName: req.body.venueName,
       phone: req.body.phone,
@@ -193,6 +199,7 @@ router.post('/accounts', async (req, res) => {
       plan: req.body.plan,
       days: req.body.days === undefined || req.body.days === '' ? undefined : Number(req.body.days),
     });
+    sheetRegistration({ account, venue, source: 'Админка' });
     res.json({ account: await loadAccount(account.id), ownerPin, password: generated ? password : undefined });
   } catch (err) {
     if (err instanceof AccountError) return res.status(err.status).json({ error: err.message, code: err.code });
@@ -412,7 +419,9 @@ router.post('/accounts/:id/payments', async (req, res) => {
     }
 
     await client.query('COMMIT');
-    res.json({ payment: payment.rows[0], account: await loadAccount(id) });
+    const account = await loadAccount(id);
+    sheetPayment({ payment: payment.rows[0], account }); // в вашу Google Таблицу, не ждём ответа
+    res.json({ payment: payment.rows[0], account });
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
     throw err;
