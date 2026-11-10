@@ -4,11 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>vzlyot.post — касса для фастфуда</title>
-  <meta name="description" content="Простая касса для фастфуда: меню, смены, сотрудники, выручка и остатки. Работает в браузере на телефоне, планшете и ноутбуке. 14 дней бесплатно.">
+  <meta name="description" content="Касса для шаурмы, бургерной и кофейни: меню, смены, сотрудники и выручка. Работает в браузере на планшете, телефоне и ноутбуке. 14 дней бесплатно.">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://images.unsplash.com">
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script>
     // На устройстве уже открыта касса — сразу в неё. Сайт можно посмотреть по ссылке с # или ?site
     try {
@@ -19,7 +20,7 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --navy: #1C2B45;
-      --navy-deep: #152238;
+      --navy-deep: #131F35;
       --coral: #FF6A45;
       --coral-hover: #F2542D;
       --coral-text: #C23A14;
@@ -32,11 +33,8 @@
       --ink-soft: #5F6779;
       --green: #1A7A42;
       --green-soft: #E2F4E8;
-      --amber: #94580A;
-      --amber-soft: #FFF0CC;
-      --red: #C0392B;
-      --red-soft: #FCE5E1;
-      --wrap: 1120px;
+      --display: 'Unbounded', 'Manrope', sans-serif;
+      --wrap: 1200px;
     }
     html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
     body {
@@ -44,211 +42,272 @@
       background: var(--cream);
       color: var(--ink);
       font-size: 17px;
-      line-height: 1.55;
+      line-height: 1.6;
       -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
     }
+    img { display: block; max-width: 100%; height: auto; }
     a { color: inherit; }
     button, input { font: inherit; color: inherit; }
-    :focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; border-radius: 6px; }
-    .wrap { width: 100%; max-width: var(--wrap); margin: 0 auto; padding: 0 24px; }
-    h1, h2, h3 { letter-spacing: -0.025em; line-height: 1.12; text-wrap: balance; }
-    h2 { font-size: clamp(28px, 4vw, 40px); font-weight: 800; }
-    h3 { font-size: 20px; font-weight: 700; letter-spacing: -0.015em; line-height: 1.25; }
-    .lead { color: var(--ink-soft); max-width: 60ch; margin-top: 14px; }
+    :focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; border-radius: 6px; }
+    .wrap { width: 100%; max-width: var(--wrap); margin: 0 auto; padding: 0 28px; }
     .num { font-variant-numeric: tabular-nums; }
 
+    h1, h2, h3 { font-family: var(--display); font-weight: 600; letter-spacing: -0.02em; line-height: 1.12; text-wrap: balance; }
+    h2 { font-size: clamp(28px, 3.6vw, 44px); }
+    h3 { font-size: clamp(20px, 2vw, 26px); line-height: 1.2; }
+    .lead { margin-top: 16px; max-width: 56ch; color: var(--ink-soft); font-size: 18px; }
+
     .btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      min-height: 48px; padding: 12px 22px; border-radius: 12px; border: 1.5px solid transparent;
-      font-weight: 700; font-size: 16px; text-decoration: none; cursor: pointer;
-      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      min-height: 54px; padding: 14px 26px; border-radius: 14px; border: 1.5px solid transparent;
+      font-weight: 800; font-size: 16px; text-decoration: none; cursor: pointer; white-space: nowrap;
+      transition: background 0.15s, border-color 0.15s, transform 0.15s;
     }
+    .btn:active { transform: scale(0.98); }
     .btn-coral { background: var(--coral); color: #fff; }
     .btn-coral:hover { background: var(--coral-hover); }
     .btn-coral:disabled { background: #C9C2B2; cursor: default; }
-    .btn-line { border-color: rgba(247,244,236,0.35); color: var(--cream); min-height: 40px; padding: 8px 16px; font-size: 14px; }
-    .btn-line:hover { border-color: var(--cream); }
+    .btn-ghost { border-color: rgba(247,244,236,0.35); color: var(--cream); }
+    .btn-ghost:hover { border-color: var(--cream); }
 
-    /* ── Шапка и первый экран (тёмно-синий) ─────────────────── */
-    .hero { background: var(--navy); color: var(--cream); padding-bottom: 72px; }
-    .top { display: flex; align-items: center; gap: 20px; padding: 18px 0; }
-    .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 800; font-size: 19px; letter-spacing: -0.02em; margin-right: auto; }
+    /* ── Шапка ───────────────────────────────────────────── */
+    .top { position: relative; z-index: 5; display: flex; align-items: center; gap: 24px; padding: 20px 0; color: var(--cream); }
+    .brand { display: flex; align-items: center; gap: 10px; margin-right: auto; text-decoration: none; font-weight: 800; font-size: 19px; letter-spacing: -0.02em; }
     .brand svg { width: 30px; height: 30px; }
-    .top nav { display: flex; gap: 22px; font-size: 15px; font-weight: 600; }
-    .top nav a { text-decoration: none; color: rgba(247,244,236,0.78); }
+    .top nav { display: flex; gap: 26px; font-size: 15px; font-weight: 600; }
+    .top nav a { text-decoration: none; color: rgba(247,244,236,0.75); }
     .top nav a:hover { color: var(--cream); }
-    .lang { display: inline-flex; padding: 3px; border-radius: 10px; background: rgba(247,244,236,0.10); }
-    .lang button { border: none; background: transparent; padding: 6px 10px; border-radius: 8px; font-size: 13px; font-weight: 700; color: rgba(247,244,236,0.7); cursor: pointer; }
+    .lang { display: inline-flex; padding: 3px; border-radius: 10px; background: rgba(247,244,236,0.1); }
+    .lang button { border: none; background: transparent; padding: 6px 11px; border-radius: 8px; font-size: 13px; font-weight: 800; color: rgba(247,244,236,0.7); cursor: pointer; }
     .lang button[aria-pressed="true"] { background: var(--cream); color: var(--navy); }
+    .top .login { min-height: 42px; padding: 8px 18px; font-size: 14px; }
 
-    .hero-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 56px; align-items: start; padding-top: 44px; }
-    .hero h1 { font-size: clamp(34px, 5.2vw, 56px); font-weight: 800; }
-    .hero-sub { margin-top: 18px; font-size: 18px; color: rgba(247,244,236,0.82); max-width: 46ch; }
+    /* ── Первый экран: слева текст на тёмно-синем, справа фото на всю высоту ── */
+    .hero { position: relative; background: var(--navy); color: var(--cream); overflow: hidden; }
+    .hero-visual { position: absolute; top: 0; right: 0; bottom: 0; width: 46%; z-index: 1; }
+    .hero-photo { position: absolute; inset: 0; border-bottom-left-radius: 48px; overflow: hidden; }
+    .hero-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; animation: photo-in 1.2s ease-out both; }
+    .hero-photo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(28,43,69,0.35), transparent 30%); }
+    .hero-main { position: relative; z-index: 2; }
+    .hero-body { display: flex; min-height: min(740px, 90vh); }
+    .hero-text { width: 50%; padding: 48px 0 96px; display: flex; flex-direction: column; justify-content: center; }
+    .hero h1 { font-size: clamp(36px, 4.6vw, 64px); font-weight: 700; }
+    .hero h1 em { font-style: normal; color: var(--gold); }
+    .hero-sub { margin-top: 22px; max-width: 46ch; font-size: 19px; color: rgba(247,244,236,0.82); }
+    .hero-cta { margin-top: 34px; display: flex; flex-wrap: wrap; gap: 12px; }
+    .facts { margin-top: 44px; display: flex; flex-wrap: wrap; gap: 10px 28px; list-style: none; font-size: 15px; font-weight: 600; color: rgba(247,244,236,0.85); }
+    .facts li { display: flex; align-items: center; gap: 9px; }
+    .facts li::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
 
-    /* Регистрация */
-    .signup { margin-top: 30px; background: var(--paper); color: var(--ink); border-radius: 18px; padding: 24px; scroll-margin-top: 24px; }
-    .signup h2 { font-size: 21px; letter-spacing: -0.015em; }
-    .signup-note { font-size: 14px; color: var(--ink-soft); margin-top: 4px; }
-    .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
-    .field { display: grid; gap: 5px; }
-    .field label { font-size: 13px; font-weight: 600; color: var(--ink-soft); }
-    .field input {
-      width: 100%; min-height: 48px; padding: 10px 14px; border-radius: 12px;
-      border: 1.5px solid var(--line); background: #fff; font-size: 16px; outline: none;
+    /* Телефон с настоящей кассой поверх фото */
+    .phone {
+      width: 236px; padding: 9px; border-radius: 38px; background: #0E1626;
+      box-shadow: 0 40px 80px rgba(8,14,28,0.55), 0 0 0 1px rgba(255,255,255,0.08);
     }
+    .hero-phone { position: absolute; z-index: 2; left: -48px; bottom: 56px; animation: device-in 0.9s 0.35s cubic-bezier(.2,.8,.2,1) both; }
+    .phone img { width: 100%; aspect-ratio: 750 / 1290; object-fit: cover; object-position: top; border-radius: 30px; }
+    .paid-chip {
+      position: absolute; z-index: 2; right: 28px; top: 132px; display: flex; align-items: center; gap: 12px;
+      padding: 12px 18px 12px 12px; border-radius: 18px; background: var(--paper); color: var(--ink);
+      box-shadow: 0 24px 50px rgba(8,14,28,0.35);
+      animation: device-in 0.9s 0.6s cubic-bezier(.2,.8,.2,1) both;
+    }
+    .paid-chip i { width: 38px; height: 38px; border-radius: 12px; background: var(--green-soft); display: grid; place-items: center; color: var(--green); font-style: normal; font-weight: 800; font-size: 18px; }
+    .paid-chip small { display: block; font-size: 12px; color: var(--ink-soft); font-weight: 600; }
+    .paid-chip b { font-size: 17px; font-weight: 800; }
+    @keyframes photo-in { from { transform: scale(1.06); } to { transform: none; } }
+    @keyframes device-in { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+
+    section { padding: 112px 0; }
+
+    /* ── Так выглядит касса ─────────────────────────────── */
+    .product-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: end; }
+    .showcase { position: relative; margin-top: 56px; padding-right: 120px; }
+    .laptop { background: #0E1626; border-radius: 22px; padding: 12px; box-shadow: 0 40px 90px rgba(28,43,69,0.22); }
+    .laptop-bar { display: flex; gap: 6px; padding: 2px 6px 10px; }
+    .laptop-bar i { width: 10px; height: 10px; border-radius: 50%; background: #2A3550; }
+    .laptop img { width: 100%; border-radius: 10px; }
+    .showcase .phone { position: absolute; right: 0; bottom: -40px; width: 220px; box-shadow: 0 30px 70px rgba(28,43,69,0.35); }
+    .points { margin-top: 88px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; list-style: none; }
+    .points li { padding-top: 20px; border-top: 2px solid var(--navy); }
+    .points b { display: block; font-size: 19px; font-weight: 800; letter-spacing: -0.01em; }
+    .points span { display: block; margin-top: 6px; color: var(--ink-soft); font-size: 16px; }
+
+    /* ── Для любой точки: три высоких фото ─────────────── */
+    .venues { background: var(--navy); color: var(--cream); }
+    .venues .lead { color: rgba(247,244,236,0.75); }
+    .venue-grid { margin-top: 52px; display: grid; grid-template-columns: 1.15fr 1fr 1fr; gap: 20px; }
+    .venue { position: relative; border-radius: 26px; overflow: hidden; aspect-ratio: 3 / 4; background: var(--navy-deep); }
+    .venue:first-child { aspect-ratio: auto; }
+    .venue img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; }
+    .venue:hover img { transform: scale(1.04); }
+    .venue::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, rgba(14,22,38,0.88)); }
+    .venue div { position: absolute; left: 24px; right: 24px; bottom: 22px; z-index: 1; }
+    .venue h3 { font-size: 22px; }
+    .venue p { margin-top: 6px; font-size: 15px; color: rgba(247,244,236,0.82); }
+
+    /* ── Возможности: фото и текст по очереди ──────────── */
+    .story { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 72px; align-items: center; }
+    .story + .story { margin-top: 112px; }
+    .story.flip .story-media { order: 2; }
+    .story-media { position: relative; }
+    .story-media > img { width: 100%; aspect-ratio: 5 / 4; object-fit: cover; border-radius: 28px; }
+    .story-text p { margin-top: 16px; color: var(--ink-soft); font-size: 18px; max-width: 46ch; }
+    .story-text ul { margin-top: 22px; list-style: none; display: grid; gap: 12px; }
+    .story-text li { display: grid; grid-template-columns: 26px 1fr; gap: 10px; font-weight: 600; }
+    .story-text li::before { content: '✓'; width: 26px; height: 26px; border-radius: 8px; background: #FFE7DE; color: var(--coral-text); display: grid; place-items: center; font-size: 14px; font-weight: 800; }
+    .pay-tags { position: absolute; left: 24px; bottom: 24px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .pay-tags span { padding: 9px 16px; border-radius: 999px; background: rgba(253,251,244,0.94); font-weight: 800; font-size: 14px; box-shadow: 0 10px 24px rgba(14,22,38,0.2); }
+    .pay-tags span:first-child { background: var(--coral); color: #fff; }
+    .pin-card { position: absolute; left: -24px; bottom: 28px; padding: 18px 20px; border-radius: 20px; background: var(--paper); box-shadow: 0 24px 50px rgba(28,43,69,0.22); min-width: 230px; }
+    .pin-dots { display: flex; gap: 9px; margin-bottom: 14px; }
+    .pin-dots i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line); }
+    .pin-dots i.on { background: var(--coral); border-color: var(--coral); }
+    .pin-card div { display: flex; justify-content: space-between; gap: 16px; font-size: 14px; font-weight: 700; padding: 4px 0; }
+    .pin-card div span { color: var(--ink-soft); font-weight: 500; }
+    .stats-shot { position: absolute; left: -32px; bottom: -36px; width: 86%; border-radius: 16px; overflow: hidden; border: 6px solid var(--paper); box-shadow: 0 30px 60px rgba(28,43,69,0.28); }
+
+    /* ── Шаги ──────────────────────────────────────────── */
+    .steps-band { background: var(--sand); }
+    .steps { margin-top: 52px; list-style: none; counter-reset: step; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 36px; }
+    .steps li { counter-increment: step; }
+    .steps li::before { content: counter(step); display: grid; place-items: center; width: 64px; height: 64px; border-radius: 20px; margin-bottom: 22px; background: var(--navy); color: var(--gold); font-family: var(--display); font-size: 28px; font-weight: 700; }
+    .steps p { margin-top: 8px; color: var(--ink-soft); font-size: 16px; }
+
+    /* ── Тарифы ────────────────────────────────────────── */
+    .plans { margin-top: 52px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: stretch; }
+    .plan { position: relative; display: flex; flex-direction: column; padding: 32px 28px; border-radius: 26px; background: var(--paper); border: 1px solid var(--line); }
+    .plan.main { background: var(--navy); color: var(--cream); border-color: var(--navy); }
+    .plan-badge { position: absolute; top: -14px; left: 28px; padding: 5px 14px; border-radius: 999px; background: var(--gold); color: var(--navy); font-size: 13px; font-weight: 800; }
+    .plan h3 { font-size: 22px; }
+    .plan-for { margin-top: 6px; font-size: 15px; opacity: 0.72; }
+    .plan-price { margin-top: 22px; font-family: var(--display); font-size: 44px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
+    .plan-price small { font-family: 'Manrope', sans-serif; font-size: 15px; font-weight: 600; letter-spacing: 0; opacity: 0.7; white-space: nowrap; }
+    .plan-price.deal { font-size: 30px; line-height: 44px; }
+    .plan ul { margin: 26px 0 30px; list-style: none; display: grid; gap: 11px; font-size: 15px; font-weight: 600; flex: 1; }
+    .plan li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; }
+    .plan li::before { content: '✓'; color: var(--green); font-weight: 800; }
+    .plan.main li::before { color: var(--gold); }
+    .plan li.soon { opacity: 0.6; }
+    .plan li.soon::before { content: '…'; }
+    .plan .btn { width: 100%; }
+    .plan .btn-line { border-color: var(--line); color: var(--ink); }
+    .plan .btn-line:hover { border-color: var(--navy); }
+    .plans-note { margin-top: 22px; color: var(--ink-soft); font-size: 15px; }
+
+    /* ── Регистрация на фоне фото ──────────────────────── */
+    .signup-band { position: relative; color: var(--cream); overflow: hidden; scroll-margin-top: 0; }
+    .signup-band > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 60% 40%; }
+    .signup-band::before { content: ''; position: absolute; inset: 0; z-index: 1; background: linear-gradient(90deg, rgba(19,31,53,0.96) 0%, rgba(19,31,53,0.86) 45%, rgba(19,31,53,0.45) 100%); }
+    .signup-grid { position: relative; z-index: 2; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 460px); gap: 64px; align-items: center; }
+    .signup-grid h2 { font-size: clamp(30px, 3.8vw, 48px); }
+    .signup-grid .lead { color: rgba(247,244,236,0.8); }
+    .signup-grid .facts { margin-top: 30px; flex-direction: column; gap: 12px; }
+    .signup { background: var(--paper); color: var(--ink); border-radius: 26px; padding: 30px; box-shadow: 0 40px 80px rgba(8,14,28,0.4); }
+    .signup h3 { font-size: 22px; }
+    .signup-note { margin-top: 6px; font-size: 14px; color: var(--ink-soft); }
+    .fields { display: grid; gap: 14px; margin-top: 20px; }
+    .field { display: grid; gap: 6px; }
+    .field label { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+    .field input { width: 100%; min-height: 52px; padding: 12px 16px; border-radius: 14px; border: 1.5px solid var(--line); background: #fff; font-size: 16px; outline: none; }
     .field input::placeholder { color: #A9A596; }
     .field input:focus { border-color: var(--coral); }
-    .phone { display: flex; align-items: stretch; border: 1.5px solid var(--line); border-radius: 12px; background: #fff; overflow: hidden; }
-    .phone:focus-within { border-color: var(--coral); }
-    .phone span { display: flex; align-items: center; padding: 0 4px 0 14px; font-weight: 700; color: var(--ink-soft); }
-    .phone input { border: none; border-radius: 0; padding-left: 6px; min-height: 45px; }
+    .phone-field { display: flex; align-items: stretch; border: 1.5px solid var(--line); border-radius: 14px; background: #fff; overflow: hidden; }
+    .phone-field:focus-within { border-color: var(--coral); }
+    .phone-field span { display: flex; align-items: center; padding: 0 4px 0 16px; font-weight: 800; color: var(--ink-soft); }
+    .phone-field input { border: none; border-radius: 0; padding-left: 6px; min-height: 49px; }
     .pass { position: relative; }
-    .pass input { padding-right: 52px; }
-    .pass button { position: absolute; right: 6px; top: 6px; bottom: 6px; width: 40px; border: none; background: transparent; border-radius: 8px; cursor: pointer; font-size: 17px; }
-    .signup .btn { width: 100%; margin-top: 16px; }
-    .form-error { display: none; margin-top: 12px; padding: 10px 14px; border-radius: 10px; background: var(--red-soft); color: var(--red); font-size: 14px; font-weight: 600; }
+    .pass input { padding-right: 54px; }
+    .pass button { position: absolute; right: 6px; top: 6px; bottom: 6px; width: 42px; border: none; background: transparent; border-radius: 10px; cursor: pointer; font-size: 17px; }
+    .pass button:hover { background: var(--sand); }
+    .signup .btn { width: 100%; margin-top: 18px; }
+    .form-error { display: none; margin-top: 14px; padding: 11px 14px; border-radius: 12px; background: #FCE5E1; color: #C0392B; font-size: 14px; font-weight: 700; }
     .form-error.show { display: block; }
     .form-error a { font-weight: 800; }
-    .signup-foot { margin-top: 12px; font-size: 14px; color: var(--ink-soft); text-align: center; }
-    .signup-foot a { color: var(--coral-text); font-weight: 700; }
+    .signup-foot { margin-top: 14px; font-size: 14px; color: var(--ink-soft); text-align: center; }
+    .signup-foot a { color: var(--coral-text); font-weight: 800; }
 
-    /* Живой пример кассы */
-    .demo { background: var(--cream); color: var(--ink); border-radius: 22px; padding: 16px; border: 6px solid var(--navy-deep); outline: 1px solid rgba(247,244,236,0.14); }
-    .demo-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 2px 4px 12px; font-size: 13px; font-weight: 700; }
-    .demo-open { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: var(--green-soft); color: var(--green); }
-    .demo-open::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-    .demo-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr); gap: 12px; }
-    .dishes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-content: start; }
-    .dish {
-      display: grid; gap: 4px; text-align: left; padding: 12px; min-height: 74px; border-radius: 12px;
-      border: 1.5px solid var(--line); background: var(--paper); cursor: pointer; transition: border-color 0.12s, transform 0.12s;
-    }
-    .dish:hover { border-color: var(--coral); }
-    .dish:active { transform: scale(0.97); }
-    .dish b { font-size: 14px; font-weight: 700; line-height: 1.25; }
-    .dish span { font-size: 13px; font-weight: 700; color: var(--coral-text); }
-    .receipt { position: relative; margin-bottom: 10px; background: #fff; border-radius: 10px; padding: 14px 14px 20px; display: flex; flex-direction: column; min-height: 318px; box-shadow: 0 10px 24px rgba(28,43,69,0.10); }
-    .receipt-head { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: var(--ink-soft); padding-bottom: 10px; border-bottom: 1.5px dashed var(--line); }
-    .receipt-lines { flex: 1; list-style: none; padding: 8px 0; display: grid; gap: 6px; align-content: start; font-size: 14px; }
-    .receipt-lines li { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: baseline; }
-    .receipt-lines li.new { animation: line-in 0.22s ease-out; }
-    .receipt-lines small { color: var(--ink-soft); font-size: 12px; font-weight: 600; }
-    .receipt-empty { color: var(--ink-soft); font-size: 13px; }
-    .receipt-total { display: flex; justify-content: space-between; align-items: baseline; padding-top: 10px; border-top: 1.5px dashed var(--line); font-weight: 800; }
-    .receipt-total span:last-child { font-size: 19px; }
-    .pay { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px; }
-    .pay button { min-height: 40px; border-radius: 10px; border: none; background: var(--navy); color: var(--cream); font-size: 13px; font-weight: 700; cursor: pointer; }
-    .pay button:hover { background: var(--coral); }
-    .pay button:disabled { background: var(--sand); color: var(--ink-soft); cursor: default; }
-    .paid { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(255,255,255,0.86); border-radius: 10px; }
-    .paid.show { display: flex; }
-    .paid span { transform: rotate(-8deg); padding: 8px 18px; border: 3px solid var(--green); border-radius: 10px; color: var(--green); font-weight: 800; font-size: 20px; letter-spacing: 0.02em; }
-    .demo-hint { margin-top: 16px; font-size: 14px; color: rgba(247,244,236,0.72); text-align: center; }
-    @keyframes line-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
-
-    /* ── Разделы ─────────────────────────────────────────────── */
-    section { padding: 84px 0; }
-    .scenes { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 20px; margin-top: 40px; }
-    .scene { grid-column: span 3; background: var(--paper); border: 1px solid var(--line); border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 18px; }
-    .scene.wide { grid-column: span 6; flex-direction: row; align-items: center; gap: 36px; }
-    .scene.wide > * { flex: 1; min-width: 0; }
-    .scene p { color: var(--ink-soft); margin-top: 8px; font-size: 16px; }
-    .mock { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 16px; font-size: 14px; }
-    .mock-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--sand); }
-    .mock-row:last-child { border-bottom: none; padding-bottom: 0; }
-    .mock-row:first-child { padding-top: 0; }
-    .mock-row b { font-weight: 700; }
-    .mock-big { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
-    .tag { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }
-    .tag-ok { background: var(--green-soft); color: var(--green); }
-    .tag-low { background: var(--amber-soft); color: var(--amber); }
-    .tag-out { background: var(--red-soft); color: var(--red); }
-    .paychips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    .paychips span { text-align: center; padding: 10px 6px; border-radius: 10px; border: 1.5px solid var(--line); font-weight: 700; font-size: 13px; }
-    .paychips span.on { border-color: var(--coral); background: #FFE7DE; color: var(--coral-text); }
-    .pinpad { display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: center; }
-    .pindots { display: flex; gap: 8px; }
-    .pindots i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line); }
-    .pindots i.on { background: var(--coral); border-color: var(--coral); }
-    .people { display: grid; gap: 8px; }
-    .people div { display: flex; justify-content: space-between; gap: 10px; font-weight: 600; }
-    .people span { color: var(--ink-soft); font-weight: 500; }
-    .bars { display: grid; gap: 10px; }
-    .bar { display: grid; grid-template-columns: 110px 1fr 34px; gap: 10px; align-items: center; font-weight: 600; }
-    .bar i { display: block; height: 10px; border-radius: 5px; background: var(--coral); }
-    .bar span { text-align: right; color: var(--ink-soft); }
-
-    .steps-band { background: var(--sand); }
-    .steps { list-style: none; counter-reset: step; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; margin-top: 40px; }
-    .steps li { counter-increment: step; border-top: 3px solid var(--navy); padding-top: 18px; }
-    .steps li::before { content: counter(step); display: block; font-size: 44px; font-weight: 800; line-height: 1; letter-spacing: -0.03em; color: var(--coral); margin-bottom: 12px; }
-    .steps p { color: var(--ink-soft); margin-top: 8px; font-size: 16px; }
-
-    /* Тарифы — таблица сравнения */
-    .plans-scroll { margin-top: 36px; overflow-x: auto; border-radius: 20px; border: 1px solid var(--line); background: var(--paper); }
-    .plans { width: 100%; min-width: 640px; border-collapse: collapse; table-layout: fixed; }
-    .plans th:first-child { width: 37%; }
-    .plans th, .plans td { padding: 14px 18px; text-align: center; border-bottom: 1px solid var(--line); }
-    .plans th:first-child, .plans td:first-child { text-align: left; }
-    .plans thead th { vertical-align: bottom; padding-top: 24px; padding-bottom: 20px; }
-    .plans thead th.pick { background: var(--navy); color: var(--cream); }
-    .plans tbody td.pick { background: rgba(28,43,69,0.05); }
-    .plans tbody tr:last-child td { border-bottom: none; }
-    .plan-name { font-size: 18px; font-weight: 800; letter-spacing: -0.015em; }
-    .plan-price { margin-top: 4px; font-size: 30px; font-weight: 800; letter-spacing: -0.03em; }
-    .plan-price small { font-size: 14px; font-weight: 600; letter-spacing: 0; opacity: 0.7; }
-    .plan-for { font-size: 13px; font-weight: 500; opacity: 0.75; margin-top: 2px; }
-    .plans td { font-size: 15px; }
-    .yes { color: var(--green); font-weight: 800; font-size: 18px; }
-    .no { color: #B9B2A0; }
-    .soon { font-size: 12px; font-weight: 700; color: var(--amber); background: var(--amber-soft); padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
-    .plans-cta { margin-top: 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
-    .plans-cta p { color: var(--ink-soft); font-size: 15px; max-width: 52ch; }
-
-    .faq { max-width: 760px; margin-top: 32px; }
+    /* ── Вопросы ───────────────────────────────────────── */
+    .faq-grid { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 64px; align-items: start; }
     .faq details { border-bottom: 1px solid var(--line); }
-    .faq summary { list-style: none; cursor: pointer; padding: 18px 40px 18px 0; position: relative; font-weight: 700; font-size: 18px; letter-spacing: -0.01em; }
+    .faq details:first-child { border-top: 1px solid var(--line); }
+    .faq summary { list-style: none; cursor: pointer; padding: 22px 48px 22px 0; position: relative; font-weight: 800; font-size: 18px; letter-spacing: -0.01em; }
     .faq summary::-webkit-details-marker { display: none; }
-    .faq summary::after { content: '+'; position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: 24px; font-weight: 500; color: var(--coral); }
-    .faq details[open] summary::after { content: '−'; }
-    .faq details p { padding: 0 40px 20px 0; color: var(--ink-soft); }
+    .faq summary::after { content: '+'; position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border-radius: 10px; background: var(--sand); display: grid; place-items: center; font-size: 20px; font-weight: 600; color: var(--coral-text); }
+    .faq details[open] summary::after { content: '−'; background: var(--coral); color: #fff; }
+    .faq details p { padding: 0 48px 22px 0; color: var(--ink-soft); }
 
-    .closing { background: var(--navy); color: var(--cream); text-align: center; }
-    .closing p { margin: 14px auto 28px; color: rgba(247,244,236,0.8); max-width: 48ch; }
-    footer { background: var(--navy-deep); color: rgba(247,244,236,0.65); font-size: 14px; padding: 22px 0; }
-    footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
-    footer a { color: var(--cream); font-weight: 600; text-decoration: none; }
+    footer { background: var(--navy-deep); color: rgba(247,244,236,0.6); font-size: 14px; padding: 26px 0; }
+    footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 24px; }
+    footer a { color: var(--cream); font-weight: 700; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
 
-    @media (max-width: 960px) {
-      .hero-grid { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+    /* ── Адаптив ───────────────────────────────────────── */
+    @media (max-width: 1040px) {
       .top nav { display: none; }
-      .scene, .scene.wide { grid-column: span 6; }
-      .scene.wide { flex-direction: column; align-items: stretch; gap: 18px; }
-      .steps { grid-template-columns: minmax(0, 1fr); }
+      /* Сначала текст, под ним фото с телефоном */
+      .hero { display: flex; flex-direction: column; }
+      .hero-main { order: 1; }
+      .hero-visual { order: 2; position: relative; width: auto; height: 540px; margin-left: 28px; }
+      .hero-photo { border-radius: 36px 0 0 0; }
+      .hero-body { min-height: 0; }
+      .hero-text { width: auto; padding: 32px 0 48px; }
+      .hero-phone { left: 24px; bottom: 28px; width: 190px; }
+      .paid-chip { right: 20px; top: 28px; }
+      .showcase { padding-right: 70px; }
+      .showcase .phone { width: 160px; bottom: -30px; }
+      .venue-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .venue:first-child { grid-column: span 2; aspect-ratio: 16 / 9; }
+      .story, .story.flip { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+      .story.flip .story-media { order: 0; }
+      .pin-card { left: 16px; }
+      .stats-shot { left: 16px; }
+      .plans { grid-template-columns: minmax(0, 1fr); max-width: 520px; }
+      .signup-grid, .faq-grid { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+      .signup-band::before { background: rgba(19,31,53,0.9); }
     }
-    @media (max-width: 560px) {
+    @media (max-width: 640px) {
       body { font-size: 16px; }
       .wrap { padding: 0 16px; }
-      section { padding: 60px 0; }
-      .hero { padding-bottom: 52px; }
-      .hero-grid { padding-top: 24px; }
-      .fields { grid-template-columns: minmax(0, 1fr); }
-      .signup { padding: 20px 16px; }
-      .demo { padding: 12px; border-width: 4px; }
-      .demo-body { grid-template-columns: minmax(0, 1fr); }
-      .receipt { min-height: 0; }
-      .dish { min-height: 62px; padding: 10px; }
-      .bar { grid-template-columns: 92px 1fr 30px; }
+      section { padding: 76px 0; }
+      .top { gap: 12px; padding: 14px 0; }
       .brand span { display: none; }
+      .hero-sub { font-size: 17px; }
+      .hero-cta .btn { width: 100%; }
+      .facts { margin-top: 30px; }
+      .hero-visual { height: 440px; margin-left: 16px; }
+      .hero-phone { left: 16px; bottom: 20px; width: 150px; }
+      .phone { padding: 6px; border-radius: 28px; }
+      .phone img { border-radius: 23px; }
+      .paid-chip { right: 12px; top: 18px; padding: 9px 14px 9px 9px; }
+      .paid-chip i { width: 32px; height: 32px; }
+      .paid-chip b { font-size: 15px; }
+      .product-head { grid-template-columns: minmax(0, 1fr); }
+      .showcase { margin-top: 36px; padding-right: 0; padding-bottom: 120px; }
+      .laptop { padding: 6px; border-radius: 14px; }
+      .laptop-bar { display: none; }
+      .laptop img { border-radius: 8px; }
+      .showcase .phone { width: 130px; right: 8px; bottom: 0; }
+      .points { grid-template-columns: minmax(0, 1fr); gap: 24px; margin-top: 48px; }
+      .venue-grid { grid-template-columns: minmax(0, 1fr); }
+      .venue, .venue:first-child { grid-column: auto; aspect-ratio: 4 / 3; }
+      .story + .story { margin-top: 80px; }
+      .story-media > img { border-radius: 20px; }
+      .pin-card { position: relative; left: auto; bottom: auto; margin: -40px 16px 0; }
+      .stats-shot { position: relative; left: auto; bottom: auto; width: auto; margin: -48px 16px 0; }
+      .steps { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+      .signup { padding: 22px 18px; }
     }
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }
-      * { animation: none !important; transition: none !important; }
+      *, *::before, *::after { animation: none !important; transition: none !important; }
     }
   </style>
 </head>
 <body>
 
+<!-- ═══════════ ПЕРВЫЙ ЭКРАН ═══════════ -->
 <div class="hero">
   <div class="wrap">
     <header class="top">
@@ -257,6 +316,7 @@
         <span>vzlyot.post</span>
       </a>
       <nav aria-label="Разделы">
+        <a href="#product" data-i18n="nav.product">Касса</a>
         <a href="#features" data-i18n="nav.features">Возможности</a>
         <a href="#plans" data-i18n="nav.plans">Тарифы</a>
         <a href="#faq" data-i18n="nav.faq">Вопросы</a>
@@ -265,17 +325,224 @@
         <button type="button" data-lang="ru" aria-pressed="true">RU</button>
         <button type="button" data-lang="uz" aria-pressed="false">UZ</button>
       </div>
-      <a class="btn btn-line" href="/app" data-i18n="nav.login">Войти</a>
+      <a class="btn btn-ghost login" href="/app" data-i18n="nav.login">Войти</a>
     </header>
+  </div>
 
-    <div class="hero-grid">
-      <div>
-        <h1 data-i18n="hero.title">Касса для фастфуда, которая начинает работать за 10 минут</h1>
-        <p class="hero-sub" data-i18n="hero.sub">Добавьте меню, откройте смену и принимайте заказы с телефона, планшета или ноутбука. Ничего покупать и устанавливать не нужно.</p>
+  <div class="hero-visual">
+    <div class="hero-photo">
+      <img src="https://images.unsplash.com/photo-1786048271620-aced3edbf796?auto=format&fit=crop&w=1400&q=72" alt="Улыбающийся кассир за стойкой фастфуда" data-i18n-alt="hero.photoAlt" fetchpriority="high">
+    </div>
+    <div class="phone hero-phone"><img src="/img/screen-phone.jpg" alt="Касса vzlyot.post на телефоне" data-i18n-alt="hero.phoneAlt"></div>
+    <div class="paid-chip" aria-hidden="true">
+      <i>✓</i>
+      <div><small data-i18n="hero.chip">Оплачено картой</small><b class="num">86 000 <span data-i18n="common.sum">сум</span></b></div>
+    </div>
+  </div>
 
-        <form class="signup" id="signup" novalidate>
-          <h2 data-i18n="form.title">Попробуйте 14 дней бесплатно</h2>
-          <p class="signup-note" data-i18n="form.note">Без карты и договора. Касса откроется сразу после регистрации.</p>
+  <div class="wrap hero-main">
+    <div class="hero-body">
+      <div class="hero-text">
+        <h1 data-i18n-html="hero.title">Касса для фастфуда, которая <em>запускается за 10 минут</em></h1>
+        <p class="hero-sub" data-i18n="hero.sub">Меню, смены, сотрудники и выручка в одном окне. Откройте кассу на планшете или телефоне и принимайте заказы уже сегодня.</p>
+        <div class="hero-cta">
+          <a class="btn btn-coral" href="#signup" data-i18n="hero.cta">Попробовать 14 дней бесплатно</a>
+          <a class="btn btn-ghost" href="#product" data-i18n="hero.more">Посмотреть кассу</a>
+        </div>
+        <ul class="facts">
+          <li data-i18n="fact.1">Без покупки оборудования</li>
+          <li data-i18n="fact.2">Русский и узбекский</li>
+          <li data-i18n="fact.3">Без карты и договора</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main>
+  <!-- ═══════════ ТАК ВЫГЛЯДИТ КАССА ═══════════ -->
+  <section id="product">
+    <div class="wrap">
+      <div class="product-head">
+        <div>
+          <h2 data-i18n="product.title">Так выглядит касса</h2>
+          <p class="lead" data-i18n="product.lead">Слева меню, справа чек. Кассир нажимает на блюда, выбирает оплату и отдаёт заказ. Научиться можно за одну смену.</p>
+        </div>
+      </div>
+      <div class="showcase">
+        <div class="laptop">
+          <div class="laptop-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+          <img src="/img/screen-pos.jpg" alt="Экран кассы: меню слева, текущий заказ справа" data-i18n-alt="product.alt" loading="lazy" width="1504" height="770">
+        </div>
+        <div class="phone"><img src="/img/screen-phone.jpg" alt="" loading="lazy"></div>
+      </div>
+      <ul class="points">
+        <li><b data-i18n="point.1t">Нажали на блюдо — оно в чеке</b><span data-i18n="point.1p">Большие кнопки, категории сверху, итог считается сам.</span></li>
+        <li><b data-i18n="point.2t">Смена считает деньги</b><span data-i18n="point.2p">Открыли утром, закрыли вечером — сразу видно наличные, карту и число заказов.</span></li>
+        <li><b data-i18n="point.3t">Работает на любом устройстве</b><span data-i18n="point.3p">Планшет на стойке, телефон кассира или ноутбук — нужен только браузер.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ═══════════ ДЛЯ ЛЮБОЙ ТОЧКИ ═══════════ -->
+  <section class="venues">
+    <div class="wrap">
+      <h2 data-i18n="venues.title">Подходит любой точке</h2>
+      <p class="lead" data-i18n="venues.lead">От шаурмы у метро до кофейни на углу. Добавьте своё меню, и касса готова.</p>
+      <div class="venue-grid">
+        <article class="venue">
+          <img src="https://images.unsplash.com/photo-1773514294087-b93f864866a5?auto=format&fit=crop&w=1000&q=70" alt="Повар нарезает мясо для донера" data-i18n-alt="venue.1alt" loading="lazy">
+          <div><h3 data-i18n="venue.1t">Шаурма и донер</h3><p data-i18n="venue.1p">Быстрые заказы в час пик, когда очередь до двери.</p></div>
+        </article>
+        <article class="venue">
+          <img src="https://images.unsplash.com/photo-1778792113398-358b0a771d8e?auto=format&fit=crop&w=800&q=70" alt="Гости заказывают бургер у стойки с планшетом" data-i18n-alt="venue.2alt" loading="lazy">
+          <div><h3 data-i18n="venue.2t">Бургерная</h3><p data-i18n="venue.2p">Комбо, напитки и картошка — всё в одном чеке.</p></div>
+        </article>
+        <article class="venue">
+          <img src="https://images.unsplash.com/photo-1556742393-d75f468bfcb0?auto=format&fit=crop&w=800&q=70" alt="Бариста принимает заказ на планшете" data-i18n-alt="venue.3alt" loading="lazy" style="object-position: 78% 50%;">
+          <div><h3 data-i18n="venue.3t">Кофейня</h3><p data-i18n="venue.3p">Касса на планшете у кофемашины, без лишних проводов.</p></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ ВОЗМОЖНОСТИ ═══════════ -->
+  <section id="features">
+    <div class="wrap">
+      <div class="story">
+        <div class="story-media">
+          <img src="https://images.unsplash.com/photo-1778792049348-9687d6d6a474?auto=format&fit=crop&w=1100&q=70" alt="Гость оплачивает заказ картой у кассы" data-i18n-alt="story.1alt" loading="lazy">
+          <div class="pay-tags" aria-hidden="true">
+            <span data-i18n="pay.card">Карта</span><span data-i18n="pay.cash">Наличные</span><span data-i18n="pay.split">Пополам</span>
+          </div>
+        </div>
+        <div class="story-text">
+          <h3 data-i18n="story.1t">Оплата так, как удобно гостю</h3>
+          <p data-i18n="story.1p">Наличными, картой или частью так, частью так. Касса сама разделит сумму и правильно учтёт её в отчёте смены.</p>
+          <ul>
+            <li data-i18n="story.1a">Отмена чека, если гость передумал</li>
+            <li data-i18n="story.1b">Выручка за смену видна в любой момент</li>
+            <li data-i18n="story.1c">Остатки напитков уменьшаются сами</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="story flip">
+        <div class="story-media">
+          <img src="https://images.unsplash.com/photo-1778791910832-df59a1b5be3d?auto=format&fit=crop&w=1100&q=70" alt="Кассир принимает заказ на планшете у стойки" data-i18n-alt="story.2alt" loading="lazy">
+          <div class="pin-card" aria-hidden="true">
+            <div class="pin-dots"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+            <div>Нилуфар <span data-i18n="role.cashier">кассир</span></div>
+            <div>Санжар <span data-i18n="role.admin">администратор</span></div>
+            <div>Азиз <span data-i18n="role.owner">владелец</span></div>
+          </div>
+        </div>
+        <div class="story-text">
+          <h3 data-i18n="story.2t">У каждого сотрудника свой PIN-код</h3>
+          <p data-i18n="story.2p">Кассир входит по четырём цифрам и видит только кассу. Меню, отчёты и настройки остаются у владельца и администратора.</p>
+          <ul>
+            <li data-i18n="story.2a">Видно, кто открыл смену и кто пробил чек</li>
+            <li data-i18n="story.2b">Сменить сотрудника — одно касание</li>
+            <li data-i18n="story.2c">Ушёл сотрудник — отключили, история осталась</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="story">
+        <div class="story-media">
+          <img src="https://images.unsplash.com/photo-1753351052617-62818ffc9173?auto=format&fit=crop&w=1100&q=70" alt="Владельцы кафе стоят у своей стойки" data-i18n-alt="story.3alt" loading="lazy">
+          <div class="stats-shot"><img src="/img/screen-analytics.jpg" alt="Аналитика: выручка, средний чек, популярные блюда" data-i18n-alt="story.3shot" loading="lazy" width="1260" height="322"></div>
+        </div>
+        <div class="story-text">
+          <h3 data-i18n="story.3t">Выручка у вас в телефоне</h3>
+          <p data-i18n="story.3p">Сколько продали сегодня, за неделю и за месяц, какой средний чек и что берут чаще всего. Даже если вы сейчас не на точке.</p>
+          <ul>
+            <li data-i18n="story.3a">Отчёты по времени Ташкента</li>
+            <li data-i18n="story.3b">Наличные и карта отдельно</li>
+            <li data-i18n="story.3c">Самые популярные блюда</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ КАК НАЧАТЬ ═══════════ -->
+  <section class="steps-band">
+    <div class="wrap">
+      <h2 data-i18n="steps.title">Как начать</h2>
+      <ol class="steps">
+        <li><h3 data-i18n="steps.1t">Зарегистрируйтесь</h3><p data-i18n="steps.1p">Имя, название точки, номер телефона и пароль. Касса откроется сразу.</p></li>
+        <li><h3 data-i18n="steps.2t">Добавьте меню</h3><p data-i18n="steps.2p">Только названия и цены. Десять позиций заносятся за пять минут.</p></li>
+        <li><h3 data-i18n="steps.3t">Откройте смену</h3><p data-i18n="steps.3p">И принимайте заказы с любого устройства, где есть браузер.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ═══════════ ТАРИФЫ ═══════════ -->
+  <section id="plans">
+    <div class="wrap">
+      <h2 data-i18n="plans.title">Тарифы</h2>
+      <p class="lead" data-i18n="plans.lead">Начните с простого. Когда понадобятся техкарты, склад по граммам, финансы и клиенты, переключим на «Бизнес» — все данные сохранятся.</p>
+      <div class="plans">
+        <article class="plan main">
+          <span class="plan-badge" data-i18n="plans.badge">14 дней бесплатно</span>
+          <h3 data-i18n="plans.start">Старт</h3>
+          <p class="plan-for" data-i18n="plans.startFor">Одна точка, быстрый запуск</p>
+          <div class="plan-price num" data-plan="start">—</div>
+          <ul>
+            <li data-i18n="plans.f1">Касса, меню и смены</li>
+            <li data-i18n="plans.f2">Сотрудники с PIN-кодами</li>
+            <li data-i18n="plans.f3">Выручка и популярные блюда</li>
+            <li data-i18n="plans.f4">Остатки поштучных товаров</li>
+          </ul>
+          <a class="btn btn-coral" href="#signup" data-i18n="plans.cta">Начать бесплатно</a>
+        </article>
+        <article class="plan">
+          <h3 data-i18n="plans.business">Бизнес</h3>
+          <p class="plan-for" data-i18n="plans.businessFor">Полный учёт для точки</p>
+          <div class="plan-price num" data-plan="business">—</div>
+          <ul>
+            <li data-i18n="plans.f5">Всё, что есть в «Старте»</li>
+            <li data-i18n="plans.f6">Техкарты: ингредиенты списываются сами</li>
+            <li data-i18n="plans.f7">Склад по граммам и литрам</li>
+            <li data-i18n="plans.f8">Финансы: расходы и прибыль</li>
+            <li data-i18n="plans.f9">Клиенты и бонусы</li>
+          </ul>
+          <a class="btn btn-line" href="#signup" data-i18n="plans.cta">Начать бесплатно</a>
+        </article>
+        <article class="plan">
+          <h3 data-i18n="plans.network">Сеть</h3>
+          <p class="plan-for" data-i18n="plans.networkFor">Для сети точек, цену обсудим</p>
+          <div class="plan-price num" data-plan="network">—</div>
+          <ul>
+            <li data-i18n="plans.f10">Всё, что есть в «Бизнесе»</li>
+            <li class="soon" data-i18n="plans.f11">Несколько точек в одном аккаунте — скоро</li>
+          </ul>
+          <a class="btn btn-line" href="#signup" data-i18n="plans.cta">Начать бесплатно</a>
+        </article>
+      </div>
+      <p class="plans-note" data-i18n="plans.note">Пробный период — на тарифе «Старт». Тариф выбирается после него, оплата через Click, Payme или наличными.</p>
+    </div>
+  </section>
+
+  <!-- ═══════════ РЕГИСТРАЦИЯ ═══════════ -->
+  <section class="signup-band" id="signup">
+    <img src="https://images.unsplash.com/photo-1778792180307-62836fc12a39?auto=format&fit=crop&w=1800&q=65" alt="" loading="lazy">
+    <div class="wrap">
+      <div class="signup-grid">
+        <div>
+          <h2 data-i18n="signup.title">Откройте свою кассу сегодня</h2>
+          <p class="lead" data-i18n="signup.lead">Регистрация занимает минуту. Первые 14 дней — бесплатно, без карты и договора.</p>
+          <ul class="facts">
+            <li data-i18n="signup.f1">Касса откроется сразу после регистрации</li>
+            <li data-i18n="signup.f2">Меню и заказы сохраняются после пробного периода</li>
+            <li data-i18n="signup.f3">Работает на телефоне, планшете и ноутбуке</li>
+          </ul>
+        </div>
+
+        <form class="signup" id="signup-form" novalidate>
+          <h3 data-i18n="form.title">Создать кассу</h3>
+          <p class="signup-note" data-i18n="form.note">Войти потом можно по номеру и паролю.</p>
           <div class="fields">
             <div class="field">
               <label for="f-name" data-i18n="form.name">Ваше имя</label>
@@ -287,7 +554,7 @@
             </div>
             <div class="field">
               <label for="f-phone" data-i18n="form.phone">Номер телефона</label>
-              <div class="phone">
+              <div class="phone-field">
                 <span aria-hidden="true">+998</span>
                 <input id="f-phone" name="phone" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="90 123 45 67" maxlength="16">
               </div>
@@ -301,181 +568,28 @@
             </div>
           </div>
           <div class="form-error" id="form-error" role="alert"></div>
-          <button class="btn btn-coral" id="signup-btn" type="submit" data-i18n="form.submit">Создать кассу</button>
+          <button class="btn btn-coral" id="signup-btn" type="submit" data-i18n="form.submit">Создать кассу бесплатно</button>
           <p class="signup-foot"><span data-i18n="form.have">Уже есть касса?</span> <a href="/app" data-i18n="form.login">Войти</a></p>
         </form>
       </div>
+    </div>
+  </section>
 
+  <!-- ═══════════ ВОПРОСЫ ═══════════ -->
+  <section id="faq">
+    <div class="wrap faq-grid">
       <div>
-        <div class="demo" aria-label="Пример кассы">
-          <div class="demo-bar">
-            <span>Lavash House</span>
-            <span class="demo-open" data-i18n="demo.open">Смена открыта</span>
-          </div>
-          <div class="demo-body">
-            <div class="dishes" id="demo-dishes"></div>
-            <div class="receipt">
-              <div class="receipt-head"><span data-i18n="demo.order">Заказ</span><span class="num" id="demo-count"></span></div>
-              <ul class="receipt-lines num" id="demo-lines"></ul>
-              <div class="receipt-total"><span data-i18n="demo.total">Итого</span><span class="num" id="demo-total"></span></div>
-              <div class="pay">
-                <button type="button" data-pay="cash" data-i18n="demo.cash">Наличные</button>
-                <button type="button" data-pay="card" data-i18n="demo.card">Карта</button>
-              </div>
-              <div class="paid" id="demo-paid" aria-live="polite"><span data-i18n="demo.paid">Оплачено</span></div>
-            </div>
-          </div>
-        </div>
-        <p class="demo-hint" data-i18n="demo.hint">Это рабочий пример: нажмите на блюдо — оно появится в чеке.</p>
+        <h2 data-i18n="faq.title">Частые вопросы</h2>
+        <p class="lead" data-i18n="faq.lead">Не нашли ответ? Зарегистрируйтесь и попробуйте сами — это бесплатно.</p>
       </div>
-    </div>
-  </div>
-</div>
-
-<main>
-  <section id="features">
-    <div class="wrap">
-      <h2 data-i18n="feat.title">Всё, что нужно точке каждый день</h2>
-      <p class="lead" data-i18n="feat.lead">Без лишних кнопок. Кассир разберётся за одну смену, владелец видит деньги в любой момент.</p>
-
-      <div class="scenes">
-        <article class="scene">
-          <div class="mock">
-            <div class="mock-row"><span>Лаваш × 2</span><b class="num">56 000</b></div>
-            <div class="mock-row"><span>Кола 0.5 × 2</span><b class="num">20 000</b></div>
-            <div class="mock-row"><b data-i18n="demo.total">Итого</b><b class="mock-big num">76 000</b></div>
-            <div class="paychips" style="margin-top:12px;">
-              <span class="on" data-i18n="demo.cash">Наличные</span>
-              <span data-i18n="demo.card">Карта</span>
-              <span data-i18n="feat.split">Раздельно</span>
-            </div>
-          </div>
-          <div>
-            <h3 data-i18n="feat.1t">Заказ в три касания</h3>
-            <p data-i18n="feat.1p">Кассир нажимает на блюда, выбирает наличные, карту или раздельную оплату — заказ готов.</p>
-          </div>
-        </article>
-
-        <article class="scene">
-          <div class="mock">
-            <div class="mock-row"><span data-i18n="feat.revenue">Выручка за смену</span><b class="mock-big num">4 860 000</b></div>
-            <div class="mock-row"><span data-i18n="demo.cash">Наличные</span><b class="num">2 140 000</b></div>
-            <div class="mock-row"><span data-i18n="demo.card">Карта</span><b class="num">2 720 000</b></div>
-            <div class="mock-row"><span data-i18n="feat.orders">Заказов</span><b class="num">148</b></div>
-          </div>
-          <div>
-            <h3 data-i18n="feat.2t">Смена под контролем</h3>
-            <p data-i18n="feat.2p">Откройте смену утром и закройте вечером: сколько заказов, сколько наличными и картой — видно сразу.</p>
-          </div>
-        </article>
-
-        <article class="scene">
-          <div class="mock pinpad">
-            <div class="pindots" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
-            <div class="people">
-              <div>Нилуфар <span data-i18n="feat.cashier">кассир</span></div>
-              <div>Санжар <span data-i18n="feat.admin">администратор</span></div>
-              <div>Азиз <span data-i18n="feat.owner">владелец</span></div>
-            </div>
-          </div>
-          <div>
-            <h3 data-i18n="feat.3t">У каждого сотрудника свой PIN-код</h3>
-            <p data-i18n="feat.3p">Кассир видит только кассу. Меню, отчёты и настройки остаются у владельца и администратора.</p>
-          </div>
-        </article>
-
-        <article class="scene">
-          <div class="mock">
-            <div class="mock-row"><span>Кола 0.5</span><span><b class="num">46</b> <span data-i18n="feat.pcs">шт</span> &nbsp;<span class="tag tag-ok" data-i18n="feat.ok">В норме</span></span></div>
-            <div class="mock-row"><span>Вода 0.5</span><span><b class="num">9</b> <span data-i18n="feat.pcs">шт</span> &nbsp;<span class="tag tag-low" data-i18n="feat.low">Заканчивается</span></span></div>
-            <div class="mock-row"><span>Сок 1 л</span><span><b class="num">0</b> <span data-i18n="feat.pcs">шт</span> &nbsp;<span class="tag tag-out" data-i18n="feat.out">Нет</span></span></div>
-          </div>
-          <div>
-            <h3 data-i18n="feat.4t">Остатки напитков и товаров</h3>
-            <p data-i18n="feat.4p">Продали колу — остаток уменьшился сам. Касса подскажет, когда товар заканчивается.</p>
-          </div>
-        </article>
-
-        <article class="scene wide">
-          <div>
-            <h3 data-i18n="feat.5t">Выручка и популярные блюда</h3>
-            <p data-i18n="feat.5p">Сколько заработали сегодня, за неделю и за месяц, какой средний чек и что берут чаще всего. Открывается с телефона, даже если вы не на точке.</p>
-          </div>
-          <div class="mock bars num">
-            <div class="bar"><span style="text-align:left;color:inherit;">Лаваш</span><i style="width:100%"></i><span>212</span></div>
-            <div class="bar"><span style="text-align:left;color:inherit;">Бургер</span><i style="width:74%"></i><span>157</span></div>
-            <div class="bar"><span style="text-align:left;color:inherit;">Кола 0.5</span><i style="width:61%"></i><span>129</span></div>
-            <div class="bar"><span style="text-align:left;color:inherit;">Хот-дог</span><i style="width:38%"></i><span>81</span></div>
-          </div>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <section class="steps-band">
-    <div class="wrap">
-      <h2 data-i18n="steps.title">Как начать</h2>
-      <ol class="steps">
-        <li><h3 data-i18n="steps.1t">Зарегистрируйтесь по номеру телефона</h3><p data-i18n="steps.1p">Имя, название точки, номер и пароль. Касса откроется сразу.</p></li>
-        <li><h3 data-i18n="steps.2t">Добавьте меню</h3><p data-i18n="steps.2p">Только названия и цены. Десять позиций заносятся за пять минут.</p></li>
-        <li><h3 data-i18n="steps.3t">Откройте смену и продавайте</h3><p data-i18n="steps.3p">С любого устройства, где есть браузер и интернет.</p></li>
-      </ol>
-    </div>
-  </section>
-
-  <section id="plans">
-    <div class="wrap">
-      <h2 data-i18n="plans.title">Тарифы</h2>
-      <p class="lead" data-i18n="plans.lead">Начните с простого. Когда понадобятся техкарты, учёт по граммам, финансы и клиенты — переключим на «Бизнес», все данные сохранятся.</p>
-      <div class="plans-scroll">
-        <table class="plans">
-          <thead>
-            <tr>
-              <th scope="col"><span class="plan-for" data-i18n="plans.month">Цена за месяц</span></th>
-              <th scope="col" class="pick"><div class="plan-name" data-i18n="plans.start">Старт</div><div class="plan-price num" data-plan="start">—</div><div class="plan-for" data-i18n="plans.startFor">одна точка, быстрый запуск</div></th>
-              <th scope="col"><div class="plan-name" data-i18n="plans.business">Бизнес</div><div class="plan-price num" data-plan="business">—</div><div class="plan-for" data-i18n="plans.businessFor">полный учёт</div></th>
-              <th scope="col"><div class="plan-name" data-i18n="plans.network">Сеть</div><div class="plan-price num" data-plan="network">—</div><div class="plan-for" data-i18n="plans.networkFor">несколько точек</div></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td data-i18n="plans.r1">Касса, меню и смены</td><td class="pick"><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
-            <tr><td data-i18n="plans.r2">Сотрудники с PIN-кодами</td><td class="pick"><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
-            <tr><td data-i18n="plans.r3">Выручка и популярные блюда</td><td class="pick"><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
-            <tr><td data-i18n="plans.r4">Остатки поштучных товаров</td><td class="pick"><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
-            <tr><td data-i18n="plans.r5">Техкарты: ингредиенты списываются сами</td><td class="pick"><span class="no">—</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
-            <tr><td data-i18n="plans.r6">Склад по граммам и литрам</td><td class="pick"><span class="no">—</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
-            <tr><td data-i18n="plans.r7">Финансы: расходы и прибыль</td><td class="pick"><span class="no">—</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
-            <tr><td data-i18n="plans.r8">Клиенты и бонусы</td><td class="pick"><span class="no">—</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
-            <tr><td data-i18n="plans.r9">Несколько точек в одном аккаунте</td><td class="pick"><span class="no">—</span></td><td><span class="no">—</span></td><td><span class="soon" data-i18n="plans.soon">скоро</span></td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="plans-cta">
-        <a class="btn btn-coral" href="#signup" data-i18n="plans.cta">Начать бесплатно</a>
-        <p data-i18n="plans.note">Первые 14 дней бесплатно на тарифе «Старт». Тариф выбирается после пробного периода.</p>
-      </div>
-    </div>
-  </section>
-
-  <section id="faq" style="padding-top:0;">
-    <div class="wrap">
-      <h2 data-i18n="faq.title">Частые вопросы</h2>
       <div class="faq">
         <details><summary data-i18n="faq.1q">Нужно ли покупать оборудование?</summary><p data-i18n="faq.1a">Нет. Касса открывается в браузере — на телефоне, планшете или ноутбуке, которые у вас уже есть.</p></details>
         <details><summary data-i18n="faq.2q">Что будет через 14 дней?</summary><p data-i18n="faq.2a">Касса попросит продлить доступ. Меню, заказы и отчёты никуда не пропадают: после оплаты вы продолжаете с того же места.</p></details>
         <details><summary data-i18n="faq.3q">Как оплатить?</summary><p data-i18n="faq.3a">Через Click, Payme или наличными. После оплаты мы включаем доступ на оплаченный срок.</p></details>
         <details><summary data-i18n="faq.4q">Можно ли перейти со «Старта» на «Бизнес»?</summary><p data-i18n="faq.4a">Да, в любой момент. Меню, сотрудники и история заказов сохраняются, просто открываются новые разделы.</p></details>
-        <details><summary data-i18n="faq.5q">Работает ли касса без интернета?</summary><p data-i18n="faq.5a">Нет, нужен интернет: заказы сразу сохраняются на сервере, поэтому вы видите выручку с любого устройства.</p></details>
+        <details><summary data-i18n="faq.5q">Работает ли касса без интернета?</summary><p data-i18n="faq.5a">Нет, нужен интернет: заказы сразу сохраняются на сервере, поэтому выручку видно с любого устройства.</p></details>
         <details><summary data-i18n="faq.6q">На каком языке работает касса?</summary><p data-i18n="faq.6a">На русском и узбекском. Язык переключается в настройках кассы.</p></details>
       </div>
-    </div>
-  </section>
-
-  <section class="closing">
-    <div class="wrap">
-      <h2 data-i18n="close.title">Откройте кассу сегодня</h2>
-      <p data-i18n="close.text">Регистрация занимает минуту. Первые 14 дней бесплатно.</p>
-      <a class="btn btn-coral" href="#signup" data-i18n="form.submit">Создать кассу</a>
     </div>
   </section>
 </main>
@@ -483,6 +597,7 @@
 <footer>
   <div class="wrap">
     <span>© <span id="year">2026</span> vzlyot.post</span>
+    <span><span data-i18n="foot.photos">Фото</span>: <a href="https://unsplash.com" rel="noopener" target="_blank">Unsplash</a></span>
     <a href="/app" data-i18n="foot.login">Войти в кассу</a>
   </div>
 </footer>
@@ -492,75 +607,80 @@
 // ЯЗЫК. Русский текст стоит прямо в разметке, узбекский — в словаре ниже.
 // ═══════════════════════════════════════════════════════════
 const UZ = {
-  'nav.features': 'Imkoniyatlar', 'nav.plans': 'Tariflar', 'nav.faq': 'Savollar', 'nav.login': 'Kirish',
-  'hero.title': 'Fastfud uchun kassa — 10 daqiqada ishga tushadi',
-  'hero.sub': 'Menyuni qo‘shing, smenani oching va telefon, planshet yoki noutbukdan buyurtma qabul qiling. Hech narsa sotib olish va o‘rnatish shart emas.',
-  'form.title': '14 kun bepul sinab ko‘ring',
-  'form.note': 'Karta va shartnomasiz. Kassa ro‘yxatdan o‘tgach darhol ochiladi.',
-  'form.name': 'Ismingiz', 'form.namePh': 'Aziz',
-  'form.venue': 'Muassasa nomi', 'form.phone': 'Telefon raqami',
-  'form.pass': 'Parol o‘ylab toping', 'form.passPh': 'Kamida 6 ta belgi', 'form.passShow': 'Parolni ko‘rsatish',
-  'form.submit': 'Kassa yaratish', 'form.have': 'Kassangiz bormi?', 'form.login': 'Kirish',
-  'demo.open': 'Smena ochiq', 'demo.order': 'Buyurtma', 'demo.total': 'Jami', 'demo.cash': 'Naqd', 'demo.card': 'Karta', 'demo.paid': 'To‘landi',
-  'demo.hint': 'Bu ishlaydigan namuna: taomni bosing — u chekda paydo bo‘ladi.',
-  'feat.title': 'Shoxobchaga har kuni kerak bo‘ladigan hamma narsa',
-  'feat.lead': 'Ortiqcha tugmalarsiz. Kassir bir smenada o‘rganadi, egasi pulni istalgan payt ko‘radi.',
-  'feat.split': 'Bo‘lib', 'feat.revenue': 'Smena tushumi', 'feat.orders': 'Buyurtmalar',
-  'feat.cashier': 'kassir', 'feat.admin': 'administrator', 'feat.owner': 'egasi',
-  'feat.pcs': 'dona', 'feat.ok': 'Yetarli', 'feat.low': 'Tugayapti', 'feat.out': 'Yo‘q',
-  'feat.1t': 'Uch bosishda buyurtma',
-  'feat.1p': 'Kassir taomlarni bosadi, naqd, karta yoki bo‘lib to‘lashni tanlaydi — buyurtma tayyor.',
-  'feat.2t': 'Smena nazorat ostida',
-  'feat.2p': 'Smenani ertalab oching, kechqurun yoping: nechta buyurtma, qancha naqd va karta — darhol ko‘rinadi.',
-  'feat.3t': 'Har bir xodimning o‘z PIN kodi',
-  'feat.3p': 'Kassir faqat kassani ko‘radi. Menyu, hisobotlar va sozlamalar egasi hamda administratorda qoladi.',
-  'feat.4t': 'Ichimlik va tovarlar qoldig‘i',
-  'feat.4p': 'Kola sotildi — qoldiq o‘zi kamaydi. Tovar tugayotganini kassa eslatadi.',
-  'feat.5t': 'Tushum va eng ko‘p sotiladigan taomlar',
-  'feat.5p': 'Bugun, hafta va oyda qancha tushum bo‘ldi, o‘rtacha chek qancha va nimani ko‘proq olishadi. Shoxobchada bo‘lmasangiz ham telefondan ochiladi.',
+  'nav.product': 'Kassa', 'nav.features': 'Imkoniyatlar', 'nav.plans': 'Tariflar', 'nav.faq': 'Savollar', 'nav.login': 'Kirish',
+  'hero.title': 'Fastfud uchun kassa — <em>10 daqiqada ishga tushadi</em>',
+  'hero.sub': 'Menyu, smenalar, xodimlar va tushum bitta oynada. Kassani planshet yoki telefonda oching va bugunoq buyurtma qabul qiling.',
+  'hero.cta': '14 kun bepul sinab ko‘rish', 'hero.more': 'Kassani ko‘rish',
+  'hero.photoAlt': 'Fastfud peshtaxtasidagi jilmayib turgan kassir', 'hero.phoneAlt': 'Telefondagi vzlyot.post kassasi',
+  'hero.chip': 'Karta bilan to‘landi', 'common.sum': 'so‘m',
+  'fact.1': 'Uskuna sotib olish shart emas', 'fact.2': 'Rus va o‘zbek tillarida', 'fact.3': 'Karta va shartnomasiz',
+  'product.title': 'Kassa shunday ko‘rinadi',
+  'product.lead': 'Chapda menyu, o‘ngda chek. Kassir taomlarni bosadi, to‘lovni tanlaydi va buyurtmani beradi. Bir smenada o‘rganib olsa bo‘ladi.',
+  'product.alt': 'Kassa ekrani: chapda menyu, o‘ngda joriy buyurtma',
+  'point.1t': 'Taomni bosdingiz — u chekda', 'point.1p': 'Katta tugmalar, yuqorida toifalar, jami o‘zi hisoblanadi.',
+  'point.2t': 'Smena pulni hisoblaydi', 'point.2p': 'Ertalab ochdingiz, kechqurun yopdingiz — naqd, karta va buyurtmalar soni darhol ko‘rinadi.',
+  'point.3t': 'Istalgan qurilmada ishlaydi', 'point.3p': 'Peshtaxtadagi planshet, kassir telefoni yoki noutbuk — faqat brauzer kerak.',
+  'venues.title': 'Har qanday shoxobchaga mos', 'venues.lead': 'Metro yonidagi shaurmadan burchakdagi qahvaxonagacha. Menyungizni qo‘shing — kassa tayyor.',
+  'venue.1t': 'Shaurma va doner', 'venue.1p': 'Navbat eshikkacha cho‘zilgan payt tezkor buyurtmalar.', 'venue.1alt': 'Oshpaz doner uchun go‘sht kesmoqda',
+  'venue.2t': 'Burgerxona', 'venue.2p': 'Kombo, ichimlik va kartoshka — hammasi bitta chekda.', 'venue.2alt': 'Mehmonlar planshetli peshtaxtada burger buyurtma qilmoqda',
+  'venue.3t': 'Qahvaxona', 'venue.3p': 'Kofe mashinasi yonida planshetdagi kassa, ortiqcha simlarsiz.', 'venue.3alt': 'Barista planshetda buyurtma qabul qilmoqda',
+  'pay.card': 'Karta', 'pay.cash': 'Naqd', 'pay.split': 'Bo‘lib',
+  'story.1t': 'Mehmonga qulay to‘lov', 'story.1p': 'Naqd, karta yoki bir qismi naqd, bir qismi karta. Kassa summani o‘zi bo‘ladi va smena hisobotida to‘g‘ri hisobga oladi.',
+  'story.1a': 'Mehmon fikridan qaytsa, chekni bekor qilish', 'story.1b': 'Smena tushumi istalgan payt ko‘rinadi', 'story.1c': 'Ichimliklar qoldig‘i o‘zi kamayadi',
+  'story.1alt': 'Mehmon kassada karta bilan to‘lamoqda',
+  'story.2t': 'Har bir xodimning o‘z PIN kodi', 'story.2p': 'Kassir to‘rt raqam bilan kiradi va faqat kassani ko‘radi. Menyu, hisobotlar va sozlamalar egasi hamda administratorda qoladi.',
+  'story.2a': 'Smenani kim ochgani va chekni kim urgani ko‘rinadi', 'story.2b': 'Xodimni almashtirish — bir bosish', 'story.2c': 'Xodim ketdi — o‘chirildi, tarix saqlandi',
+  'story.2alt': 'Kassir peshtaxtada planshetda buyurtma qabul qilmoqda',
+  'role.cashier': 'kassir', 'role.admin': 'administrator', 'role.owner': 'egasi',
+  'story.3t': 'Tushum telefoningizda', 'story.3p': 'Bugun, hafta va oyda qancha sotildi, o‘rtacha chek qancha va nimani ko‘proq olishadi. Hatto hozir shoxobchada bo‘lmasangiz ham.',
+  'story.3a': 'Hisobotlar Toshkent vaqti bo‘yicha', 'story.3b': 'Naqd va karta alohida', 'story.3c': 'Eng ommabop taomlar',
+  'story.3alt': 'Kafe egalari o‘z peshtaxtasi oldida', 'story.3shot': 'Analitika: tushum, o‘rtacha chek, ommabop taomlar',
   'steps.title': 'Qanday boshlash kerak',
-  'steps.1t': 'Telefon raqami orqali ro‘yxatdan o‘ting', 'steps.1p': 'Ism, shoxobcha nomi, raqam va parol. Kassa darhol ochiladi.',
+  'steps.1t': 'Ro‘yxatdan o‘ting', 'steps.1p': 'Ism, shoxobcha nomi, telefon raqami va parol. Kassa darhol ochiladi.',
   'steps.2t': 'Menyuni qo‘shing', 'steps.2p': 'Faqat nom va narxlar. O‘nta pozitsiya besh daqiqada kiritiladi.',
-  'steps.3t': 'Smenani oching va soting', 'steps.3p': 'Brauzer va internet bor istalgan qurilmadan.',
+  'steps.3t': 'Smenani oching', 'steps.3p': 'Va brauzer bor istalgan qurilmadan buyurtma qabul qiling.',
   'plans.title': 'Tariflar',
-  'plans.lead': 'Oddiysidan boshlang. Texkartalar, gramm bo‘yicha hisob, moliya va mijozlar kerak bo‘lganda «Biznes»ga o‘tkazamiz — barcha ma’lumotlar saqlanadi.',
-  'plans.month': 'Oylik narx', 'plans.start': 'Start', 'plans.business': 'Biznes', 'plans.network': 'Tarmoq',
-  'plans.startFor': 'bitta shoxobcha, tez ishga tushirish', 'plans.businessFor': 'to‘liq hisob', 'plans.networkFor': 'bir nechta shoxobcha',
-  'plans.r1': 'Kassa, menyu va smenalar', 'plans.r2': 'PIN kodli xodimlar', 'plans.r3': 'Tushum va ommabop taomlar',
-  'plans.r4': 'Donali tovarlar qoldig‘i', 'plans.r5': 'Texkartalar: ingredientlar o‘zi hisobdan chiqadi',
-  'plans.r6': 'Gramm va litr bo‘yicha ombor', 'plans.r7': 'Moliya: xarajatlar va foyda', 'plans.r8': 'Mijozlar va bonuslar',
-  'plans.r9': 'Bitta akkauntda bir nechta shoxobcha', 'plans.soon': 'tez orada',
-  'plans.cta': 'Bepul boshlash', 'plans.note': 'Dastlabki 14 kun «Start» tarifida bepul. Tarif sinov muddatidan keyin tanlanadi.',
-  'plans.perMonth': '/ oy',
-  'faq.title': 'Ko‘p beriladigan savollar',
+  'plans.lead': 'Oddiysidan boshlang. Texkartalar, gramm bo‘yicha ombor, moliya va mijozlar kerak bo‘lganda «Biznes»ga o‘tkazamiz — barcha ma’lumotlar saqlanadi.',
+  'plans.badge': '14 kun bepul', 'plans.start': 'Start', 'plans.business': 'Biznes', 'plans.network': 'Tarmoq',
+  'plans.startFor': 'Bitta shoxobcha, tez ishga tushirish', 'plans.businessFor': 'Shoxobcha uchun to‘liq hisob', 'plans.networkFor': 'Shoxobchalar tarmog‘i uchun, narx kelishiladi',
+  'plans.f1': 'Kassa, menyu va smenalar', 'plans.f2': 'PIN kodli xodimlar', 'plans.f3': 'Tushum va ommabop taomlar', 'plans.f4': 'Donali tovarlar qoldig‘i',
+  'plans.f5': '«Start»dagi hamma narsa', 'plans.f6': 'Texkartalar: ingredientlar o‘zi hisobdan chiqadi', 'plans.f7': 'Gramm va litr bo‘yicha ombor',
+  'plans.f8': 'Moliya: xarajatlar va foyda', 'plans.f9': 'Mijozlar va bonuslar',
+  'plans.f10': '«Biznes»dagi hamma narsa', 'plans.f11': 'Bitta akkauntda bir nechta shoxobcha — tez orada',
+  'plans.cta': 'Bepul boshlash',
+  'plans.note': 'Sinov muddati «Start» tarifida. Tarif undan keyin tanlanadi, to‘lov Click, Payme yoki naqd orqali.',
+  'signup.title': 'Kassangizni bugun oching', 'signup.lead': 'Ro‘yxatdan o‘tish bir daqiqa oladi. Dastlabki 14 kun — bepul, karta va shartnomasiz.',
+  'signup.f1': 'Kassa ro‘yxatdan o‘tgach darhol ochiladi', 'signup.f2': 'Menyu va buyurtmalar sinov muddatidan keyin ham saqlanadi', 'signup.f3': 'Telefon, planshet va noutbukda ishlaydi',
+  'form.title': 'Kassa yaratish', 'form.note': 'Keyin raqam va parol orqali kirish mumkin.',
+  'form.name': 'Ismingiz', 'form.namePh': 'Aziz', 'form.venue': 'Muassasa nomi', 'form.phone': 'Telefon raqami',
+  'form.pass': 'Parol o‘ylab toping', 'form.passPh': 'Kamida 6 ta belgi', 'form.passShow': 'Parolni ko‘rsatish',
+  'form.submit': 'Kassani bepul yaratish', 'form.have': 'Kassangiz bormi?', 'form.login': 'Kirish',
+  'faq.title': 'Ko‘p beriladigan savollar', 'faq.lead': 'Javob topmadingizmi? Ro‘yxatdan o‘tib, o‘zingiz sinab ko‘ring — bu bepul.',
   'faq.1q': 'Uskuna sotib olish kerakmi?', 'faq.1a': 'Yo‘q. Kassa brauzerda ochiladi — sizda bor telefon, planshet yoki noutbukda.',
   'faq.2q': '14 kundan keyin nima bo‘ladi?', 'faq.2a': 'Kassa kirishni uzaytirishni so‘raydi. Menyu, buyurtmalar va hisobotlar yo‘qolmaydi: to‘lovdan so‘ng o‘sha joydan davom etasiz.',
   'faq.3q': 'Qanday to‘lanadi?', 'faq.3a': 'Click, Payme yoki naqd orqali. To‘lovdan keyin to‘langan muddatga kirishni yoqamiz.',
   'faq.4q': '«Start»dan «Biznes»ga o‘tish mumkinmi?', 'faq.4a': 'Ha, istalgan payt. Menyu, xodimlar va buyurtmalar tarixi saqlanadi, shunchaki yangi bo‘limlar ochiladi.',
-  'faq.5q': 'Kassa internetsiz ishlaydimi?', 'faq.5a': 'Yo‘q, internet kerak: buyurtmalar darhol serverda saqlanadi, shuning uchun tushumni istalgan qurilmadan ko‘rasiz.',
+  'faq.5q': 'Kassa internetsiz ishlaydimi?', 'faq.5a': 'Yo‘q, internet kerak: buyurtmalar darhol serverda saqlanadi, shuning uchun tushum istalgan qurilmadan ko‘rinadi.',
   'faq.6q': 'Kassa qaysi tilda ishlaydi?', 'faq.6a': 'Rus va o‘zbek tillarida. Til kassa sozlamalarida almashtiriladi.',
-  'close.title': 'Kassani bugun oching', 'close.text': 'Ro‘yxatdan o‘tish bir daqiqa oladi. Dastlabki 14 kun bepul.',
-  'foot.login': 'Kassaga kirish',
+  'foot.photos': 'Suratlar', 'foot.login': 'Kassaga kirish',
 };
 // Тексты, которые появляются из скрипта
 const MSG = {
   ru: {
-    perMonth: '/ мес', sum: 'сум', items: 'поз.', empty: 'Нажмите на блюдо слева',
+    perMonth: '/ мес', sum: 'сум', deal: 'Договорная',
     fill: 'Заполните имя, название заведения, номер и пароль',
     phone: 'Введите номер полностью: 9 цифр после +998',
     pass: 'Пароль — минимум 6 символов',
     busy: 'Создаём кассу…', net: 'Нет связи с сервером. Проверьте интернет и попробуйте ещё раз.',
     exists: 'Этот номер уже зарегистрирован.', toLogin: 'Войти в кассу',
-    dishes: ['Лаваш', 'Бургер', 'Хот-дог', 'Картошка фри', 'Кола 0.5', 'Чай'],
   },
   uz: {
-    perMonth: '/ oy', sum: 'so‘m', items: 'poz.', empty: 'Chapdagi taomni bosing',
+    perMonth: '/ oy', sum: 'so‘m', deal: 'Kelishiladi',
     fill: 'Ism, muassasa nomi, raqam va parolni kiriting',
     phone: 'Raqamni to‘liq kiriting: +998 dan keyin 9 ta raqam',
     pass: 'Parol — kamida 6 ta belgi',
     busy: 'Kassa yaratilmoqda…', net: 'Server bilan aloqa yo‘q. Internetni tekshirib, qayta urinib ko‘ring.',
     exists: 'Bu raqam allaqachon ro‘yxatdan o‘tgan.', toLogin: 'Kassaga kirish',
-    dishes: ['Lavash', 'Burger', 'Xot-dog', 'Kartoshka fri', 'Kola 0.5', 'Choy'],
   },
 };
 
@@ -568,19 +688,23 @@ let lang = 'ru';
 try { if (localStorage.getItem('qp_lang') === 'uz') lang = 'uz'; } catch (e) {}
 const RU = {};
 document.querySelectorAll('[data-i18n]').forEach(el => { if (!(el.dataset.i18n in RU)) RU[el.dataset.i18n] = el.textContent; });
+document.querySelectorAll('[data-i18n-html]').forEach(el => { RU[el.dataset.i18nHtml] = el.innerHTML; });
 document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { RU[el.dataset.i18nPlaceholder] = el.getAttribute('placeholder'); });
 document.querySelectorAll('[data-i18n-aria-label]').forEach(el => { RU[el.dataset.i18nAriaLabel] = el.getAttribute('aria-label'); });
+document.querySelectorAll('[data-i18n-alt]').forEach(el => { RU[el.dataset.i18nAlt] = el.getAttribute('alt'); });
 const tr = key => (lang === 'uz' && UZ[key]) || RU[key] || key;
 const msg = key => MSG[lang][key];
 
 function applyLang() {
   document.documentElement.lang = lang;
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = tr(el.dataset.i18n); });
+  // Заголовок с выделением: разметка только из словаря выше, не из ввода пользователя
+  document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = tr(el.dataset.i18nHtml); });
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.setAttribute('placeholder', tr(el.dataset.i18nPlaceholder)); });
   document.querySelectorAll('[data-i18n-aria-label]').forEach(el => { el.setAttribute('aria-label', tr(el.dataset.i18nAriaLabel)); });
+  document.querySelectorAll('[data-i18n-alt]').forEach(el => { el.setAttribute('alt', tr(el.dataset.i18nAlt)); });
   document.querySelectorAll('.lang button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
   renderPlans();
-  renderDemo();
 }
 document.querySelectorAll('.lang button').forEach(b => b.addEventListener('click', () => {
   lang = b.dataset.lang;
@@ -597,93 +721,26 @@ let plans = null;
 function renderPlans() {
   document.querySelectorAll('[data-plan]').forEach(el => {
     const plan = plans && plans.find(p => p.id === el.dataset.plan);
+    el.classList.remove('deal');
     if (!plan) { el.textContent = '—'; return; }
-    el.innerHTML = '';
-    el.append(plan.currency + money(plan.price) + ' ');
+    // Цена не задана — договорная
+    if (plan.price == null) {
+      el.textContent = msg('deal');
+      el.classList.add('deal');
+      return;
+    }
+    el.textContent = money(plan.price) + ' ';
     const small = document.createElement('small');
-    small.textContent = msg('perMonth');
+    small.textContent = (plan.currency === 'USD' || plan.currency === '$' ? '$' : msg('sum')) + ' ' + msg('perMonth');
     el.append(small);
   });
 }
 fetch('/plans').then(r => r.json()).then(d => { plans = d.plans; renderPlans(); }).catch(() => {});
 
 // ═══════════════════════════════════════════════════════════
-// ЖИВОЙ ПРИМЕР КАССЫ
-// ═══════════════════════════════════════════════════════════
-const PRICES = [28000, 32000, 18000, 15000, 10000, 5000];
-let order = { 0: 1, 4: 1 }; // чек не пустой с самого начала
-let lastAdded = null;
-let paidTimer = null;
-
-function renderDemo() {
-  const names = msg('dishes');
-  const dishes = document.getElementById('demo-dishes');
-  if (!dishes.children.length) {
-    PRICES.forEach((price, i) => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'dish';
-      btn.innerHTML = '<b></b><span class="num"></span>';
-      btn.addEventListener('click', () => addDish(i));
-      dishes.append(btn);
-    });
-  }
-  [...dishes.children].forEach((btn, i) => {
-    btn.querySelector('b').textContent = names[i];
-    btn.querySelector('span').textContent = money(PRICES[i]) + ' ' + msg('sum');
-  });
-
-  const lines = document.getElementById('demo-lines');
-  const ids = Object.keys(order);
-  lines.innerHTML = '';
-  if (!ids.length) {
-    const li = document.createElement('li');
-    li.className = 'receipt-empty';
-    li.textContent = msg('empty');
-    lines.append(li);
-  }
-  let total = 0, count = 0;
-  ids.forEach(id => {
-    const qty = order[id], sub = PRICES[id] * qty;
-    total += sub; count += qty;
-    const li = document.createElement('li');
-    if (+id === lastAdded) li.className = 'new';
-    const name = document.createElement('span');
-    name.textContent = names[id] + ' ';
-    const q = document.createElement('small');
-    q.textContent = '× ' + qty;
-    name.append(q);
-    const price = document.createElement('b');
-    price.textContent = money(sub);
-    li.append(name, price);
-    lines.append(li);
-  });
-  lastAdded = null;
-  document.getElementById('demo-count').textContent = count + ' ' + msg('items');
-  document.getElementById('demo-total').textContent = money(total) + ' ' + msg('sum');
-  document.querySelectorAll('.pay button').forEach(b => { b.disabled = !count; });
-}
-function addDish(i) {
-  if (paidTimer) return;
-  order[i] = Math.min((order[i] || 0) + 1, 99);
-  lastAdded = i;
-  renderDemo();
-}
-document.querySelectorAll('.pay button').forEach(b => b.addEventListener('click', () => {
-  if (paidTimer || !Object.keys(order).length) return;
-  document.getElementById('demo-paid').classList.add('show');
-  paidTimer = setTimeout(() => {
-    document.getElementById('demo-paid').classList.remove('show');
-    order = {};
-    paidTimer = null;
-    renderDemo();
-  }, 1400);
-}));
-
-// ═══════════════════════════════════════════════════════════
 // РЕГИСТРАЦИЯ
 // ═══════════════════════════════════════════════════════════
-const form = document.getElementById('signup');
+const form = document.getElementById('signup-form');
 const phoneEl = document.getElementById('f-phone');
 const passEl = document.getElementById('f-pass');
 const errEl = document.getElementById('form-error');

@@ -8,7 +8,8 @@
 //   finance       — расходы кассы, прибыль, финансовые отчёты
 //   clients       — база клиентов и бонусы
 //
-// ЦЕНЫ: поменяйте числа ниже — лендинг и админка подхватят их сами.
+// ЦЕНЫ: в сумах за месяц. Поменяйте числа ниже — лендинг и админка подхватят их сами.
+// price: null — цена договорная (на сайте так и написано).
 
 const PAID_FEATURES = ['recipes', 'stock_weight', 'finance', 'clients'];
 
@@ -16,22 +17,22 @@ const PLANS = {
   start: {
     id: 'start',
     name: 'Старт',
-    price: 29,
-    currency: '$',
+    price: 300000,
+    currency: 'UZS',
     features: [],
   },
   business: {
     id: 'business',
     name: 'Бизнес',
-    price: 49,
-    currency: '$',
+    price: 479000,
+    currency: 'UZS',
     features: [...PAID_FEATURES],
   },
   network: {
     id: 'network',
     name: 'Сеть',
-    price: 89,
-    currency: '$',
+    price: null,
+    currency: 'UZS',
     features: [...PAID_FEATURES],
   },
 };

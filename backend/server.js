@@ -28,7 +28,8 @@ app.use(helmet({
       scriptSrcAttr: ["'unsafe-inline'"],
       // Фирменный шрифт Manrope грузится с Google Fonts; без интернета остаётся системный
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-      imgSrc: ["'self'", "data:", "blob:"],
+      // Фотографии на лендинге — с Unsplash (бесплатная лицензия, раздаются их CDN)
+      imgSrc: ["'self'", "data:", "blob:", 'https://images.unsplash.com'],
       connectSrc: ["'self'"],
       fontSrc: ["'self'", "data:", 'https://fonts.gstatic.com'],
       objectSrc: ["'none'"],

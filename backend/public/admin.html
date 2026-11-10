@@ -486,8 +486,11 @@ document.addEventListener('keydown', e => {
   if ($('modal-bg').classList.contains('open')) closeModal(); else closeDrawer();
 });
 const acc = id => accounts.find(a => a.id === id) || {};
+// Цена тарифа: «300 000 сум/мес», «$29/мес» или «договорная» (price: null)
+const planPrice = p => p.price == null ? 'договорная'
+  : (p.currency === 'USD' || p.currency === '$' ? '$' + money(p.price) : money(p.price) + ' сум') + '/мес';
 const planOptions = selected => plans.map(p =>
-  `<option value="${esc(p.id)}"${p.id === selected ? ' selected' : ''}>${esc(p.name)} — ${esc(p.currency)}${money(p.price)}/мес</option>`).join('');
+  `<option value="${esc(p.id)}"${p.id === selected ? ' selected' : ''}>${esc(p.name)} — ${esc(planPrice(p))}</option>`).join('');
 const monthOptions = () => [1, 3, 6, 12].map(m => `<option value="${m}">${m} мес.</option>`).join('');
 
 async function act(fn, okText) {
@@ -498,10 +501,12 @@ async function act(fn, okText) {
 function openPayment(id) {
   const a = acc(id);
   const plan = plans.find(p => p.id === (a.plan || 'start')) || {};
+  // Сумма и валюта по умолчанию — из цены текущего тарифа клиента
+  const inUsd = plan.currency === 'USD' || plan.currency === '$';
   showModal(`<h3>Оплата: ${esc(a.venue_name || a.name)}</h3>
     <div class="row2">
-      <div class="field"><label>Сумма</label><input type="number" id="p-amount" min="1" step="1" value="${plan.currency === '$' ? plan.price || '' : ''}"></div>
-      <div class="field"><label>Валюта</label><select id="p-currency"><option value="USD">Доллары ($)</option><option value="UZS">Сумы</option></select></div>
+      <div class="field"><label>Сумма</label><input type="number" id="p-amount" min="1" step="1" value="${plan.price || ''}"></div>
+      <div class="field"><label>Валюта</label><select id="p-currency"><option value="UZS"${inUsd ? '' : ' selected'}>Сумы</option><option value="USD"${inUsd ? ' selected' : ''}>Доллары ($)</option></select></div>
     </div>
     <div class="row2">
       <div class="field"><label>Способ оплаты</label><select id="p-method">${Object.entries(METHOD).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select></div>
@@ -646,10 +651,10 @@ function renderPayments() {
   const sum = (m, cur) => (by.find(x => x.month === m && x.currency === cur) || {}).total || 0;
   const months = [...new Set(by.map(x => x.month))].slice(0, 6);
   $('pay-metrics').innerHTML =
-    `<div class="metric static"><div class="metric-label">Этот месяц, $</div><div class="metric-value num c-green">$${money(sum(month, 'USD'))}</div><div class="metric-sub">оплаты в долларах</div></div>
-     <div class="metric static"><div class="metric-label">Этот месяц, сум</div><div class="metric-value num c-green">${money(sum(month, 'UZS'))}</div><div class="metric-sub">оплаты в сумах</div></div>` +
+    `<div class="metric static"><div class="metric-label">Этот месяц, сум</div><div class="metric-value num c-green">${money(sum(month, 'UZS'))}</div><div class="metric-sub">оплаты в сумах</div></div>
+     <div class="metric static"><div class="metric-label">Этот месяц, $</div><div class="metric-value num c-green">$${money(sum(month, 'USD'))}</div><div class="metric-sub">оплаты в долларах</div></div>` +
     months.filter(m => m !== month).map(m =>
-      `<div class="metric static"><div class="metric-label">${esc(m)}</div><div class="metric-value num" style="font-size:20px;">$${money(sum(m, 'USD'))}</div><div class="metric-sub num">${money(sum(m, 'UZS'))} сум</div></div>`).join('');
+      `<div class="metric static"><div class="metric-label">${esc(m)}</div><div class="metric-value num" style="font-size:20px;">${money(sum(m, 'UZS'))} сум</div><div class="metric-sub num">$${money(sum(m, 'USD'))}</div></div>`).join('');
 
   $('payments-tbody').innerHTML = payments.length ? payments.map(p => `<tr>
       <td class="num">${fmtDate(p.paid_at)}</td>
