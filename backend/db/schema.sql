@@ -6,13 +6,18 @@
 CREATE TABLE IF NOT EXISTS accounts (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
-  email VARCHAR(255) UNIQUE NOT NULL,
+  email VARCHAR(255) UNIQUE,                -- необязателен: основной логин — телефон
+  phone VARCHAR(20),                        -- +998901234567, уникален (индекс в миграции 0003)
   password_hash VARCHAR(255) NOT NULL,
   plan VARCHAR(50) DEFAULT 'start',         -- start | business | network
   status VARCHAR(20) DEFAULT 'trial',       -- trial | active | expired | blocked
   expires_at TIMESTAMP,                     -- дата окончания подписки
+  note TEXT,                                -- заметка в админ-панели
+  last_login_at TIMESTAMP,                  -- последний вход с паролем
+  last_seen_at TIMESTAMP,                   -- последняя работа в кассе
   created_at TIMESTAMP DEFAULT NOW()
 );
+-- Оплаты подписок (таблица subscription_payments) создаются миграцией 0003.
 
 -- Заведения (точки) - один аккаунт может иметь несколько точек (тариф "Сеть")
 CREATE TABLE IF NOT EXISTS venues (

@@ -1,12 +1,17 @@
 const express = require('express');
 const pool = require('../db/pool');
-const { requireAuth, requireRole } = require('../middleware/auth');
+const { requireAuth, requireRole, requireFeature, hasFeature, featureLocked } = require('../middleware/auth');
 
 const router = express.Router();
 router.use(requireAuth);
 
 const INCOME_UNITS = new Set(['pcs', 'g', 'kg', 'ml', 'l']);
 const STOCK_CATEGORIES = new Set(['kitchen', 'bar', 'drinks', 'packaging', 'other']);
+
+// На простом тарифе склад только поштучный; граммы и литры — весовой склад («Бизнес»)
+function weightLocked(req, unit) {
+  return unit !== 'pcs' && !hasFeature(req, 'stock_weight');
+}
 
 function toStockDeltaGrams(quantity, unit) {
   const delta = (unit === 'kg' || unit === 'l') ? quantity * 1000 : quantity;
@@ -55,8 +60,10 @@ router.get('/incomes', requireRole('owner', 'admin'), async (req, res) => {
 
 // POST /stock — новый ингредиент (owner, admin)
 router.post('/', requireRole('owner', 'admin'), async (req, res) => {
-  const { name, min_grams = 300, category = 'kitchen', unit = 'g' } = req.body;
+  const { name, min_grams = 300, category = 'kitchen' } = req.body;
+  const unit = req.body.unit || (hasFeature(req, 'stock_weight') ? 'g' : 'pcs');
   if (!name) return res.status(400).json({ error: 'Укажите название' });
+  if (weightLocked(req, unit)) return featureLocked(res, 'stock_weight');
   if (!STOCK_CATEGORIES.has(category) || !INCOME_UNITS.has(unit)) {
     return res.status(400).json({ error: 'Проверьте категорию и единицу измерения' });
   }
@@ -82,6 +89,7 @@ router.put('/:id', requireRole('owner', 'admin'), async (req, res) => {
   if (unit && !INCOME_UNITS.has(unit)) {
     return res.status(400).json({ error: 'Неверная единица измерения' });
   }
+  if (unit && weightLocked(req, unit)) return featureLocked(res, 'stock_weight');
   let normalizedStockGrams = null;
   if (stock_grams !== undefined && stock_grams !== null && stock_grams !== '') {
     try {
@@ -138,6 +146,10 @@ router.post('/:id/income', requireRole('owner', 'admin'), async (req, res) => {
     }
 
     const unit = requestedUnit || ingRes.rows[0].unit || 'g';
+    if (weightLocked(req, unit) || weightLocked(req, ingRes.rows[0].unit || 'g')) {
+      await client.query('ROLLBACK');
+      return featureLocked(res, 'stock_weight');
+    }
     if (!INCOME_UNITS.has(unit)) {
       await client.query('ROLLBACK');
       return res.status(400).json({ error: 'Неверная единица измерения товара' });
@@ -194,6 +206,8 @@ router.delete('/:id', requireRole('owner', 'admin'), async (req, res) => {
 
 // GET /stock/recipes/:menuItemId — состав блюда (проверяем venue_id)
 router.get('/recipes/:menuItemId', async (req, res) => {
+  // Без техкарт в тарифе состава нет: блюдо продаётся без списания
+  if (!hasFeature(req, 'recipes')) return res.json([]);
   try {
     const itemCheck = await pool.query('SELECT id FROM menu_items WHERE id = $1 AND venue_id = $2', [req.params.menuItemId, req.user.venueId]);
     if (!itemCheck.rows.length) return res.status(403).json({ error: 'Доступ запрещён' });
@@ -212,7 +226,7 @@ router.get('/recipes/:menuItemId', async (req, res) => {
 });
 
 // POST /stock/recipes — добавить ингредиент в тех.карту
-router.post('/recipes', requireRole('owner', 'admin'), async (req, res) => {
+router.post('/recipes', requireFeature('recipes'), requireRole('owner', 'admin'), async (req, res) => {
   try {
     const { menu_item_id, ingredient_id, grams } = req.body;
     const amount = Number(grams);
@@ -243,7 +257,7 @@ router.post('/recipes', requireRole('owner', 'admin'), async (req, res) => {
 });
 
 // PUT /stock/recipes/:id — изменить граммовку
-router.put('/recipes/:id', requireRole('owner', 'admin'), async (req, res) => {
+router.put('/recipes/:id', requireFeature('recipes'), requireRole('owner', 'admin'), async (req, res) => {
   try {
     const amount = Number(req.body.grams);
     if (!Number.isFinite(amount) || amount <= 0) return res.status(400).json({ error: 'Укажите корректное количество' });
@@ -266,7 +280,7 @@ router.put('/recipes/:id', requireRole('owner', 'admin'), async (req, res) => {
 });
 
 // DELETE /stock/recipes/:id
-router.delete('/recipes/:id', requireRole('owner', 'admin'), async (req, res) => {
+router.delete('/recipes/:id', requireFeature('recipes'), requireRole('owner', 'admin'), async (req, res) => {
   try {
     // Проверяем, что рецепт относится к нашему заведению
     const check = await pool.query(

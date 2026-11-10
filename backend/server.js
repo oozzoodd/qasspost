@@ -12,18 +12,25 @@ const stockRoutes = require('./routes/stock');
 const ordersRoutes = require('./routes/orders');
 const adminRoutes = require('./routes/admin');
 const migrate = require('./db/migrate');
+const { publicPlans, TRIAL_DAYS } = require('./config/plans');
 
 const app = express();
+
+// Railway ставит перед сервером один прокси: без этого все посетители выглядят
+// как один IP-адрес и ограничение попыток входа срабатывает на всех сразу.
+app.set('trust proxy', 1);
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'"],
       scriptSrcAttr: ["'unsafe-inline'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
+      // Фирменный шрифт Manrope грузится с Google Fonts; без интернета остаётся системный
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       imgSrc: ["'self'", "data:", "blob:"],
       connectSrc: ["'self'"],
-      fontSrc: ["'self'", "data:"],
+      fontSrc: ["'self'", "data:", 'https://fonts.gstatic.com'],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
       frameAncestors: ["'none'"],
@@ -35,20 +42,32 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '1mb' }));
 
-const authLimiter = rateLimit({
+const limiter = options => rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 80,
   standardHeaders: true,
   legacyHeaders: false,
+  message: { error: 'Слишком много попыток. Подождите немного и попробуйте снова.' },
+  ...options,
 });
-app.use(['/auth/login', '/auth/pin-login', '/auth/owner-pin', '/auth/register', '/admin'], authLimiter);
+// Вход и PIN: защита от перебора
+app.use(['/auth/login', '/auth/pin-login', '/auth/owner-pin'], limiter({ limit: 80 }));
+// Регистрация открыта всем с лендинга — не даём создавать аккаунты пачками
+app.use('/auth/register', limiter({ windowMs: 60 * 60 * 1000, limit: 10 }));
+// Админка: считаем только неудачные запросы (неверный ключ), работе в панели это не мешает
+app.use('/admin', limiter({ limit: 30, skipSuccessfulRequests: true }));
 
-// Раздача статических файлов фронтенда (касса и админка)
+// Страницы: «/» — лендинг (index.html), «/app» — касса, «/admin.html» — админ-панель
+app.get('/app', (req, res) => res.sendFile(path.join(__dirname, 'public', 'app.html')));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Проверка что сервер живой (Railway health check)
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'vzlyot.post API', version: '1.0.0' });
+});
+
+// Тарифы и цены для лендинга (задаются в config/plans.js)
+app.get('/plans', (req, res) => {
+  res.json({ plans: publicPlans(), trialDays: TRIAL_DAYS });
 });
 
 app.use('/auth', authRoutes);

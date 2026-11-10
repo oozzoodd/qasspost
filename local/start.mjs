@@ -126,14 +126,15 @@ try {
   server.on('exit', code => { if (!stopping) { console.log('Сервер остановился'); stop(code || 0); } });
 
   console.log('');
-  console.log(`   Касса:   http://localhost:${APP_PORT}`);
+  console.log(`   Сайт:    http://localhost:${APP_PORT}`);
+  console.log(`   Касса:   http://localhost:${APP_PORT}/app`);
   console.log(`   Админка: http://localhost:${APP_PORT}/admin.html   (ключ: ${secrets.adminKey})`);
   console.log('   Демо:    demo@vzlyot.post / demo1234, PIN 1111');
   console.log('   Остановить: Ctrl+C или закрыть это окно');
   console.log('');
 
   if (process.platform === 'win32' && !process.env.NO_BROWSER) {
-    setTimeout(() => spawn('cmd', ['/c', 'start', '', `http://localhost:${APP_PORT}`], { detached: true, stdio: 'ignore' }), 2500);
+    setTimeout(() => spawn('cmd', ['/c', 'start', '', `http://localhost:${APP_PORT}/app`], { detached: true, stdio: 'ignore' }), 2500);
   }
 } catch (err) {
   console.error('❌ Ошибка запуска:', err.message || err);

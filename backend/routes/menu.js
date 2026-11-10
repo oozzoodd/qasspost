@@ -1,6 +1,6 @@
 const express = require('express');
 const pool = require('../db/pool');
-const { requireAuth, requireRole } = require('../middleware/auth');
+const { requireAuth, requireRole, hasFeature } = require('../middleware/auth');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -35,14 +35,18 @@ function normalizeMenuItemStockFields(body, existing = {}) {
   return { itemType, stockIngredientId: null, stockQty: 1 };
 }
 
-async function assertStockIngredientBelongsToVenue(venueId, ingredientId) {
+async function assertStockIngredientBelongsToVenue(venueId, ingredientId, req) {
   if (!ingredientId) return;
   const r = await pool.query(
-    'SELECT id FROM ingredients WHERE id = $1 AND venue_id = $2',
+    'SELECT id, unit FROM ingredients WHERE id = $1 AND venue_id = $2',
     [ingredientId, venueId]
   );
   if (!r.rows.length) {
     throw new Error('Складской товар не найден');
+  }
+  // На простом тарифе к позиции меню привязывается только поштучный товар
+  if (req && r.rows[0].unit !== 'pcs' && !hasFeature(req, 'stock_weight')) {
+    throw new Error('На вашем тарифе можно привязать только поштучный товар');
   }
 }
 
@@ -50,7 +54,7 @@ async function assertStockIngredientBelongsToVenue(venueId, ingredientId) {
 router.get('/', async (req, res) => {
   const { venueId } = req.user;
   const cats = await pool.query('SELECT * FROM menu_categories WHERE venue_id = $1 ORDER BY sort_order, id', [venueId]);
-  // recipe_count — сколько ингредиентов в техкарте: блюдо без техкарты продать нельзя
+  // recipe_count — сколько ингредиентов в техкарте: без техкарты блюдо продаётся без списания со склада
   const items = await pool.query(
     `SELECT m.*, (SELECT COUNT(*) FROM recipes r WHERE r.menu_item_id = m.id)::int AS recipe_count
      FROM menu_items m WHERE m.venue_id = $1 ORDER BY m.id`,
@@ -76,7 +80,7 @@ router.post('/items', requireRole('owner', 'admin'), async (req, res) => {
     if (!name || price == null) return res.status(400).json({ error: 'Укажите название и цену' });
 
     const { itemType, stockIngredientId, stockQty } = normalizeMenuItemStockFields(req.body);
-    await assertStockIngredientBelongsToVenue(venueId, stockIngredientId);
+    await assertStockIngredientBelongsToVenue(venueId, stockIngredientId, req);
 
     const r = await pool.query(
       `INSERT INTO menu_items
@@ -107,7 +111,8 @@ router.put('/items/:id', requireRole('owner', 'admin'), async (req, res) => {
     const stockFields = touchesStockFields
       ? normalizeMenuItemStockFields(req.body, existingRes.rows[0])
       : normalizeMenuItemStockFields({}, existingRes.rows[0]);
-    await assertStockIngredientBelongsToVenue(venueId, stockFields.stockIngredientId);
+    // Проверяем тариф только когда привязку к складу меняют, иначе старые позиции нельзя было бы править
+    await assertStockIngredientBelongsToVenue(venueId, stockFields.stockIngredientId, touchesStockFields ? req : null);
 
     const r = await pool.query(
       `UPDATE menu_items SET

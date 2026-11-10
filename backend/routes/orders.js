@@ -1,6 +1,6 @@
 const express = require('express');
 const pool = require('../db/pool');
-const { requireAuth, requireRole } = require('../middleware/auth');
+const { requireAuth, requireRole, requireFeature, hasFeature } = require('../middleware/auth');
 const { isValidPin, hashPin, findByPin } = require('../utils/pin');
 const { TZ_DAY_START, localToStored } = require('../utils/time');
 
@@ -233,7 +233,7 @@ function financePeriodSql(query) {
 }
 
 // GET /orders/finance/summary — финансовая сводка за период
-router.get('/finance/summary', requireRole('owner', 'admin'), async (req, res) => {
+router.get('/finance/summary', requireFeature('finance'), requireRole('owner', 'admin'), async (req, res) => {
   const period = financePeriodSql(req.query);
   if (!period) return res.status(400).json({ error: 'Неверный период' });
   const params = [req.user.venueId, ...period.params];
@@ -297,7 +297,7 @@ router.get('/finance/summary', requireRole('owner', 'admin'), async (req, res) =
 });
 
 // GET /orders/finance/shifts — закрытые смены за период
-router.get('/finance/shifts', requireRole('owner', 'admin'), async (req, res) => {
+router.get('/finance/shifts', requireFeature('finance'), requireRole('owner', 'admin'), async (req, res) => {
   const period = financePeriodSql(req.query);
   if (!period) return res.status(400).json({ error: 'Неверный период' });
   const params = [req.user.venueId, ...period.params];
@@ -328,7 +328,7 @@ router.get('/finance/shifts', requireRole('owner', 'admin'), async (req, res) =>
 });
 
 // POST /orders/expenses — добавить расход в текущую открытую смену
-router.post('/expenses', async (req, res) => {
+router.post('/expenses', requireFeature('finance'), async (req, res) => {
   const amount = Number(req.body.amount);
   const category = String(req.body.category || '').trim();
   const comment = String(req.body.comment || '').trim();
@@ -379,7 +379,7 @@ router.post('/expenses', async (req, res) => {
 });
 
 // GET /orders/expenses — последние расходы заведения
-router.get('/expenses', async (req, res) => {
+router.get('/expenses', requireFeature('finance'), async (req, res) => {
   const r = await pool.query(
     `SELECT e.*, s.name AS staff_name
      FROM cash_expenses e
@@ -393,7 +393,7 @@ router.get('/expenses', async (req, res) => {
 });
 
 // GET /orders/expenses/summary — расходы текущей открытой смены
-router.get('/expenses/summary', async (req, res) => {
+router.get('/expenses/summary', requireFeature('finance'), async (req, res) => {
   const shiftRes = await pool.query(
     `SELECT id FROM shifts
      WHERE venue_id = $1 AND closed_at IS NULL
@@ -522,8 +522,11 @@ router.post('/', async (req, res) => {
     }
     const shiftId = shiftRes.rows[0].id;
 
-    const normalizedClientId = client_id ? Number(client_id) : null;
-    if (client_id && (!Number.isInteger(normalizedClientId) || normalizedClientId <= 0)) {
+    // На тарифе без базы клиентов привязка к клиенту просто не используется
+    const useClients = hasFeature(req, 'clients');
+    const useRecipes = hasFeature(req, 'recipes');
+    const normalizedClientId = useClients && client_id ? Number(client_id) : null;
+    if (useClients && client_id && (!Number.isInteger(normalizedClientId) || normalizedClientId <= 0)) {
       await client.query('ROLLBACK');
       return res.status(400).json({ error: 'Клиент не найден' });
     }
@@ -559,7 +562,10 @@ router.post('/', async (req, res) => {
         item_type: itemType,
         stock_ingredient_id: stockIngredientId,
         stock_qty: stockQty,
+        // Списывался ли склад: отмена чека возвращает ровно то, что было списано
+        stock_deducted: itemType === 'stock_item',
       });
+      const snapshot = itemsSnapshot[itemsSnapshot.length - 1];
 
       if (itemType === 'stock_item') {
         if (!stockIngredientId) {
@@ -581,7 +587,7 @@ router.post('/', async (req, res) => {
           'UPDATE ingredients SET stock_grams = stock_grams - $1, updated_at = NOW() WHERE id = $2 AND venue_id = $3',
           [needed, stockIngredientId, venueId]
         );
-      } else {
+      } else if (useRecipes) {
         // Списываем ингредиенты по тех.карте
         const recipeRes = await client.query(
           `SELECT r.ingredient_id, r.grams, i.stock_grams
@@ -591,9 +597,9 @@ router.post('/', async (req, res) => {
            FOR UPDATE OF i`,
           [id, venueId]
         );
-        if (!recipeRes.rows.length) {
-          throw new Error(`Заполните техкарту для товара: ${item.name}`);
-        }
+        // Техкарты ещё нет — блюдо продаётся без списания со склада
+        // (иначе после перехода со «Старта» точка не могла бы продавать, пока не заполнит все техкарты)
+        snapshot.stock_deducted = recipeRes.rows.length > 0;
         for (const r of recipeRes.rows) {
           const needed = r.grams * qty;
           const current = r.stock_grams ?? 0;
@@ -731,6 +737,8 @@ router.post('/:id/cancel', requireRole('owner', 'admin'), async (req, res) => {
           continue;
         }
 
+        if (item.stock_deducted === false) continue;
+
         const recipeRes = await client.query(
           `SELECT r.ingredient_id, r.grams
            FROM recipes r
@@ -787,7 +795,7 @@ router.post('/:id/cancel', requireRole('owner', 'admin'), async (req, res) => {
 
 // ── КЛИЕНТЫ ──────────────────────────────────────────────────
 
-router.get('/clients/all', async (req, res) => {
+router.get('/clients/all', requireFeature('clients'), async (req, res) => {
   const search = (req.query.search || '').trim();
   const params = [req.user.venueId];
   // last_order_at — дата последнего чека клиента (для карточек и Kanban)
@@ -805,7 +813,7 @@ router.get('/clients/all', async (req, res) => {
 });
 
 // Добавить клиента может и кассир — прямо с кассы, чтобы начислять бонусы
-router.post('/clients', async (req, res) => {
+router.post('/clients', requireFeature('clients'), async (req, res) => {
   const { name, phone, email, status, last_payment_at, expires_at } = req.body;
   if (!name) return res.status(400).json({ error: 'Укажите имя' });
   const r = await pool.query(
@@ -816,7 +824,7 @@ router.post('/clients', async (req, res) => {
   res.json(r.rows[0]);
 });
 
-router.put('/clients/:id', requireRole('owner', 'admin'), async (req, res) => {
+router.put('/clients/:id', requireFeature('clients'), requireRole('owner', 'admin'), async (req, res) => {
   const { name, phone, email, status, last_payment_at, expires_at, bonus } = req.body;
   const r = await pool.query(
     `UPDATE clients SET name=COALESCE($1,name), phone=COALESCE($2,phone), email=COALESCE($3,email),
@@ -829,7 +837,7 @@ router.put('/clients/:id', requireRole('owner', 'admin'), async (req, res) => {
 });
 
 // Удаление клиента: его чеки остаются в отчётах, просто без привязки к клиенту
-router.delete('/clients/:id', requireRole('owner', 'admin'), async (req, res) => {
+router.delete('/clients/:id', requireFeature('clients'), requireRole('owner', 'admin'), async (req, res) => {
   await pool.query('UPDATE orders SET client_id = NULL WHERE client_id=$1 AND venue_id=$2', [req.params.id, req.user.venueId]);
   await pool.query('DELETE FROM clients WHERE id=$1 AND venue_id=$2', [req.params.id, req.user.venueId]);
   res.json({ ok: true });

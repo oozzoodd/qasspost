@@ -3,202 +3,670 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>vzlyot.post — Админ панель</title>
+<meta name="robots" content="noindex">
+<title>vzlyot.post — админ-панель</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F5F5F0; color: #1a1a1a; font-size: 14px; padding: 24px; }
-  .container { max-width: 1100px; margin: 0 auto; }
-  h1 { font-size: 22px; font-weight: 600; margin-bottom: 16px; }
-  .key-box { background: #fff; border: 1px solid #E8E8E3; border-radius: 12px; padding: 16px; margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
-  .key-box input { flex: 1; padding: 10px 12px; border: 1px solid #E0E0DB; border-radius: 8px; font-size: 13px; }
-  .key-box label { font-size: 13px; font-weight: 500; color: #555; }
-  .btn { padding: 9px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; border: none; font-weight: 500; }
-  .btn-primary { background: #1D9E75; color: #fff; }
-  .btn-primary:hover { background: #0F6E56; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy: #1C2B45; --coral: #FF6A45; --coral-hover: #F2542D; --coral-text: #C23A14; --gold: #FFB627;
+    --bg: #F7F4EC; --card: #FDFBF4; --soft: #EFE9D8; --line: #E7E0CF; --text: #1C2B45; --muted: #5F6779;
+    --green: #1A7A42; --green-soft: #E2F4E8; --amber: #94580A; --amber-soft: #FFF0CC; --red: #C0392B; --red-soft: #FCE5E1;
+  }
+  body { font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.45; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  :focus-visible { outline: 3px solid var(--gold); outline-offset: 1px; }
+  .num { font-variant-numeric: tabular-nums; }
+  .muted { color: var(--muted); }
+
+  .bar { background: var(--navy); color: #F7F4EC; }
+  .bar-in { max-width: 1280px; margin: 0 auto; padding: 12px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 16px; letter-spacing: -0.02em; margin-right: auto; }
+  .brand svg { width: 26px; height: 26px; }
+  .brand small { font-weight: 600; opacity: 0.65; font-size: 13px; }
+  .tabs { display: flex; gap: 4px; padding: 3px; border-radius: 10px; background: rgba(255,255,255,0.10); }
+  .tabs button { border: none; background: transparent; padding: 7px 14px; border-radius: 8px; font-weight: 700; font-size: 13px; color: rgba(247,244,236,0.75); cursor: pointer; }
+  .tabs button.on { background: #F7F4EC; color: var(--navy); }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 20px; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 14px; border-radius: 9px; border: 1px solid transparent; font-weight: 700; font-size: 13px; cursor: pointer; white-space: nowrap; text-decoration: none; }
+  .btn-primary { background: var(--coral); color: #fff; }
+  .btn-primary:hover { background: var(--coral-hover); }
+  .btn-ghost { background: var(--card); border-color: var(--line); }
+  .btn-ghost:hover { border-color: var(--navy); }
+  .btn-danger { background: var(--red-soft); color: var(--red); }
+  .btn-light { background: rgba(255,255,255,0.12); color: #F7F4EC; }
   .btn-sm { padding: 6px 10px; font-size: 12px; }
-  .btn-danger { background: #FEE8E8; color: #C0392B; }
-  .btn-green { background: #E8F7F1; color: #0F6E56; }
-  .btn-amber { background: #FEF3C7; color: #92400E; }
-  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 12px; margin-bottom: 20px; }
-  .metric { background: #fff; border: 1px solid #E8E8E3; border-radius: 10px; padding: 14px 16px; }
-  .metric-label { font-size: 12px; color: #888; margin-bottom: 5px; }
-  .metric-value { font-size: 24px; font-weight: 600; }
-  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #E8E8E3; font-size: 13px; }
-  th { text-align: left; font-size: 11px; font-weight: 500; color: #999; padding: 12px 10px; border-bottom: 1px solid #E8E8E3; text-transform: uppercase; }
-  td { padding: 12px 10px; border-bottom: 1px solid #F0F0EB; vertical-align: middle; }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: #FAFAFA; }
-  .badge { display: inline-flex; font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 500; }
-  .badge-green { background: #E8F7F1; color: #0F6E56; }
-  .badge-amber { background: #FEF3C7; color: #92400E; }
-  .badge-red { background: #FEE8E8; color: #9B1C1C; }
-  .badge-gray { background: #F0F0EB; color: #666; }
-  .actions { display: flex; gap: 6px; flex-wrap: wrap; }
-  .empty { text-align: center; padding: 40px; color: #bbb; }
-  .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; align-items: center; justify-content: center; }
+  .btn:disabled { opacity: 0.5; cursor: default; }
+
+  /* Вход */
+  .login { max-width: 380px; margin: 12vh auto 0; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 28px; }
+  .login h1 { font-size: 20px; letter-spacing: -0.02em; margin-bottom: 6px; }
+  .login p { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
+  .login .btn { width: 100%; margin-top: 12px; padding: 12px; }
+  .error { display: none; margin-top: 12px; padding: 9px 12px; border-radius: 9px; background: var(--red-soft); color: var(--red); font-weight: 600; font-size: 13px; }
+  .error.show { display: block; }
+
+  .field { display: grid; gap: 4px; margin-bottom: 12px; }
+  .field label { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .field input, .field select, .field textarea { width: 100%; padding: 9px 11px; border: 1px solid var(--line); border-radius: 9px; background: #fff; outline: none; }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--coral); }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .check { display: flex; align-items: center; gap: 8px; font-weight: 600; margin-bottom: 12px; }
+  .check input { width: 16px; height: 16px; accent-color: var(--coral); }
+
+  /* Сводка */
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .metric { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; text-align: left; cursor: pointer; }
+  .metric.on { border-color: var(--navy); box-shadow: inset 0 0 0 1px var(--navy); }
+  .metric.static { cursor: default; }
+  .metric-label { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .metric-value { font-size: 26px; font-weight: 800; letter-spacing: -0.03em; margin-top: 2px; }
+  .metric-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .c-green { color: var(--green); } .c-amber { color: var(--amber); } .c-red { color: var(--red); }
+
+  .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  .toolbar input[type=search] { flex: 1; min-width: 220px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 9px; background: #fff; outline: none; }
+  .toolbar input[type=search]:focus { border-color: var(--coral); }
+
+  .table-wrap { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 12px; font-weight: 700; color: var(--muted); padding: 11px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  td { padding: 11px 12px; border-bottom: 1px solid var(--soft); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr.click { cursor: pointer; }
+  tbody tr.click:hover td { background: #FAF6EC; }
+  td.r, th.r { text-align: right; }
+  .sub { font-size: 12px; color: var(--muted); }
+  .badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+  .b-green { background: var(--green-soft); color: var(--green); }
+  .b-amber { background: var(--amber-soft); color: var(--amber); }
+  .b-red { background: var(--red-soft); color: var(--red); }
+  .b-gray { background: var(--soft); color: var(--muted); }
+  .b-navy { background: var(--navy); color: #F7F4EC; }
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
+  .empty { text-align: center; padding: 32px; color: var(--muted); }
+
+  /* Карточка клиента */
+  .drawer-bg { display: none; position: fixed; inset: 0; background: rgba(28,43,69,0.45); z-index: 50; }
+  .drawer-bg.open { display: block; }
+  .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: min(620px, 100%); background: var(--bg); overflow-y: auto; padding: 20px; box-shadow: -18px 0 40px rgba(28,43,69,0.2); }
+  .drawer-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+  .drawer-head h2 { font-size: 22px; letter-spacing: -0.02em; line-height: 1.2; }
+  .drawer-head .x { margin-left: auto; border: none; background: var(--soft); width: 34px; height: 34px; border-radius: 9px; font-size: 18px; cursor: pointer; flex-shrink: 0; }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+  .panel h3 { font-size: 15px; letter-spacing: -0.01em; margin-bottom: 12px; }
+  .kv { display: grid; grid-template-columns: 150px 1fr; gap: 6px 12px; }
+  .kv dt { color: var(--muted); }
+  .kv dd { font-weight: 600; overflow-wrap: anywhere; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .chart { display: flex; align-items: flex-end; gap: 4px; height: 96px; margin-top: 4px; }
+  .chart div { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 3px; height: 100%; }
+  .chart i { display: block; width: 100%; border-radius: 4px 4px 0 0; background: var(--coral); min-height: 2px; }
+  .chart i.zero { background: var(--line); }
+  .chart span { font-size: 10px; color: var(--muted); }
+  .usage { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 14px; }
+  .usage div { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  .usage b { display: block; font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+  .usage span { font-size: 12px; color: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  .modal-bg { display: none; position: fixed; inset: 0; background: rgba(28,43,69,0.5); z-index: 100; align-items: center; justify-content: center; padding: 16px; }
   .modal-bg.open { display: flex; }
-  .modal { background: #fff; border-radius: 14px; padding: 22px; width: 320px; }
-  .modal h3 { font-size: 16px; margin-bottom: 14px; }
-  .field { margin-bottom: 12px; }
-  .field label { display: block; font-size: 12px; color: #666; margin-bottom: 5px; }
-  .field select, .field input { width: 100%; padding: 9px; border: 1px solid #E0E0DB; border-radius: 8px; font-size: 13px; }
-  .modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
-  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 13px; display: none; z-index: 999; }
+  .modal { background: var(--card); border-radius: 16px; padding: 22px; width: min(440px, 100%); max-height: 92vh; overflow-y: auto; }
+  .modal h3 { font-size: 18px; letter-spacing: -0.015em; margin-bottom: 14px; }
+  .modal-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
+  .secret { margin: 10px 0 14px; padding: 12px 14px; border-radius: 10px; background: var(--amber-soft); font-size: 13px; }
+  .secret b { display: block; font-size: 20px; letter-spacing: 0.04em; margin-top: 2px; user-select: all; }
+  #toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: var(--navy); color: #F7F4EC; padding: 10px 18px; border-radius: 10px; font-weight: 600; font-size: 13px; display: none; z-index: 999; max-width: calc(100vw - 32px); }
+
+  @media (max-width: 640px) {
+    .wrap { padding: 14px; }
+    .row2 { grid-template-columns: 1fr; }
+    .kv { grid-template-columns: 1fr; gap: 0 0; }
+    .kv dd { margin-bottom: 8px; }
+    .brand small { display: none; }
+  }
 </style>
 </head>
 <body>
-<div class="container">
-  <h1>🛠 vzlyot.post — Управление клиентами</h1>
 
-  <div class="key-box">
-    <label>ADMIN_KEY:</label>
-    <input type="password" id="admin-key" placeholder="Введите секретный ключ из Railway Variables">
-    <button class="btn btn-primary" onclick="loadAccounts()">Войти</button>
-  </div>
-
-  <div id="content" style="display:none;">
-    <div class="metrics" id="metrics"></div>
-    <table>
-      <thead><tr><th>Заведение</th><th>Email</th><th>Тариф</th><th>Статус</th><th>Доступ до</th><th>Действия</th></tr></thead>
-      <tbody id="accounts-tbody"></tbody>
-    </table>
-  </div>
-  <div class="empty" id="empty-msg">Введите ADMIN_KEY чтобы увидеть список клиентов</div>
+<div id="login-screen" class="wrap" style="display:none;">
+  <form class="login" id="login-form">
+    <h1>Админ-панель vzlyot.post</h1>
+    <p>Введите секретный ключ ADMIN_KEY. Он задан в настройках сервера (Railway → Variables) или показан в окне локального запуска.</p>
+    <div class="field"><label for="admin-key">Ключ</label><input type="password" id="admin-key" autocomplete="current-password"></div>
+    <div class="error" id="login-error" role="alert"></div>
+    <button class="btn btn-primary" type="submit">Войти</button>
+  </form>
 </div>
 
-<div class="modal-bg" id="modal-bg">
-  <div class="modal" id="modal-body"></div>
+<div id="panel" style="display:none;">
+  <div class="bar">
+    <div class="bar-in">
+      <div class="brand">
+        <svg viewBox="0 0 48 48" fill="none" stroke-linecap="round" aria-hidden="true"><path d="M11 40 23 16" stroke="#FF6A45" stroke-width="9"/><path d="M25 15 37 40" stroke="#F7F4EC" stroke-width="9"/><circle cx="24" cy="5.5" r="3.4" fill="#FFB627"/></svg>
+        vzlyot.post <small>админ-панель</small>
+      </div>
+      <div class="tabs">
+        <button type="button" data-tab="clients" class="on">Клиенты</button>
+        <button type="button" data-tab="payments">Оплаты</button>
+      </div>
+      <button class="btn btn-light btn-sm" type="button" onclick="refresh()">Обновить</button>
+      <button class="btn btn-light btn-sm" type="button" onclick="signOut()">Выйти</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <!-- КЛИЕНТЫ -->
+    <div id="tab-clients">
+      <div class="metrics" id="metrics"></div>
+      <div class="toolbar">
+        <input type="search" id="search" placeholder="Поиск: заведение, имя, телефон" oninput="renderClients()">
+        <button class="btn btn-primary" type="button" onclick="openCreate()">+ Новый клиент</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Заведение</th><th>Контакт</th><th>Тариф</th><th>Подписка</th><th>Доступ до</th>
+            <th>Активность</th><th class="r">Заказы за 7 дн.</th><th class="r">Оборот за 30 дн.</th><th class="r">Оплачено</th>
+          </tr></thead>
+          <tbody id="clients-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ОПЛАТЫ -->
+    <div id="tab-payments" style="display:none;">
+      <div class="metrics" id="pay-metrics"></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Дата</th><th>Клиент</th><th class="r">Сумма</th><th>Способ</th><th>Тариф и срок</th><th>Комментарий</th><th></th></tr></thead>
+          <tbody id="payments-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
+
+<div class="drawer-bg" id="drawer-bg"><aside class="drawer" id="drawer"></aside></div>
+<div class="modal-bg" id="modal-bg"><div class="modal" id="modal"></div></div>
 <div id="toast"></div>
 
 <script>
-const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:3000'
-  : 'https://qasspost-production.up.railway.app';
+// ═══════════════════════════════════════════════════════════
+// Админ-панель vzlyot.post: клиенты, подписки, оплаты, активность.
+// Ключ хранится в этом браузере; кнопка «Выйти» его стирает.
+// ═══════════════════════════════════════════════════════════
 let adminKey = localStorage.getItem('qp_admin_key') || '';
 let accounts = [];
+let overview = {};
+let payments = [];
+let plans = [];
+let statusFilter = 'all';
+let openAccountId = null;
 
-document.getElementById('admin-key').value = adminKey;
-if (adminKey) loadAccounts();
+const $ = id => document.getElementById(id);
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const money = n => Math.round(Number(n) || 0).toLocaleString('ru-RU');
+const STATUS = {
+  active: ['Оплачена', 'b-green'], trial: ['Пробный период', 'b-amber'],
+  expired: ['Истекла', 'b-red'], blocked: ['Заблокирован', 'b-gray'],
+};
+const METHOD = { click: 'Click', payme: 'Payme', cash: 'Наличные', card: 'Карта', transfer: 'Перевод', other: 'Другое' };
+const ROLE = { owner: 'владелец', admin: 'администратор', cashier: 'кассир' };
+const planName = id => (plans.find(p => p.id === id) || {}).name || id || '—';
+const payAmount = p => p.currency === 'USD' ? '$' + money(p.amount) : money(p.amount) + ' сум';
 
-function toast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.style.display = 'block';
-  setTimeout(()=>t.style.display='none', 2500);
+function fmtDate(v) { return v ? new Date(v).toLocaleDateString('ru-RU') : '—'; }
+function fmtDateTime(v) { return v ? new Date(v).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—'; }
+function daysLeft(v) { return v ? Math.ceil((new Date(v) - Date.now()) / 86400000) : null; }
+function ago(v) {
+  if (!v) return 'никогда';
+  const min = Math.floor((Date.now() - new Date(v)) / 60000);
+  if (min < 2) return 'только что';
+  if (min < 60) return min + ' мин назад';
+  const h = Math.floor(min / 60);
+  if (h < 24) return h + ' ч назад';
+  const d = Math.floor(h / 24);
+  return d === 1 ? 'вчера' : d + ' дн. назад';
+}
+// Насколько живо клиент пользуется кассой — по последней продаже
+function activity(a) {
+  if (!a.last_order_at) return { text: a.menu_count ? 'Меню есть, продаж нет' : 'Не начал работать', color: '#B9B2A0' };
+  const days = (Date.now() - new Date(a.last_order_at)) / 86400000;
+  if (days < 2) return { text: 'Работает', color: '#1A7A42' };
+  if (days < 7) return { text: 'Продажи ' + ago(a.last_order_at), color: '#E29A12' };
+  return { text: 'Не продаёт ' + Math.floor(days) + ' дн.', color: '#C0392B' };
 }
 
-async function adminApi(path, opts = {}) {
-  const res = await fetch(API_URL + path, {
-    ...opts,
-    headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey, ...(opts.headers||{}) }
+function toast(text) {
+  const el = $('toast');
+  el.textContent = text; el.style.display = 'block';
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => { el.style.display = 'none'; }, 3200);
+}
+
+async function api(path, opts = {}) {
+  const res = await fetch(path, {
+    method: opts.method || 'GET',
+    headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
   });
   let data; try { data = await res.json(); } catch { data = {}; }
-  if (!res.ok) throw new Error(data.error || 'Ошибка ' + res.status);
+  if (!res.ok) {
+    const err = new Error(data.error || 'Ошибка ' + res.status);
+    err.status = res.status;
+    throw err;
+  }
   return data;
 }
 
-async function loadAccounts() {
-  adminKey = document.getElementById('admin-key').value.trim();
-  if (!adminKey) return toast('Введите ключ');
-  localStorage.setItem('qp_admin_key', adminKey);
+// ── Вход ─────────────────────────────────────────────────────
+function showLogin(message) {
+  $('panel').style.display = 'none';
+  $('login-screen').style.display = 'block';
+  const err = $('login-error');
+  err.textContent = message || '';
+  err.classList.toggle('show', Boolean(message));
+  $('admin-key').focus();
+}
+$('login-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  adminKey = $('admin-key').value.trim();
+  if (!adminKey) return showLogin('Введите ключ');
+  await start();
+});
+function signOut() {
+  adminKey = '';
+  localStorage.removeItem('qp_admin_key');
+  $('admin-key').value = '';
+  closeDrawer();
+  showLogin();
+}
+
+async function start() {
   try {
-    accounts = await adminApi('/admin/accounts');
-    document.getElementById('content').style.display = 'block';
-    document.getElementById('empty-msg').style.display = 'none';
-    renderMetrics(); renderTable();
+    await refresh();
+    localStorage.setItem('qp_admin_key', adminKey);
+    $('login-screen').style.display = 'none';
+    $('panel').style.display = 'block';
   } catch (err) {
-    toast('Ошибка: ' + err.message);
-    document.getElementById('content').style.display = 'none';
-    document.getElementById('empty-msg').style.display = 'block';
-    document.getElementById('empty-msg').textContent = 'Ошибка: ' + err.message;
+    localStorage.removeItem('qp_admin_key');
+    showLogin(err.status === 403 ? 'Неверный ключ' : err.message);
   }
 }
 
+async function refresh() {
+  [accounts, overview, payments, plans] = await Promise.all([
+    api('/admin/accounts'), api('/admin/overview'), api('/admin/payments'), api('/admin/plans'),
+  ]);
+  renderMetrics(); renderClients(); renderPayments();
+  if (openAccountId) openAccount(openAccountId, true);
+}
+
+// ── Вкладки ──────────────────────────────────────────────────
+document.querySelectorAll('.tabs button').forEach(btn => btn.addEventListener('click', () => {
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b === btn));
+  $('tab-clients').style.display = btn.dataset.tab === 'clients' ? '' : 'none';
+  $('tab-payments').style.display = btn.dataset.tab === 'payments' ? '' : 'none';
+}));
+
+// ── Клиенты ──────────────────────────────────────────────────
 function renderMetrics() {
-  const total = accounts.length;
-  const active = accounts.filter(a=>a.status==='active').length;
-  const trial = accounts.filter(a=>a.status==='trial').length;
-  const blocked = accounts.filter(a=>a.status==='blocked').length;
-  document.getElementById('metrics').innerHTML = `
-    <div class="metric"><div class="metric-label">Всего клиентов</div><div class="metric-value">${total}</div></div>
-    <div class="metric"><div class="metric-label">Активных</div><div class="metric-value" style="color:#0F6E56">${active}</div></div>
-    <div class="metric"><div class="metric-label">Пробный период</div><div class="metric-value" style="color:#B45309">${trial}</div></div>
-    <div class="metric"><div class="metric-label">Заблокировано</div><div class="metric-value" style="color:#C0392B">${blocked}</div></div>`;
+  const o = overview;
+  const cell = (key, label, value, sub, cls = '') =>
+    `<button type="button" class="metric ${statusFilter === key ? 'on' : ''}" onclick="setFilter('${key}')">
+       <div class="metric-label">${label}</div><div class="metric-value num ${cls}">${value}</div><div class="metric-sub">${sub}</div>
+     </button>`;
+  $('metrics').innerHTML =
+    cell('all', 'Всего клиентов', o.total || 0, `новых за 7 дней: ${o.new_7d || 0}`) +
+    cell('active', 'Платят', o.active || 0, 'оплаченная подписка', 'c-green') +
+    cell('trial', 'Пробный период', o.trial || 0, 'ещё не платили', 'c-amber') +
+    cell('expiring', 'Скоро закончится', o.expiring_7d || 0, 'доступ истекает за 7 дней', 'c-amber') +
+    cell('expired', 'Истекли', o.expired || 0, 'нужно продление', 'c-red') +
+    cell('sleeping', 'Не пользуются', o.sleeping || 0, 'доступ есть, продаж 7 дней нет', 'c-red') +
+    cell('blocked', 'Заблокированы', o.blocked || 0, 'доступ закрыт вручную');
+}
+function setFilter(key) { statusFilter = key; renderMetrics(); renderClients(); }
+
+function matchesFilter(a) {
+  const s = a.effective_status;
+  switch (statusFilter) {
+    case 'all': return true;
+    case 'expiring': { const d = daysLeft(a.expires_at); return (s === 'active' || s === 'trial') && d !== null && d <= 7; }
+    case 'sleeping': return (s === 'active' || s === 'trial') && !a.orders_7d;
+    default: return s === statusFilter;
+  }
 }
 
-const statusBadge = { active:'badge-green', trial:'badge-amber', expired:'badge-red', blocked:'badge-gray' };
-const statusLabel = { active:'Активна', trial:'Пробный период', expired:'Истекла', blocked:'Заблокирована' };
-const planLabel = { start:'Старт', business:'Бизнес', network:'Сеть' };
-
-function renderTable() {
-  document.getElementById('accounts-tbody').innerHTML = accounts.map(a => {
-    const expires = a.expires_at ? new Date(a.expires_at).toLocaleDateString('ru-RU') : '—';
-    return `<tr>
-      <td><strong>${a.venue_name || a.name}</strong></td>
-      <td style="color:#888;">${a.email}</td>
-      <td>${planLabel[a.plan]||a.plan}</td>
-      <td><span class="badge ${statusBadge[a.status]||'badge-gray'}">${statusLabel[a.status]||a.status}</span></td>
-      <td>${expires}</td>
-      <td class="actions">
-        <button class="btn btn-sm btn-primary" onclick="openActivate(${a.id})">Активировать</button>
-        <button class="btn btn-sm btn-green" onclick="extend(${a.id})">+1 мес</button>
-        ${a.status==='blocked'
-          ? `<button class="btn btn-sm btn-green" onclick="unblock(${a.id})">Разблок.</button>`
-          : `<button class="btn btn-sm btn-danger" onclick="block(${a.id})">Заблок.</button>`}
-      </td>
+function renderClients() {
+  const q = $('search').value.trim().toLowerCase();
+  const qDigits = q.replace(/\D/g, '');
+  const rows = accounts.filter(a => {
+    if (!matchesFilter(a)) return false;
+    if (!q) return true;
+    const text = [a.venue_name, a.name, a.email, a.note].filter(Boolean).join(' ').toLowerCase();
+    return text.includes(q) || (qDigits.length >= 3 && String(a.phone || '').replace(/\D/g, '').includes(qDigits));
+  });
+  $('clients-tbody').innerHTML = rows.length ? rows.map(a => {
+    const [sLabel, sClass] = STATUS[a.effective_status] || [a.effective_status, 'b-gray'];
+    const left = daysLeft(a.expires_at);
+    const leftText = left === null ? '' : left < 0 ? `истёк ${-left} дн. назад` : left === 0 ? 'сегодня' : `осталось ${left} дн.`;
+    const act = activity(a);
+    const paid = [a.paid_usd ? '$' + money(a.paid_usd) : '', a.paid_uzs ? money(a.paid_uzs) + ' сум' : ''].filter(Boolean).join('<br>') || '—';
+    return `<tr class="click" onclick="openAccount(${a.id})">
+      <td><strong>${esc(a.venue_name || '—')}</strong><div class="sub">с ${fmtDate(a.created_at)}</div></td>
+      <td>${esc(a.name)}<div class="sub num">${esc(a.phone || a.email || '—')}</div></td>
+      <td><span class="badge ${a.plan === 'start' ? 'b-gray' : 'b-navy'}">${esc(planName(a.plan))}</span></td>
+      <td><span class="badge ${sClass}">${sLabel}</span></td>
+      <td class="num">${fmtDate(a.expires_at)}<div class="sub">${leftText}</div></td>
+      <td><span class="dot" style="background:${act.color}"></span>${act.text}<div class="sub">в кассе: ${ago(a.last_seen_at)}</div></td>
+      <td class="r num">${a.orders_7d}</td>
+      <td class="r num">${money(a.revenue_30d)}<div class="sub">сум</div></td>
+      <td class="r num">${paid}</td>
     </tr>`;
-  }).join('') || '<tr><td colspan="6" style="text-align:center;color:#bbb;padding:24px;">Клиентов пока нет</td></tr>';
+  }).join('') : `<tr><td colspan="9" class="empty">${accounts.length ? 'Никого не найдено' : 'Клиентов пока нет. Они появятся здесь после регистрации на сайте.'}</td></tr>`;
 }
 
-function showModal(html) { document.getElementById('modal-body').innerHTML = html; document.getElementById('modal-bg').classList.add('open'); }
-function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
-document.getElementById('modal-bg').addEventListener('click', e => { if (e.target===e.currentTarget) closeModal(); });
+// ── Карточка клиента ─────────────────────────────────────────
+async function openAccount(id, silent) {
+  openAccountId = id;
+  if (!silent) {
+    $('drawer').innerHTML = '<div class="empty">Загрузка…</div>';
+    $('drawer-bg').classList.add('open');
+  }
+  let d;
+  try { d = await api('/admin/accounts/' + id); }
+  catch (err) { toast(err.message); closeDrawer(); return; }
+  if (openAccountId !== id) return;
+  const a = d.account;
+  const [sLabel, sClass] = STATUS[a.effective_status] || [a.effective_status, 'b-gray'];
+  const left = daysLeft(a.expires_at);
+  const max = Math.max(1, ...d.daily.map(x => x.orders));
+  const chart = d.daily.map(x =>
+    `<div title="${esc(x.day)}: ${x.orders} заказов, ${money(x.revenue)} сум">
+       <i class="${x.orders ? '' : 'zero'}" style="height:${x.orders ? Math.max(6, Math.round(x.orders / max * 100)) : 2}%"></i>
+       <span class="num">${esc(x.day.slice(8))}</span>
+     </div>`).join('');
+  const c = d.counts;
+  const used = [
+    ['Меню', a.menu_count], ['Склад', c.stock_count], ['Техкарты', c.recipes_count],
+    ['Клиенты', c.clients_count], ['Расходы', c.expenses_count], ['Смены', c.shifts_count],
+  ].map(([label, n]) => `<span class="badge ${n ? 'b-green' : 'b-gray'}">${label}: ${n}</span>`).join('');
+  const act = activity(a);
 
-function openActivate(id) {
-  showModal(`<h3>Активировать тариф</h3>
-    <div class="field"><label>Тариф</label>
-      <select id="act-plan">
-        <option value="start">Старт ($29)</option>
-        <option value="business" selected>Бизнес ($49)</option>
-        <option value="network">Сеть ($89)</option>
-      </select>
+  $('drawer').innerHTML = `
+    <div class="drawer-head">
+      <div>
+        <h2>${esc(a.venue_name || a.name)}</h2>
+        <div class="muted">${esc(a.name)} · клиент с ${fmtDate(a.created_at)}</div>
+      </div>
+      <button class="x" type="button" onclick="closeDrawer()" aria-label="Закрыть">×</button>
     </div>
-    <div class="field"><label>Срок (месяцев)</label>
-      <select id="act-months">
-        <option value="1">1 месяц</option>
-        <option value="3">3 месяца (-10%)</option>
-        <option value="6">6 месяцев (-15%)</option>
-        <option value="12">12 месяцев (-20%)</option>
-      </select>
+
+    <div class="panel">
+      <h3>Подписка</h3>
+      <dl class="kv">
+        <dt>Тариф</dt><dd>${esc(planName(a.plan))}</dd>
+        <dt>Состояние</dt><dd><span class="badge ${sClass}">${sLabel}</span></dd>
+        <dt>Доступ до</dt><dd class="num">${fmtDate(a.expires_at)}${left === null ? '' : left < 0 ? ` — истёк ${-left} дн. назад` : ` — осталось ${left} дн.`}</dd>
+        <dt>Телефон</dt><dd class="num">${a.phone ? `<a href="tel:${esc(a.phone)}">${esc(a.phone)}</a>` : '—'}</dd>
+        <dt>Email</dt><dd>${esc(a.email || '—')}</dd>
+        <dt>Заметка</dt><dd>${esc(a.note || '—')}</dd>
+      </dl>
+      <div class="actions">
+        <button class="btn btn-primary" type="button" onclick="openPayment(${a.id})">Записать оплату</button>
+        <button class="btn btn-ghost" type="button" onclick="openPlan(${a.id})">Тариф и срок</button>
+        <button class="btn btn-ghost" type="button" onclick="openEdit(${a.id})">Изменить данные</button>
+        <button class="btn btn-ghost" type="button" onclick="resetPassword(${a.id})">Новый пароль</button>
+        ${a.status === 'blocked'
+          ? `<button class="btn btn-ghost" type="button" onclick="setBlocked(${a.id}, false)">Разблокировать</button>`
+          : `<button class="btn btn-danger" type="button" onclick="setBlocked(${a.id}, true)">Заблокировать</button>`}
+      </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-sm" onclick="closeModal()">Отмена</button>
-      <button class="btn btn-sm btn-primary" onclick="doActivate(${id})">Активировать</button>
+
+    <div class="panel">
+      <h3>Пользуется ли кассой</h3>
+      <div class="usage">
+        <div><b><span class="dot" style="background:${act.color}"></span>${act.text}</b><span>последняя продажа: ${ago(a.last_order_at)}</span></div>
+        <div><b class="num">${a.orders_7d}</b><span>заказов за 7 дней</span></div>
+        <div><b class="num">${a.orders_30d}</b><span>заказов за 30 дней</span></div>
+        <div><b class="num">${money(a.revenue_30d)}</b><span>сум оборота за 30 дней</span></div>
+      </div>
+      <div class="muted" style="font-size:12px;">Заказы по дням за две недели</div>
+      <div class="chart">${chart}</div>
+      <dl class="kv" style="margin-top:14px;">
+        <dt>Был в кассе</dt><dd>${ago(a.last_seen_at)}</dd>
+        <dt>Входил с паролем</dt><dd>${fmtDateTime(a.last_login_at)}</dd>
+        <dt>Последняя смена</dt><dd>${fmtDateTime(c.last_shift_at)}</dd>
+        <dt>Всего заказов</dt><dd class="num">${a.orders_total}</dd>
+      </dl>
+      <div class="muted" style="font-size:12px;margin:14px 0 6px;">Чем пользуется (сколько записей)</div>
+      <div class="chips">${used}</div>
+      <div class="actions">
+        <button class="btn btn-ghost" type="button" onclick="viewPos(${a.id})">👁 Открыть кассу клиента</button>
+      </div>
+      <div class="muted" style="font-size:12px;margin-top:8px;">Касса откроется в новой вкладке только для просмотра: изменить в ней ничего нельзя.</div>
+    </div>
+
+    <div class="panel">
+      <h3>Сотрудники</h3>
+      ${d.staff.length ? d.staff.map(s =>
+        `<div style="display:flex;justify-content:space-between;gap:10px;padding:5px 0;">
+           <span><strong>${esc(s.name)}</strong> <span class="muted">${ROLE[s.role] || esc(s.role)}${s.active ? '' : ', отключён'}</span></span>
+           <span class="muted num">${esc(s.phone || '')}</span>
+         </div>`).join('') : '<div class="muted">Нет сотрудников</div>'}
+    </div>
+
+    <div class="panel">
+      <h3>Оплаты</h3>
+      ${d.payments.length ? `<table>
+        <thead><tr><th>Дата</th><th class="r">Сумма</th><th>Способ</th><th>За что</th></tr></thead>
+        <tbody>${d.payments.map(p => `<tr>
+          <td class="num">${fmtDate(p.paid_at)}</td>
+          <td class="r num"><strong>${payAmount(p)}</strong></td>
+          <td>${METHOD[p.method] || esc(p.method || '—')}</td>
+          <td>${p.plan ? esc(planName(p.plan)) : ''}${p.months ? ' · ' + p.months + ' мес.' : ''}<div class="sub">${esc(p.comment || '')}</div></td>
+        </tr>`).join('')}</tbody></table>` : '<div class="muted">Оплат пока не было</div>'}
+    </div>`;
+}
+function closeDrawer() { openAccountId = null; $('drawer-bg').classList.remove('open'); }
+$('drawer-bg').addEventListener('click', e => { if (e.target === e.currentTarget) closeDrawer(); });
+
+// ── Окна действий ────────────────────────────────────────────
+function showModal(html) { $('modal').innerHTML = html; $('modal-bg').classList.add('open'); }
+function closeModal() { $('modal-bg').classList.remove('open'); }
+$('modal-bg').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if ($('modal-bg').classList.contains('open')) closeModal(); else closeDrawer();
+});
+const acc = id => accounts.find(a => a.id === id) || {};
+const planOptions = selected => plans.map(p =>
+  `<option value="${esc(p.id)}"${p.id === selected ? ' selected' : ''}>${esc(p.name)} — ${esc(p.currency)}${money(p.price)}/мес</option>`).join('');
+const monthOptions = () => [1, 3, 6, 12].map(m => `<option value="${m}">${m} мес.</option>`).join('');
+
+async function act(fn, okText) {
+  try { await fn(); closeModal(); if (okText) toast(okText); await refresh(); }
+  catch (err) { toast(err.message); }
+}
+
+function openPayment(id) {
+  const a = acc(id);
+  const plan = plans.find(p => p.id === (a.plan || 'start')) || {};
+  showModal(`<h3>Оплата: ${esc(a.venue_name || a.name)}</h3>
+    <div class="row2">
+      <div class="field"><label>Сумма</label><input type="number" id="p-amount" min="1" step="1" value="${plan.currency === '$' ? plan.price || '' : ''}"></div>
+      <div class="field"><label>Валюта</label><select id="p-currency"><option value="USD">Доллары ($)</option><option value="UZS">Сумы</option></select></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Способ оплаты</label><select id="p-method">${Object.entries(METHOD).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select></div>
+      <div class="field"><label>Дата оплаты</label><input type="date" id="p-date" value="${new Date().toLocaleDateString('sv-SE')}"></div>
+    </div>
+    <label class="check"><input type="checkbox" id="p-extend" checked onchange="document.getElementById('p-extend-fields').style.display=this.checked?'':'none'"> Сразу продлить доступ</label>
+    <div class="row2" id="p-extend-fields">
+      <div class="field"><label>Тариф</label><select id="p-plan">${planOptions(a.plan)}</select></div>
+      <div class="field"><label>На срок</label><select id="p-months">${monthOptions()}</select></div>
+    </div>
+    <div class="field"><label>Комментарий</label><input type="text" id="p-comment" maxlength="500" placeholder="Необязательно"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" type="button" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" type="button" onclick="savePayment(${id})">Записать</button>
     </div>`);
 }
-async function doActivate(id) {
-  const plan = document.getElementById('act-plan').value;
-  const months = +document.getElementById('act-months').value;
+function savePayment(id) {
+  const extend = $('p-extend').checked;
+  const body = {
+    amount: Number($('p-amount').value),
+    currency: $('p-currency').value,
+    method: $('p-method').value,
+    paid_at: $('p-date').value || undefined,
+    comment: $('p-comment').value.trim(),
+    extend,
+    plan: extend ? $('p-plan').value : undefined,
+    months: extend ? Number($('p-months').value) : undefined,
+  };
+  if (!Number.isInteger(body.amount) || body.amount <= 0) return toast('Укажите сумму целым числом');
+  act(() => api(`/admin/accounts/${id}/payments`, { method: 'POST', body }), extend ? 'Оплата записана, доступ продлён' : 'Оплата записана');
+}
+
+function openPlan(id) {
+  const a = acc(id);
+  const date = a.expires_at ? new Date(a.expires_at).toLocaleDateString('sv-SE') : '';
+  showModal(`<h3>Тариф и срок: ${esc(a.venue_name || a.name)}</h3>
+    <div class="field"><label>Тариф</label><select id="t-plan">${planOptions(a.plan)}</select></div>
+    <div class="field"><label>Доступ до (включительно)</label><input type="date" id="t-date" value="${date}"></div>
+    <p class="muted" style="font-size:12px;margin-bottom:12px;">Здесь меняются только тариф и дата. Чтобы пробный период стал оплаченной подпиской, запишите оплату.</p>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" type="button" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" type="button" onclick="savePlan(${id})">Сохранить</button>
+    </div>`);
+}
+function savePlan(id) {
+  const date = $('t-date').value;
+  if (!date) return toast('Укажите дату');
+  // До конца выбранного дня по времени этого компьютера
+  const expires = new Date(date + 'T23:59:59');
+  act(() => api('/admin/accounts/' + id, { method: 'PUT', body: { plan: $('t-plan').value, expires_at: expires.toISOString() } }), 'Сохранено');
+}
+
+function openEdit(id) {
+  const a = acc(id);
+  showModal(`<h3>Данные клиента</h3>
+    <div class="field"><label>Имя владельца</label><input type="text" id="e-name" maxlength="120" value="${esc(a.name)}"></div>
+    <div class="row2">
+      <div class="field"><label>Телефон</label><input type="tel" id="e-phone" value="${esc(a.phone || '')}" placeholder="+998 90 123 45 67"></div>
+      <div class="field"><label>Email</label><input type="email" id="e-email" value="${esc(a.email || '')}"></div>
+    </div>
+    <div class="field"><label>Заметка (видна только вам)</label><textarea id="e-note" rows="3" maxlength="2000">${esc(a.note || '')}</textarea></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" type="button" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" type="button" onclick="saveEdit(${id})">Сохранить</button>
+    </div>`);
+}
+function saveEdit(id) {
+  const body = { name: $('e-name').value.trim(), phone: $('e-phone').value.trim(), email: $('e-email').value.trim(), note: $('e-note').value.trim() };
+  act(() => api('/admin/accounts/' + id, { method: 'PUT', body }), 'Сохранено');
+}
+
+function setBlocked(id, block) {
+  const a = acc(id);
+  if (block && !confirm(`Заблокировать «${a.venue_name || a.name}»? Касса у клиента перестанет открываться.`)) return;
+  act(() => api(`/admin/accounts/${id}/${block ? 'block' : 'unblock'}`, { method: 'POST' }), block ? 'Заблокирован' : 'Разблокирован');
+}
+
+async function resetPassword(id) {
+  const a = acc(id);
+  if (!confirm(`Задать новый пароль для «${a.venue_name || a.name}»? Старый перестанет работать.`)) return;
   try {
-    await adminApi(`/admin/accounts/${id}/activate`, { method:'POST', body: JSON.stringify({ plan, months }) });
-    toast('Активировано!'); closeModal(); loadAccounts();
-  } catch(err) { toast(err.message); }
+    const r = await api(`/admin/accounts/${id}/password`, { method: 'POST', body: {} });
+    showModal(`<h3>Новый пароль</h3>
+      <div class="secret">Передайте клиенту. Пароль показывается один раз.<b>${esc(r.password)}</b></div>
+      <div class="modal-foot"><button class="btn btn-primary" type="button" onclick="closeModal()">Готово</button></div>`);
+  } catch (err) { toast(err.message); }
 }
-async function extend(id) {
+
+async function viewPos(id) {
+  // Вкладку открываем сразу по нажатию, иначе браузер заблокирует её как всплывающее окно
+  const tab = window.open('about:blank', '_blank');
   try {
-    await adminApi(`/admin/accounts/${id}/extend`, { method:'POST', body: JSON.stringify({ months: 1 }) });
-    toast('Продлено на 1 месяц'); loadAccounts();
-  } catch(err) { toast(err.message); }
+    const r = await api(`/admin/accounts/${id}/impersonate`, { method: 'POST' });
+    const url = '/app#view=' + encodeURIComponent(r.token);
+    if (tab) tab.location.href = url; else location.href = url;
+  } catch (err) {
+    if (tab) tab.close();
+    toast(err.message);
+  }
 }
-async function block(id) {
-  if (!confirm('Заблокировать этот аккаунт?')) return;
-  try { await adminApi(`/admin/accounts/${id}/block`, { method:'POST' }); toast('Заблокирован'); loadAccounts(); }
-  catch(err) { toast(err.message); }
+
+function openCreate() {
+  showModal(`<h3>Новый клиент</h3>
+    <div class="row2">
+      <div class="field"><label>Имя владельца</label><input type="text" id="c-name" maxlength="120"></div>
+      <div class="field"><label>Заведение</label><input type="text" id="c-venue" maxlength="120"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Телефон</label><input type="tel" id="c-phone" placeholder="+998 90 123 45 67"></div>
+      <div class="field"><label>Пароль</label><input type="text" id="c-pass" placeholder="Пусто — придумается сам"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Тариф</label><select id="c-plan">${planOptions('start')}</select></div>
+      <div class="field"><label>Пробный период, дней</label><input type="number" id="c-days" min="1" max="365" value="14"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" type="button" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" type="button" onclick="saveCreate()">Создать</button>
+    </div>`);
 }
-async function unblock(id) {
-  try { await adminApi(`/admin/accounts/${id}/unblock`, { method:'POST' }); toast('Разблокирован'); loadAccounts(); }
-  catch(err) { toast(err.message); }
+async function saveCreate() {
+  const body = {
+    name: $('c-name').value.trim(), venueName: $('c-venue').value.trim(), phone: $('c-phone').value.trim(),
+    password: $('c-pass').value || undefined, plan: $('c-plan').value, days: Number($('c-days').value) || 14,
+  };
+  try {
+    const r = await api('/admin/accounts', { method: 'POST', body });
+    showModal(`<h3>Клиент создан</h3>
+      <div class="secret">Передайте клиенту данные для входа. Они показываются один раз.
+        <b>${esc(r.account.phone || '')}</b>
+        ${r.password ? `Пароль<b>${esc(r.password)}</b>` : ''}
+        PIN владельца<b>${esc(r.ownerPin)}</b></div>
+      <div class="modal-foot"><button class="btn btn-primary" type="button" onclick="closeModal()">Готово</button></div>`);
+    await refresh();
+  } catch (err) { toast(err.message); }
 }
+
+// ── Оплаты ───────────────────────────────────────────────────
+function renderPayments() {
+  const month = new Date().toLocaleDateString('sv-SE').slice(0, 7);
+  const by = overview.payments_by_month || [];
+  const sum = (m, cur) => (by.find(x => x.month === m && x.currency === cur) || {}).total || 0;
+  const months = [...new Set(by.map(x => x.month))].slice(0, 6);
+  $('pay-metrics').innerHTML =
+    `<div class="metric static"><div class="metric-label">Этот месяц, $</div><div class="metric-value num c-green">$${money(sum(month, 'USD'))}</div><div class="metric-sub">оплаты в долларах</div></div>
+     <div class="metric static"><div class="metric-label">Этот месяц, сум</div><div class="metric-value num c-green">${money(sum(month, 'UZS'))}</div><div class="metric-sub">оплаты в сумах</div></div>` +
+    months.filter(m => m !== month).map(m =>
+      `<div class="metric static"><div class="metric-label">${esc(m)}</div><div class="metric-value num" style="font-size:20px;">$${money(sum(m, 'USD'))}</div><div class="metric-sub num">${money(sum(m, 'UZS'))} сум</div></div>`).join('');
+
+  $('payments-tbody').innerHTML = payments.length ? payments.map(p => `<tr>
+      <td class="num">${fmtDate(p.paid_at)}</td>
+      <td><a href="#" onclick="openAccount(${p.account_id});return false;"><strong>${esc(p.venue_name || p.account_name)}</strong></a><div class="sub num">${esc(p.account_phone || '')}</div></td>
+      <td class="r num"><strong>${payAmount(p)}</strong></td>
+      <td>${METHOD[p.method] || esc(p.method || '—')}</td>
+      <td>${p.plan ? esc(planName(p.plan)) : '—'}${p.months ? ' · ' + p.months + ' мес.' : ''}</td>
+      <td class="muted">${esc(p.comment || '')}</td>
+      <td class="r"><button class="btn btn-ghost btn-sm" type="button" onclick="deletePayment(${p.id})">Удалить</button></td>
+    </tr>`).join('') : '<tr><td colspan="7" class="empty">Оплат пока нет. Запишите первую в карточке клиента.</td></tr>';
+}
+function deletePayment(id) {
+  if (!confirm('Удалить запись об оплате? Срок доступа клиента при этом не изменится.')) return;
+  act(() => api('/admin/payments/' + id, { method: 'DELETE' }), 'Запись удалена');
+}
+
+if (adminKey) start(); else showLogin();
 </script>
 </body>
 </html>

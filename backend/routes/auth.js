@@ -2,56 +2,71 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../db/pool');
-const { JWT_SECRET } = require('../middleware/auth');
-const { isValidPin, isPinHash, hashPin, findByPin, randomPin } = require('../utils/pin');
+const { requireAuth, JWT_SECRET } = require('../middleware/auth');
+const { isValidPin, isPinHash, hashPin, findByPin } = require('../utils/pin');
+const { normalizePhone } = require('../utils/phone');
+const { TRIAL_DAYS, featuresOf } = require('../config/plans');
+const { createAccount, AccountError } = require('../utils/accounts');
 
 const router = express.Router();
 
+// Что об аккаунте можно отдавать в кассу
+function accountPublic(a) {
+  return { id: a.id, name: a.name, email: a.email, phone: a.phone, plan: a.plan, status: a.status, expires_at: a.expires_at };
+}
+
+// Логин — номер телефона или email (у старых аккаунтов телефона может не быть)
+async function findAccountByLogin(login) {
+  const value = String(login ?? '').trim();
+  if (!value) return null;
+  if (value.includes('@')) {
+    const r = await pool.query('SELECT * FROM accounts WHERE LOWER(email) = LOWER($1)', [value]);
+    return r.rows[0] || null;
+  }
+  const phone = normalizePhone(value);
+  if (!phone) return null;
+  const r = await pool.query('SELECT * FROM accounts WHERE phone = $1', [phone]);
+  return r.rows[0] || null;
+}
+
+function loginOf(body) {
+  return body.login ?? body.phone ?? body.email;
+}
+
 // ─────────────────────────────────────────────────────────
 // POST /auth/register
-// Регистрация нового владельца (приходит с лендинга, статус "trial")
+// Регистрация владельца с лендинга: имя, номер телефона, пароль.
+// Сразу создаёт точку и пробный период, возвращает токены — человек попадает в кассу.
 // ─────────────────────────────────────────────────────────
 router.post('/register', async (req, res) => {
-  const { name, email, password, venueName, pin } = req.body;
-  if (!name || !email || !password) {
-    return res.status(400).json({ error: 'Заполните все поля' });
-  }
-  if (pin !== undefined && pin !== '' && !isValidPin(pin)) {
-    return res.status(400).json({ error: 'PIN должен состоять из 4 цифр' });
-  }
-
   try {
-    const exists = await pool.query('SELECT id FROM accounts WHERE email = $1', [email]);
-    if (exists.rows.length) {
-      return res.status(409).json({ error: 'Этот email уже зарегистрирован' });
-    }
+    const { account, venue, staff, ownerPin } = await createAccount({
+      name: req.body.name,
+      venueName: req.body.venueName,
+      phone: req.body.phone,
+      email: req.body.email,
+      password: req.body.password,
+      pin: req.body.pin,
+    });
+    await pool.query('UPDATE accounts SET last_login_at = NOW() WHERE id = $1', [account.id]);
 
-    const passwordHash = await bcrypt.hash(password, 10);
-
-    // Новый аккаунт: 14 дней триал
-    const accRes = await pool.query(
-      `INSERT INTO accounts (name, email, password_hash, plan, status, expires_at)
-       VALUES ($1,$2,$3,'business','trial', NOW() + INTERVAL '14 days') RETURNING id`,
-      [name, email, passwordHash]
-    );
-    const accountId = accRes.rows[0].id;
-
-    const venueRes = await pool.query(
-      `INSERT INTO venues (account_id, name) VALUES ($1,$2) RETURNING id`,
-      [accountId, venueName || 'Моя точка']
-    );
-    const venueId = venueRes.rows[0].id;
-
-    // Владелец как сотрудник: свой PIN или случайный (общий «0000» небезопасен).
-    // Сменить PIN владелец может через /auth/owner-pin по своему паролю.
-    const ownerPin = isValidPin(pin) ? String(pin) : randomPin();
-    await pool.query(
-      `INSERT INTO staff (venue_id, name, role, pin) VALUES ($1,$2,'owner',$3)`,
-      [venueId, name, await hashPin(ownerPin)]
-    );
-
-    res.json({ message: 'Регистрация успешна! У вас 14 дней бесплатного доступа.', accountId, venueId, ownerPin });
+    const claims = { accountId: account.id, venueId: venue.id, staffId: staff.id, role: 'owner' };
+    res.json({
+      message: `Регистрация успешна! У вас ${TRIAL_DAYS} дней бесплатного доступа.`,
+      accountId: account.id,
+      venueId: venue.id,
+      ownerPin,
+      token: jwt.sign(claims, JWT_SECRET, { expiresIn: '30d' }),
+      staffToken: jwt.sign(claims, JWT_SECRET, { expiresIn: '12h' }),
+      account: accountPublic(account),
+      venue,
+      staff,
+      features: [...featuresOf(account.plan)],
+    });
   } catch (err) {
+    if (err instanceof AccountError) {
+      return res.status(err.status).json({ error: err.message, code: err.code });
+    }
     console.error(err);
     res.status(500).json({ error: 'Ошибка сервера при регистрации' });
   }
@@ -59,21 +74,21 @@ router.post('/register', async (req, res) => {
 
 // ─────────────────────────────────────────────────────────
 // POST /auth/login
-// Вход владельца по email + пароль -> получает venueId и список сотрудников
+// Вход владельца: номер телефона (или email) + пароль
 // ─────────────────────────────────────────────────────────
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ error: 'Введите email и пароль' });
+  const login = loginOf(req.body);
+  const { password } = req.body;
+  if (!login || !password) return res.status(400).json({ error: 'Введите номер телефона и пароль' });
 
   try {
-    const accRes = await pool.query('SELECT * FROM accounts WHERE email = $1', [email]);
-    if (!accRes.rows.length) return res.status(401).json({ error: 'Неверный email или пароль' });
+    const account = await findAccountByLogin(login);
+    if (!account) return res.status(401).json({ error: 'Неверный номер или пароль' });
 
-    const account = accRes.rows[0];
-    const valid = await bcrypt.compare(password, account.password_hash);
-    if (!valid) return res.status(401).json({ error: 'Неверный email или пароль' });
+    const valid = await bcrypt.compare(String(password), account.password_hash);
+    if (!valid) return res.status(401).json({ error: 'Неверный номер или пароль' });
 
-    const venueRes = await pool.query('SELECT id, name FROM venues WHERE account_id = $1', [account.id]);
+    const venueRes = await pool.query('SELECT id, name FROM venues WHERE account_id = $1 ORDER BY id LIMIT 1', [account.id]);
     if (!venueRes.rows.length) return res.status(404).json({ error: 'Заведение не найдено' });
     const venue = venueRes.rows[0];
 
@@ -83,6 +98,8 @@ router.post('/login', async (req, res) => {
     );
     const ownerStaff = staffRes.rows[0];
 
+    await pool.query('UPDATE accounts SET last_login_at = NOW() WHERE id = $1', [account.id]);
+
     const token = jwt.sign(
       { accountId: account.id, venueId: venue.id, staffId: ownerStaff?.id, role: 'owner' },
       JWT_SECRET,
@@ -91,13 +108,37 @@ router.post('/login', async (req, res) => {
 
     res.json({
       token,
-      account: { id: account.id, name: account.name, email: account.email, plan: account.plan, status: account.status, expires_at: account.expires_at },
+      account: accountPublic(account),
       venue: { id: venue.id, name: venue.name },
+      features: [...featuresOf(account.plan)],
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Ошибка сервера' });
   }
+});
+
+// ─────────────────────────────────────────────────────────
+// GET /auth/me
+// Свежие данные аккаунта и доступные разделы — касса спрашивает при каждом запуске,
+// чтобы смена тарифа в админке подхватывалась без повторного входа.
+// ─────────────────────────────────────────────────────────
+router.get('/me', requireAuth, async (req, res) => {
+  const { accountId, venueId, staffId } = req.user;
+  const accRes = await pool.query('SELECT * FROM accounts WHERE id = $1', [accountId]);
+  const venueRes = await pool.query('SELECT id, name FROM venues WHERE id = $1 AND account_id = $2', [venueId, accountId]);
+  const staffRes = staffId
+    ? await pool.query('SELECT id, name, role FROM staff WHERE id = $1 AND venue_id = $2', [staffId, venueId])
+    : { rows: [] };
+  if (!accRes.rows.length || !venueRes.rows.length) return res.status(401).json({ error: 'Аккаунт не найден' });
+
+  res.json({
+    account: accountPublic(accRes.rows[0]),
+    venue: venueRes.rows[0],
+    staff: staffRes.rows[0] || null,
+    features: [...req.features],
+    readOnly: Boolean(req.user.ro),
+  });
 });
 
 // ─────────────────────────────────────────────────────────
@@ -140,19 +181,19 @@ router.post('/pin-login', async (req, res) => {
 
 // ─────────────────────────────────────────────────────────
 // POST /auth/owner-pin
-// Владелец задаёт свой PIN, подтверждая email + паролем.
-// Нужен при первом входе (PIN при регистрации случайный) и если PIN забыт.
+// Владелец задаёт свой PIN, подтверждая номером телефона (или email) + паролем.
+// Нужен, если PIN забыт.
 // ─────────────────────────────────────────────────────────
 router.post('/owner-pin', async (req, res) => {
-  const { email, password, pin } = req.body;
-  if (!email || !password) return res.status(400).json({ error: 'Введите email и пароль' });
+  const login = loginOf(req.body);
+  const { password, pin } = req.body;
+  if (!login || !password) return res.status(400).json({ error: 'Введите номер телефона и пароль' });
   if (!isValidPin(pin)) return res.status(400).json({ error: 'PIN должен состоять из 4 цифр' });
 
   try {
-    const accRes = await pool.query('SELECT id, password_hash FROM accounts WHERE email = $1', [email]);
-    const account = accRes.rows[0];
-    if (!account || !(await bcrypt.compare(password, account.password_hash))) {
-      return res.status(401).json({ error: 'Неверный email или пароль' });
+    const account = await findAccountByLogin(login);
+    if (!account || !(await bcrypt.compare(String(password), account.password_hash))) {
+      return res.status(401).json({ error: 'Неверный номер или пароль' });
     }
 
     const venueRes = await pool.query('SELECT id FROM venues WHERE account_id = $1 ORDER BY id LIMIT 1', [account.id]);
