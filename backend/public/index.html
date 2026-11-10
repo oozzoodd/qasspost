@@ -194,6 +194,7 @@
     .plan .btn { width: 100%; }
     .plan .btn-line { border-color: var(--line); color: var(--ink); }
     .plan .btn-line:hover { border-color: var(--navy); }
+    .biz-note { margin-top: 18px; display: inline-block; padding: 8px 14px; border-radius: 12px; background: #FFF0CC; color: #6E4307; font-size: 14px; font-weight: 600; }
     .plans-note { margin-top: 22px; color: var(--ink-soft); font-size: 15px; }
 
     /* ── Регистрация на фоне фото ──────────────────────── */
@@ -461,6 +462,7 @@
             <li data-i18n="story.3b">Наличные и карта отдельно</li>
             <li data-i18n="story.3c">Самые популярные блюда</li>
           </ul>
+          <p class="biz-note" data-i18n="story.3note">Аналитика входит в тариф «Бизнес». На «Старте» видна выручка за смену.</p>
         </div>
       </div>
     </div>
@@ -482,7 +484,7 @@
   <section id="plans">
     <div class="wrap">
       <h2 data-i18n="plans.title">Тарифы</h2>
-      <p class="lead" data-i18n="plans.lead">Начните с простого. Когда понадобятся техкарты, склад по граммам, финансы и клиенты, переключим на «Бизнес» — все данные сохранятся.</p>
+      <p class="lead" data-i18n="plans.lead">Начните с простого. Когда понадобятся аналитика, техкарты, склад по граммам, финансы и клиенты, переключим на «Бизнес» — все данные сохранятся.</p>
       <div class="plans">
         <article class="plan main">
           <span class="plan-badge" data-i18n="plans.badge">14 дней бесплатно</span>
@@ -492,7 +494,7 @@
           <ul>
             <li data-i18n="plans.f1">Касса, меню и смены</li>
             <li data-i18n="plans.f2">Сотрудники с PIN-кодами</li>
-            <li data-i18n="plans.f3">Выручка и популярные блюда</li>
+            <li data-i18n="plans.f3">Выручка за смену и список чеков</li>
             <li data-i18n="plans.f4">Остатки поштучных товаров</li>
           </ul>
           <a class="btn btn-coral" href="#signup" data-i18n="plans.cta">Начать бесплатно</a>
@@ -503,6 +505,7 @@
           <div class="plan-price num" data-plan="business">—</div>
           <ul>
             <li data-i18n="plans.f5">Всё, что есть в «Старте»</li>
+            <li data-i18n="plans.f12">Аналитика: выручка за период, средний чек, популярные блюда</li>
             <li data-i18n="plans.f6">Техкарты: ингредиенты списываются сами</li>
             <li data-i18n="plans.f7">Склад по граммам и литрам</li>
             <li data-i18n="plans.f8">Финансы: расходы и прибыль</li>
@@ -518,9 +521,10 @@
             <li data-i18n="plans.f10">Всё, что есть в «Бизнесе»</li>
             <li class="soon" data-i18n="plans.f11">Несколько точек в одном аккаунте — скоро</li>
           </ul>
-          <a class="btn btn-line" href="#signup" data-i18n="plans.cta">Начать бесплатно</a>
+          <a class="btn btn-line" id="network-cta" href="#signup" data-i18n="plans.cta">Начать бесплатно</a>
         </article>
       </div>
+      <span hidden data-i18n="plans.dealCta">Обсудить цену</span>
       <p class="plans-note" data-i18n="plans.note">Пробный период — на тарифе «Старт». Тариф выбирается после него, оплата через Click, Payme или наличными.</p>
     </div>
   </section>
@@ -597,6 +601,7 @@
 <footer>
   <div class="wrap">
     <span>© <span id="year">2026</span> vzlyot.post</span>
+    <span id="foot-support"></span>
     <span><span data-i18n="foot.photos">Фото</span>: <a href="https://unsplash.com" rel="noopener" target="_blank">Unsplash</a></span>
     <a href="/app" data-i18n="foot.login">Войти в кассу</a>
   </div>
@@ -633,21 +638,21 @@ const UZ = {
   'story.2alt': 'Kassir peshtaxtada planshetda buyurtma qabul qilmoqda',
   'role.cashier': 'kassir', 'role.admin': 'administrator', 'role.owner': 'egasi',
   'story.3t': 'Tushum telefoningizda', 'story.3p': 'Bugun, hafta va oyda qancha sotildi, o‘rtacha chek qancha va nimani ko‘proq olishadi. Hatto hozir shoxobchada bo‘lmasangiz ham.',
-  'story.3a': 'Hisobotlar Toshkent vaqti bo‘yicha', 'story.3b': 'Naqd va karta alohida', 'story.3c': 'Eng ommabop taomlar',
+  'story.3a': 'Hisobotlar Toshkent vaqti bo‘yicha', 'story.3b': 'Naqd va karta alohida', 'story.3c': 'Eng ommabop taomlar', 'story.3note': 'Analitika «Biznes» tarifiga kiradi. «Start»da smena tushumi ko‘rinadi.',
   'story.3alt': 'Kafe egalari o‘z peshtaxtasi oldida', 'story.3shot': 'Analitika: tushum, o‘rtacha chek, ommabop taomlar',
   'steps.title': 'Qanday boshlash kerak',
   'steps.1t': 'Ro‘yxatdan o‘ting', 'steps.1p': 'Ism, shoxobcha nomi, telefon raqami va parol. Kassa darhol ochiladi.',
   'steps.2t': 'Menyuni qo‘shing', 'steps.2p': 'Faqat nom va narxlar. O‘nta pozitsiya besh daqiqada kiritiladi.',
   'steps.3t': 'Smenani oching', 'steps.3p': 'Va brauzer bor istalgan qurilmadan buyurtma qabul qiling.',
   'plans.title': 'Tariflar',
-  'plans.lead': 'Oddiysidan boshlang. Texkartalar, gramm bo‘yicha ombor, moliya va mijozlar kerak bo‘lganda «Biznes»ga o‘tkazamiz — barcha ma’lumotlar saqlanadi.',
+  'plans.lead': 'Oddiysidan boshlang. Analitika, texkartalar, gramm bo‘yicha ombor, moliya va mijozlar kerak bo‘lganda «Biznes»ga o‘tkazamiz — barcha ma’lumotlar saqlanadi.',
   'plans.badge': '14 kun bepul', 'plans.start': 'Start', 'plans.business': 'Biznes', 'plans.network': 'Tarmoq',
   'plans.startFor': 'Bitta shoxobcha, tez ishga tushirish', 'plans.businessFor': 'Shoxobcha uchun to‘liq hisob', 'plans.networkFor': 'Shoxobchalar tarmog‘i uchun, narx kelishiladi',
-  'plans.f1': 'Kassa, menyu va smenalar', 'plans.f2': 'PIN kodli xodimlar', 'plans.f3': 'Tushum va ommabop taomlar', 'plans.f4': 'Donali tovarlar qoldig‘i',
-  'plans.f5': '«Start»dagi hamma narsa', 'plans.f6': 'Texkartalar: ingredientlar o‘zi hisobdan chiqadi', 'plans.f7': 'Gramm va litr bo‘yicha ombor',
+  'plans.f1': 'Kassa, menyu va smenalar', 'plans.f2': 'PIN kodli xodimlar', 'plans.f3': 'Smena tushumi va cheklar ro‘yxati', 'plans.f4': 'Donali tovarlar qoldig‘i',
+  'plans.f5': '«Start»dagi hamma narsa', 'plans.f6': 'Texkartalar: ingredientlar o‘zi hisobdan chiqadi', 'plans.f12': 'Analitika: davr tushumi, o‘rtacha chek, ommabop taomlar', 'plans.f7': 'Gramm va litr bo‘yicha ombor',
   'plans.f8': 'Moliya: xarajatlar va foyda', 'plans.f9': 'Mijozlar va bonuslar',
   'plans.f10': '«Biznes»dagi hamma narsa', 'plans.f11': 'Bitta akkauntda bir nechta shoxobcha — tez orada',
-  'plans.cta': 'Bepul boshlash',
+  'plans.cta': 'Bepul boshlash', 'plans.dealCta': 'Narxni kelishish',
   'plans.note': 'Sinov muddati «Start» tarifida. Tarif undan keyin tanlanadi, to‘lov Click, Payme yoki naqd orqali.',
   'signup.title': 'Kassangizni bugun oching', 'signup.lead': 'Ro‘yxatdan o‘tish bir daqiqa oladi. Dastlabki 14 kun — bepul, karta va shartnomasiz.',
   'signup.f1': 'Kassa ro‘yxatdan o‘tgach darhol ochiladi', 'signup.f2': 'Menyu va buyurtmalar sinov muddatidan keyin ham saqlanadi', 'signup.f3': 'Telefon, planshet va noutbukda ishlaydi',
@@ -735,7 +740,31 @@ function renderPlans() {
     el.append(small);
   });
 }
-fetch('/plans').then(r => r.json()).then(d => { plans = d.plans; renderPlans(); }).catch(() => {});
+let support = {};
+fetch('/plans').then(r => r.json()).then(d => { plans = d.plans; support = d.support || {}; renderPlans(); renderSupport(); }).catch(() => {});
+
+// Контакты (config/support.js): подвал и кнопка «Обсудить цену» у тарифа «Сеть»
+function renderSupport() {
+  const foot = document.getElementById('foot-support');
+  foot.textContent = '';
+  const links = [];
+  if (support.phone) links.push(['tel:' + support.phone, support.phone]);
+  if (support.telegram) links.push(['https://t.me/' + encodeURIComponent(support.telegram), 'Telegram']);
+  links.forEach(([href, text], i) => {
+    if (i) foot.append('  ');
+    const a = document.createElement('a');
+    a.href = href; a.textContent = text;
+    if (href.startsWith('https:')) { a.target = '_blank'; a.rel = 'noopener'; }
+    foot.append(a);
+  });
+  const cta = document.getElementById('network-cta');
+  if (links.length) {
+    cta.href = links[links.length - 1][0];
+    if (cta.href.startsWith('https:')) { cta.target = '_blank'; cta.rel = 'noopener'; }
+    cta.dataset.i18n = 'plans.dealCta';
+    cta.textContent = tr('plans.dealCta');
+  }
+}
 
 // ═══════════════════════════════════════════════════════════
 // РЕГИСТРАЦИЯ

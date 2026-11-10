@@ -445,7 +445,7 @@ router.get('/today-summary', async (req, res) => {
 });
 
 // GET /orders/analytics — итоги по ВСЕМ заказам точки (а не по последним 50)
-router.get('/analytics', requireRole('owner', 'admin'), async (req, res) => {
+router.get('/analytics', requireFeature('analytics'), requireRole('owner', 'admin'), async (req, res) => {
   const totalsRes = await pool.query(
     `SELECT
        COALESCE(SUM(total) FILTER (WHERE ${COMPLETED_ORDER_SQL}), 0)::bigint AS revenue,

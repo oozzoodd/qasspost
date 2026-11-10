@@ -776,7 +776,6 @@
     }
 
     @media (max-width: 380px) {
-      .menu-grid { grid-template-columns: 1fr; }
       .daily-cash-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
 
@@ -1026,6 +1025,46 @@
     .welcome-steps { margin: 14px 0 4px 18px; display: grid; gap: 6px; font-size: 13px; line-height: 1.5; }
     #view-banner { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 900; display: none; align-items: center; gap: 10px; max-width: calc(100vw - 24px); padding: 8px 10px 8px 16px; border-radius: 999px; background: #1C2B45; color: #F7F4EC; font-size: 13px; box-shadow: var(--shadow-md); border: 1px solid rgba(255,182,39,0.6); }
     #view-banner button { border: none; border-radius: 999px; padding: 6px 12px; background: var(--gold); color: #1C2B45; font-weight: 700; font-size: 12px; cursor: pointer; }
+    .support-box { margin-top: 14px; display: grid; gap: 8px; }
+    .support-box .btn { width: 100%; justify-content: center; text-decoration: none; min-height: 44px; }
+    .support-note { font-size: 12px; color: var(--muted); }
+
+    /* ── ЭКРАН КАССЫ: крупные кнопки под палец ─────────────────
+       Стоит последним, чтобы перекрывать прежние размеры. */
+    .cat-tab { min-height: 44px; padding: 10px 18px; font-size: 15px; font-weight: 600; border-radius: 999px; }
+    .menu-grid { grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 12px; }
+    .menu-card { display: flex; flex-direction: column; justify-content: space-between; gap: 10px; min-height: 108px; padding: 16px; border-radius: 16px; }
+    .menu-card-name { font-size: 16px; font-weight: 700; line-height: 1.3; margin-bottom: 0; }
+    .menu-card-price { font-size: 16px; font-weight: 700; }
+    .menu-card:active { transform: scale(0.97); }
+    .pos-cart-title { font-size: 17px; font-weight: 700; }
+    .cart-row { gap: 10px; padding: 12px 0; }
+    .cart-name { font-size: 15px; font-weight: 600; line-height: 1.3; }
+    .qty-btn { width: 38px; height: 38px; font-size: 20px; font-weight: 600; flex-shrink: 0; }
+    .qty-num { font-size: 16px; font-weight: 700; min-width: 26px; }
+    .cart-price { font-size: 15px; font-weight: 700; min-width: 80px; }
+    .total-row { font-size: 14px; }
+    .total-row.big { font-size: 24px; font-weight: 800; }
+    .pay-methods { gap: 8px; }
+    .pay-btn { min-height: 58px; font-size: 14px; font-weight: 600; border-radius: 12px; }
+    #checkout-btn { min-height: 60px; font-size: 18px; font-weight: 800; border-radius: 14px; }
+    #cart-client-sel, .client-picker input, .client-picker .btn { min-height: 42px; font-size: 14px; }
+    @media (min-width: 821px) {
+      .pos-layout { grid-template-columns: minmax(0, 1fr) 380px; }
+      .pos-left { padding: 18px; }
+      .pos-cart-header { padding: 18px; }
+      .pos-cart-body { padding: 8px 18px; }
+      .pos-cart-footer { padding: 16px 18px; }
+    }
+    @media (max-width: 820px) {
+      .cat-tab { min-height: 42px; padding: 9px 16px; font-size: 14px; }
+      .menu-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .menu-card { min-height: 92px; padding: 14px; }
+      .menu-card-name { font-size: 15px; }
+      .menu-card-price { font-size: 15px; }
+      .pay-btn { min-height: 54px; }
+      #checkout-btn { min-height: 56px; font-size: 17px; }
+    }
   </style>
 </head>
 <body data-theme="light">
@@ -1072,6 +1111,7 @@
     <div class="expired-icon">⏰</div>
     <div class="auth-title" data-i18n="auth.expiredTitle">Подписка истекла</div>
     <p class="muted-text" style="font-size:13px;margin-bottom:16px;line-height:1.6;" data-i18n="auth.expiredText">Доступ к системе временно ограничен. Свяжитесь с поддержкой для продления тарифа.</p>
+    <div id="expired-support" style="margin-bottom:12px;"></div>
     <button class="auth-btn" onclick="logout()" data-i18n="auth.logoutBtn">Выйти</button>
   </div>
 </div>
@@ -1098,7 +1138,7 @@
       <div class="nav-group-label" data-i18n="sidebar.business">Бизнес</div>
       <div class="nav-item" data-feature="clients" onclick="nav('clients',this)"><span class="icon">👥</span><span data-i18n="nav.clients">Клиенты</span></div>
       <div class="nav-item" data-roles="owner" onclick="nav('staff',this)"><span class="icon">👤</span><span data-i18n="nav.staff">Сотрудники</span></div>
-      <div class="nav-item" data-roles="owner,admin" onclick="nav('analytics',this)"><span class="icon">📊</span><span data-i18n="nav.analytics">Аналитика</span></div>
+      <div class="nav-item" data-roles="owner,admin" onclick="nav('analytics',this)"><span class="icon">📊</span><span id="nav-analytics-label" data-i18n="nav.analytics">Аналитика</span></div>
       <div class="nav-item" data-roles="owner,admin" data-feature="finance" onclick="nav('finance',this)"><span class="icon">💰</span><span data-i18n="nav.finance">Финансы</span></div>
       <div class="nav-group-label" data-i18n="sidebar.system">Система</div>
       <div class="nav-item" onclick="nav('settings',this)"><span class="icon">⚙️</span><span data-i18n="nav.settings">Настройки</span></div>
@@ -1292,13 +1332,17 @@
     <!-- АНАЛИТИКА -->
     <div class="page" id="page-analytics">
       <div class="page-header">
-        <div class="page-title" data-i18n="analytics.title">Аналитика</div>
+        <div class="page-title" id="analytics-page-title" data-i18n="analytics.title">Аналитика</div>
       </div>
-      <div class="metrics" id="analytics-metrics"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-        <div class="card"><div class="card-title" data-i18n="analytics.topDishes">Топ блюд</div><div id="top-dishes"></div></div>
-        <div class="card"><div class="card-title" data-i18n="analytics.payment">Оплата</div><div id="pay-stats"></div></div>
+      <!-- Сводка и графики — только на тарифе с аналитикой; на «Старте» здесь только список чеков -->
+      <div id="analytics-stats" style="display:contents;">
+        <div class="metrics" id="analytics-metrics"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div class="card"><div class="card-title" data-i18n="analytics.topDishes">Топ блюд</div><div id="top-dishes"></div></div>
+          <div class="card"><div class="card-title" data-i18n="analytics.payment">Оплата</div><div id="pay-stats"></div></div>
+        </div>
       </div>
+      <div id="analytics-upsell"></div>
       <div class="card">
         <div class="card-title" data-i18n="analytics.orderHistory">История заказов</div>
         <div class="table-wrap">
@@ -1425,7 +1469,7 @@
     <button type="button" data-page="recipes" onclick="showPage('recipes')" data-i18n="nav.recipes">Тех.карты</button>
     <button type="button" data-page="clients" onclick="showPage('clients')" data-i18n="nav.clients">Клиенты</button>
     <button type="button" data-page="staff" onclick="showPage('staff')" data-i18n="nav.staff">Сотрудники</button>
-    <button type="button" data-page="analytics" onclick="showPage('analytics')" data-i18n="nav.analytics">Аналитика</button>
+    <button type="button" data-page="analytics" id="mobile-analytics-label" onclick="showPage('analytics')" data-i18n="nav.analytics">Аналитика</button>
     <button type="button" data-page="finance" onclick="showPage('finance')" data-i18n="nav.finance">Финансы</button>
     <button type="button" data-page="settings" onclick="showPage('settings')" data-i18n="nav.settings">Настройки</button>
     <button type="button" class="mobile-nav-switch" onclick="staffLogout()" data-i18n="mobile.switchStaff">Сменить</button>
@@ -1458,6 +1502,7 @@ let accountInfo = JSON.parse(localStorage.getItem('qp_account') || 'null');
 // Разделы, которых в тарифе нет, в кассе просто не показываются.
 let accountFeatures = JSON.parse(localStorage.getItem('qp_features') || '[]');
 function hasFeature(name) { return accountFeatures.includes(name); }
+// Аналитики тут нет: на «Старте» эта страница остаётся как «Чеки» (чтобы можно было отменить чек)
 const PAGE_FEATURE = { recipes: 'recipes', clients: 'clients', finance: 'finance' };
 // На простом тарифе склад только поштучный
 function stockItemsForPlan() {
@@ -1581,7 +1626,9 @@ const I18N = {
     'menu.dishHintSimple': 'Продаётся без учёта остатков — просто добавьте и продавайте.',
     'menu.noStockItemsHint': 'Сначала добавьте товар в разделе «Остатки».',
     'upgrade.title': 'Тариф «Бизнес»',
-    'upgrade.intro': 'Сейчас у вас простой тариф «Старт»: касса, меню, смены, сотрудники, выручка и поштучный склад. На «Бизнесе» добавляется:',
+    'upgrade.intro': 'Сейчас у вас простой тариф «Старт»: касса, меню, смены с выручкой, сотрудники и поштучный склад. На «Бизнесе» добавляется:',
+    'upgrade.analytics': 'Аналитика',
+    'upgrade.analyticsText': 'Выручка за день, неделю и месяц, средний чек, популярные блюда',
     'upgrade.recipes': 'Техкарты',
     'upgrade.recipesText': 'Ингредиенты списываются сами при каждой продаже',
     'upgrade.stock': 'Склад по граммам и литрам',
@@ -1591,7 +1638,7 @@ const I18N = {
     'upgrade.clients': 'Клиенты и бонусы',
     'upgrade.clientsText': 'База гостей, бонусы за покупки, история визитов',
     'upgrade.howTo': 'Чтобы подключить, свяжитесь с нами — переключим за пару минут, все данные сохранятся.',
-    'upgrade.short': 'Техкарты, склад по граммам, финансы, клиенты и бонусы.',
+    'upgrade.short': 'Аналитика, техкарты, склад по граммам, финансы, клиенты и бонусы.',
     'upgrade.more': 'Подробнее',
     'welcome.title': 'Касса готова к работе',
     'welcome.text': 'Пробный период уже идёт — всё бесплатно. Оплата не нужна.',
@@ -1609,6 +1656,12 @@ const I18N = {
     'nav.clients': 'Клиенты',
     'nav.staff': 'Сотрудники',
     'nav.analytics': 'Аналитика',
+    'nav.orders': 'Чеки',
+    'support.title': 'Связаться с нами',
+    'support.telegram': 'Написать в Telegram',
+    'support.call': 'Позвонить',
+    'support.welcome': 'Если что-то непонятно — напишите или позвоните, поможем настроить.',
+    'upgrade.onBusiness': 'Доступно на тарифе «Бизнес».',
     'nav.finance': 'Финансы',
     'nav.settings': 'Настройки',
     'common.appTitle': 'vzlyot.post — Кассовая система',
@@ -1618,7 +1671,7 @@ const I18N = {
     'mobile.menuLabel': 'Мобильное меню',
     'sidebar.main': 'Основное',
     'sidebar.stock': 'Склад',
-    'sidebar.business': 'Бизнес',
+    'sidebar.business': 'Управление',
     'sidebar.system': 'Система',
     'sidebar.switchStaff': 'Сменить сотрудника',
     'auth.loginTitle': 'Вход в систему',
@@ -1993,7 +2046,9 @@ const I18N = {
     'menu.dishHintSimple': 'Qoldiq hisobisiz sotiladi — qo‘shing va soting.',
     'menu.noStockItemsHint': 'Avval «Qoldiqlar» bo‘limida mahsulot qo‘shing.',
     'upgrade.title': '«Biznes» tarifi',
-    'upgrade.intro': 'Hozir sizda oddiy «Start» tarifi: kassa, menyu, smenalar, xodimlar, tushum va donali ombor. «Biznes»da qo‘shiladi:',
+    'upgrade.intro': 'Hozir sizda oddiy «Start» tarifi: kassa, menyu, tushumli smenalar, xodimlar va donali ombor. «Biznes»da qo‘shiladi:',
+    'upgrade.analytics': 'Analitika',
+    'upgrade.analyticsText': 'Kun, hafta va oy tushumi, o‘rtacha chek, ommabop taomlar',
     'upgrade.recipes': 'Texkartalar',
     'upgrade.recipesText': 'Har bir savdoda ingredientlar o‘zi hisobdan chiqadi',
     'upgrade.stock': 'Gramm va litr bo‘yicha ombor',
@@ -2003,7 +2058,7 @@ const I18N = {
     'upgrade.clients': 'Mijozlar va bonuslar',
     'upgrade.clientsText': 'Mehmonlar bazasi, xarid uchun bonuslar, tashriflar tarixi',
     'upgrade.howTo': 'Ulash uchun biz bilan bog‘laning — bir necha daqiqada o‘tkazamiz, barcha ma’lumotlar saqlanadi.',
-    'upgrade.short': 'Texkartalar, gramm bo‘yicha ombor, moliya, mijozlar va bonuslar.',
+    'upgrade.short': 'Analitika, texkartalar, gramm bo‘yicha ombor, moliya, mijozlar va bonuslar.',
     'upgrade.more': 'Batafsil',
     'welcome.title': 'Kassa ishga tayyor',
     'welcome.text': 'Sinov muddati boshlandi — hammasi bepul. To‘lov shart emas.',
@@ -2021,6 +2076,12 @@ const I18N = {
     'nav.clients': 'Mijozlar',
     'nav.staff': 'Xodimlar',
     'nav.analytics': 'Analitika',
+    'nav.orders': 'Cheklar',
+    'support.title': 'Biz bilan bog‘lanish',
+    'support.telegram': 'Telegramda yozish',
+    'support.call': 'Qo‘ng‘iroq qilish',
+    'support.welcome': 'Biror narsa tushunarsiz bo‘lsa — yozing yoki qo‘ng‘iroq qiling, sozlashga yordam beramiz.',
+    'upgrade.onBusiness': '«Biznes» tarifida mavjud.',
     'nav.finance': 'Moliya',
     'nav.settings': 'Sozlamalar',
     'common.appTitle': 'vzlyot.post — Kassa tizimi',
@@ -2030,7 +2091,7 @@ const I18N = {
     'mobile.menuLabel': 'Mobil menyu',
     'sidebar.main': 'Asosiy',
     'sidebar.stock': 'Ombor',
-    'sidebar.business': 'Biznes',
+    'sidebar.business': 'Boshqaruv',
     'sidebar.system': 'Tizim',
     'sidebar.switchStaff': 'Xodimni almashtirish',
     'auth.loginTitle': 'Tizimga kirish',
@@ -2431,6 +2492,7 @@ function applyLanguage() {
     el.setAttribute('aria-label', t(el.dataset.i18nAriaLabel));
   });
   syncAppearanceControls();
+  renderExpiredSupport();
 }
 
 function setLang(lang) {
@@ -2708,18 +2770,49 @@ function applyRolePermissions() {
   document.getElementById('cart-client-sel').style.display = showClients;
   document.getElementById('cart-client-picker').style.display = showClients;
   document.getElementById('expenses-card').style.display = hasFeature('finance') ? '' : 'none';
+  // Без аналитики раздел называется «Чеки»: там только последние чеки и их отмена
+  const ordersKey = hasFeature('analytics') ? 'nav.analytics' : 'nav.orders';
+  ['nav-analytics-label', 'mobile-analytics-label'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.dataset.i18n = ordersKey; el.textContent = t(ordersKey); }
+  });
+  const titleEl = document.getElementById('analytics-page-title');
+  titleEl.dataset.i18n = hasFeature('analytics') ? 'analytics.title' : 'nav.orders';
+  titleEl.textContent = t(titleEl.dataset.i18n);
 }
 
 // ═══════════════════════════════════════════════════════════
 // ТАРИФ, ПРИВЕТСТВИЕ, РЕЖИМ ПРОСМОТРА
 // ═══════════════════════════════════════════════════════════
+// Контакты владельца сервиса (config/support.js). Пустые — кнопки не показываются.
+let SUPPORT = {};
+async function loadSupport() {
+  try {
+    const res = await fetch(API_URL + '/plans');
+    SUPPORT = (await res.json()).support || {};
+  } catch { SUPPORT = {}; }
+  renderExpiredSupport();
+}
+function hasSupport() { return Boolean(SUPPORT.phone || SUPPORT.telegram); }
+function supportButtons() {
+  const items = [];
+  if (SUPPORT.telegram) items.push(`<a class="btn btn-primary" href="https://t.me/${encodeURIComponent(SUPPORT.telegram)}" target="_blank" rel="noopener">✈️ ${t('support.telegram')}</a>`);
+  if (SUPPORT.phone) items.push(`<a class="btn btn-secondary" href="tel:${esc(SUPPORT.phone)}">📞 ${t('support.call')}: ${esc(SUPPORT.phone)}</a>`);
+  return items.length ? `<div class="support-box">${items.join('')}</div>` : '';
+}
+function renderExpiredSupport() {
+  const el = document.getElementById('expired-support');
+  if (el) el.innerHTML = supportButtons();
+}
+
 function openUpgradeModal() {
-  const rows = ['recipes', 'stock', 'finance', 'clients'].map(key =>
+  const rows = ['analytics', 'recipes', 'stock', 'finance', 'clients'].map(key =>
     `<li><strong>${t('upgrade.' + key)}</strong><span>${t('upgrade.' + key + 'Text')}</span></li>`).join('');
   showModal(`<div class="modal-title">⭐ ${t('upgrade.title')}</div>
     <p class="muted-text" style="font-size:13px;line-height:1.6;">${t('upgrade.intro')}</p>
     <ul class="upgrade-list">${rows}</ul>
     <p class="muted-text" style="font-size:13px;line-height:1.6;">${t('upgrade.howTo')}</p>
+    ${supportButtons()}
     <div class="modal-footer">
       <button class="btn btn-primary" onclick="closeModal()">${t('common.close')}</button>
     </div>`);
@@ -2742,6 +2835,7 @@ function showWelcomeIfNew() {
       <li>${t('welcome.step2')}</li>
       <li>${t('welcome.step3')}</li>
     </ol>
+    ${hasSupport() ? `<p class="support-note" style="margin-top:12px;">${t('support.welcome')}</p>${supportButtons()}` : ''}
     <div class="modal-footer">
       <button class="btn btn-primary" onclick="closeModal();showPage('menu')">${t('welcome.start')}</button>
     </div>`);
@@ -3919,11 +4013,22 @@ async function cancelOrder(id) {
   }
 }
 async function renderAnalytics() {
-  // Итоги считает сервер по всем заказам; список /orders — только последние для таблицы
-  let stats;
+  // Итоги считает сервер по всем заказам; список /orders — только последние для таблицы.
+  // На «Старте» аналитики нет: показываем только последние чеки, чтобы их можно было отменить.
+  const full = hasFeature('analytics');
+  document.getElementById('analytics-stats').style.display = full ? 'contents' : 'none';
+  document.getElementById('analytics-upsell').innerHTML = !full && currentUser?.role === 'owner'
+    ? `<div class="plan-upsell" style="margin-top:0;"><strong>⭐ ${t('upgrade.analytics')}</strong><span>${t('upgrade.analyticsText')}. ${t('upgrade.onBusiness')}</span><button class="btn btn-secondary btn-sm" onclick="openUpgradeModal()">${t('upgrade.more')}</button></div>`
+    : '';
+  let stats = null;
   try {
-    [orders, stats] = await Promise.all([api('/orders'), api('/orders/analytics')]);
+    if (full) [orders, stats] = await Promise.all([api('/orders'), api('/orders/analytics')]);
+    else orders = await api('/orders');
   } catch(err) { toast(err.message); return; }
+  if (stats) renderAnalyticsStats(stats);
+  renderOrdersTable();
+}
+function renderAnalyticsStats(stats) {
   const totalRev = stats.revenue;
   const cancelledAmount = stats.cancelled_amount;
   document.getElementById('analytics-metrics').innerHTML = `
@@ -3948,6 +4053,8 @@ async function renderAnalytics() {
     <div class="bar-row"><span class="bar-label">${t('pay.mixedCount')}</span><div class="bar-track"><div class="bar-fill" style="width:${stats.orders_count?Math.round(mixed/stats.orders_count*100):0}%;background:var(--warning)"></div></div><span class="bar-count">${mixed}</span></div>
     <div class="bar-row"><span class="bar-label">${t('analytics.cancelledOrders')}</span><div class="bar-track"><div class="bar-fill" style="width:${stats.all_count?Math.round(stats.cancelled_count/stats.all_count*100):0}%;background:var(--danger)"></div></div><span class="bar-count">${stats.cancelled_count}</span></div>
     <div class="bar-row"><span class="bar-label">${t('analytics.cancelledAmount')}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(cancelledAmount/maxPay*100)}%;background:var(--danger)"></div></div><span class="bar-count">${fmt(cancelledAmount)}</span></div>`;
+}
+function renderOrdersTable() {
   document.getElementById('orders-tbody').innerHTML = orders.length
     ? orders.slice(0,20).map(o=>{
         const itemsStr = (o.items_json||[]).map(i=>esc(i.name)+' ×'+i.qty).join(', ');
@@ -4222,7 +4329,8 @@ function renderSettings() {
     ${t('settings.venue')}: <strong>${esc(venueInfo?.name || '—')}</strong><br>
     ${t('settings.plan')}: <strong>${esc(planMap[accountInfo?.plan] || accountInfo?.plan || '—')}</strong><br>
     ${t('settings.status')}: <strong>${esc(statusMap[accountInfo?.status] || accountInfo?.status || '—')}</strong><br>
-    ${t('settings.accessUntil')}: <strong>${expires}</strong>${upsell}`;
+    ${t('settings.accessUntil')}: <strong>${expires}</strong>${upsell}
+    ${hasSupport() ? `<div class="support-note" style="margin-top:12px;">${t('support.title')}</div>${supportButtons()}` : ''}`;
 
   if (hasFeature('finance')) {
     renderCashExpenses();
@@ -4347,6 +4455,7 @@ async function init() {
   applyTheme(appTheme);
   applyLanguage();
   renderPinGrid();
+  await loadSupport();
   if (viewMode) { await startApp(); return; }
   if (staffToken && ownerToken && venueInfo) {
     currentUser = JSON.parse(localStorage.getItem('qp_user') || 'null');

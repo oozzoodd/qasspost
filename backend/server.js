@@ -13,6 +13,7 @@ const ordersRoutes = require('./routes/orders');
 const adminRoutes = require('./routes/admin');
 const migrate = require('./db/migrate');
 const { publicPlans, TRIAL_DAYS } = require('./config/plans');
+const { publicSupport } = require('./config/support');
 
 const app = express();
 
@@ -66,9 +67,9 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'vzlyot.post API', version: '1.0.0' });
 });
 
-// Тарифы и цены для лендинга (задаются в config/plans.js)
+// Тарифы, цены и контакты поддержки для лендинга и кассы (config/plans.js, config/support.js)
 app.get('/plans', (req, res) => {
-  res.json({ plans: publicPlans(), trialDays: TRIAL_DAYS });
+  res.json({ plans: publicPlans(), trialDays: TRIAL_DAYS, support: publicSupport() });
 });
 
 app.use('/auth', authRoutes);
