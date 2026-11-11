@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /app
+Disallow: /admin.html
+Disallow: /auth/
+Disallow: /admin/
+Disallow: /orders/
+Disallow: /menu/
+Disallow: /stock/
+
+Sitemap: https://vzlyotpos.uz/sitemap.xml

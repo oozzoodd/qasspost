@@ -59,7 +59,24 @@ app.use('/auth/register', limiter({ windowMs: 60 * 60 * 1000, limit: 10 }));
 app.use('/admin', limiter({ limit: 30, skipSuccessfulRequests: true }));
 
 // Страницы: «/» — лендинг (index.html), «/app» — касса, «/admin.html» — админ-панель
+// Один главный адрес сайта для Google. CANONICAL_HOST (например vzlyotpos.uz) задаётся в Railway, когда домен
+// заработал: тогда сайт со служебного адреса *.up.railway.app и с www переводится на главный (301).
+// Касса (/app) не переводится: у кассиров вход сохранён в браузере на том адресе, где они работают.
+const CANONICAL_HOST = (process.env.CANONICAL_HOST || '').trim().toLowerCase();
+if (CANONICAL_HOST) {
+  app.use((req, res, next) => {
+    const host = String(req.headers.host || '').split(':')[0].toLowerCase();
+    const isSitePage = req.method === 'GET' && (req.path === '/' || req.path === '/uz' || req.path === '/uz/');
+    if (isSitePage && host !== CANONICAL_HOST && (host.endsWith('.up.railway.app') || host === `www.${CANONICAL_HOST}`)) {
+      return res.redirect(301, `https://${CANONICAL_HOST}${req.originalUrl}`);
+    }
+    next();
+  });
+}
+
 app.get('/app', (req, res) => res.sendFile(path.join(__dirname, 'public', 'app.html')));
+// Узбекская версия сайта для поиска — та же страница, язык выбирается по адресу
+app.get(['/uz', '/uz/'], (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 // Иконки Tabler (контурные) — свои, не с чужого сайта: касса не зависит от внешних CDN
 app.use('/vendor/tabler', express.static(
   path.join(__dirname, 'node_modules', '@tabler', 'icons-webfont', 'dist'),

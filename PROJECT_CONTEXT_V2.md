@@ -321,4 +321,7 @@ checkout() → buildReceiptModel(order, venue, cashier) → PrintAdapter.print(m
 - Не коммитить секреты/`.env`.
 - Читать файл перед правкой; предпочитать редактирование созданию новых файлов.
 - Demo-доступ: `demo@vzlyot.post` / `demo1234` (создаётся `db/init.js`).
-- Деплой-URL фронта: `https://qasspost-production.up.railway.app`.
+- Деплой-URL: `https://vzlyotpos.uz` и `https://www.vzlyotpos.uz` (домен куплен в PS Cloud, DNS-зона там же:
+  `@` — A на IP Railway 153.52.255.109, `www` — CNAME на `z3lw49io.up.railway.app`, плюс TXT `_railway-verify`).
+  Запасной адрес Railway: `https://qasspost-production.up.railway.app`.
+  Внимание: у «голого» домена A-запись на IP — если Railway сменит IP, обновить запись (или перенести DNS в Cloudflare).
