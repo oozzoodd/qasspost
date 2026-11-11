@@ -301,7 +301,7 @@ checkout() → buildReceiptModel(order, venue, cashier) → PrintAdapter.print(m
 > плитки блюд с цветной полоской категории (`CAT_COLORS`, `catColorOf()`), заказ — белый «чек» с зубчиками снизу,
 > цифры шрифтом Unbounded. Эмодзи заменены иконками Tabler (пакет `@tabler/icons-webfont`, отдаётся сервером по
 > `/vendor/tabler`, без внешних CDN). Стили — последний слой «ДИЗАЙН B» в `<style>` `app.html`. Скриншоты лендинга
-> ещё в старом дизайне.
+> (`public/img/screen-*.jpg`) пересняты в новом дизайне.
 
 1. **P0.1 — XSS** (закрыть критическую дыру).
 2. **P0.2 — PIN** (этап A немедленно, этап B — хеширование).
