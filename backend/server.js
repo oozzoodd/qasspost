@@ -60,6 +60,11 @@ app.use('/admin', limiter({ limit: 30, skipSuccessfulRequests: true }));
 
 // Страницы: «/» — лендинг (index.html), «/app» — касса, «/admin.html» — админ-панель
 app.get('/app', (req, res) => res.sendFile(path.join(__dirname, 'public', 'app.html')));
+// Иконки Tabler (контурные) — свои, не с чужого сайта: касса не зависит от внешних CDN
+app.use('/vendor/tabler', express.static(
+  path.join(__dirname, 'node_modules', '@tabler', 'icons-webfont', 'dist'),
+  { maxAge: '30d', immutable: true }
+));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Проверка что сервер живой (Railway health check)

@@ -512,7 +512,7 @@ router.get('/analytics', requireFeature('analytics'), requireRole('owner', 'admi
 // body: { items: [{ id: menu_item_id, qty }], pay_method, client_id, cash_amount, card_amount }
 router.post('/', async (req, res) => {
   const { venueId, staffId } = req.user;
-  const { items, pay_method, client_id, cash_amount, card_amount } = req.body;
+  const { items, pay_method, client_id, cash_amount, card_amount, cash_received } = req.body;
   if (!items || !items.length || !pay_method) {
     return res.status(400).json({ error: 'Укажите items и pay_method' });
   }
@@ -527,9 +527,9 @@ router.post('/', async (req, res) => {
   try {
     await client.query('BEGIN');
 
-    // Находим открытую смену
+    // Находим открытую смену. FOR UPDATE: два заказа одновременно не получат один номер
     const shiftRes = await client.query(
-      `SELECT id FROM shifts WHERE venue_id = $1 AND closed_at IS NULL`,
+      `SELECT id FROM shifts WHERE venue_id = $1 AND closed_at IS NULL FOR UPDATE`,
       [venueId]
     );
     if (!shiftRes.rows.length) {
@@ -662,14 +662,31 @@ router.post('/', async (req, res) => {
       );
     }
 
+    // Сколько наличных дал гость — только для сдачи на чеке; меньше суммы наличными быть не может
+    let cashReceived = null;
+    if (cash_received !== undefined && cash_received !== null && cash_received !== '' && cashAmount > 0) {
+      const received = Number(cash_received);
+      if (!Number.isInteger(received) || received < cashAmount) {
+        throw new Error('Получено наличными меньше, чем нужно оплатить');
+      }
+      cashReceived = received;
+    }
+
     // Обновляем выручку смены
     await client.query('UPDATE shifts SET revenue = revenue + $1 WHERE id = $2', [total, shiftId]);
 
+    // Номер заказа для выдачи: 1, 2, 3… с начала смены
+    const noRes = await client.query(
+      'SELECT COALESCE(MAX(order_no), 0) + 1 AS next FROM orders WHERE shift_id = $1',
+      [shiftId]
+    );
+    const orderNo = Number(noRes.rows[0].next);
+
     // Сохраняем заказ
     const orderRes = await client.query(
-      `INSERT INTO orders (venue_id, shift_id, staff_id, client_id, total, pay_method, cash_amount, card_amount, status, bonus_earned, items_json)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'completed',$9,$10) RETURNING *`,
-      [venueId, shiftId, staffId, normalizedClientId, total, pay_method, cashAmount, cardAmount, bonusEarned, JSON.stringify(itemsSnapshot)]
+      `INSERT INTO orders (venue_id, shift_id, staff_id, client_id, total, pay_method, cash_amount, card_amount, status, bonus_earned, items_json, order_no, cash_received)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'completed',$9,$10,$11,$12) RETURNING *`,
+      [venueId, shiftId, staffId, normalizedClientId, total, pay_method, cashAmount, cardAmount, bonusEarned, JSON.stringify(itemsSnapshot), orderNo, cashReceived]
     );
 
     await client.query('COMMIT');

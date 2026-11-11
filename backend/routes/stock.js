@@ -58,6 +58,119 @@ router.get('/incomes', requireRole('owner', 'admin'), async (req, res) => {
   res.json(r.rows);
 });
 
+// ── Заполнение и пересчёт склада (инвентаризация) ──────────
+// Остатки в базе: штуки — как есть, кг и литры — в граммах и миллилитрах (×1000).
+
+const INVENTORY_PERIODS = new Set([0, 3, 7, 14, 30]); // дней; 0 — не напоминать
+
+function cleanName(value) {
+  return String(value ?? '').replace(/\s+/g, ' ').trim().slice(0, 255);
+}
+
+// Первое заполнение склада тоже считается пересчётом: от него идёт отсчёт до следующего
+async function touchInventory(client, venueId, force) {
+  await client.query(
+    `UPDATE venues SET last_inventory_at = NOW()
+     WHERE id = $1 ${force ? '' : 'AND last_inventory_at IS NULL'}`,
+    [venueId]
+  );
+}
+
+// POST /stock/bulk — добавить сразу несколько товаров с текущим количеством
+// body: { items: [{ name, unit: 'pcs'|'kg'|'l', quantity }] }
+router.post('/bulk', requireRole('owner', 'admin'), async (req, res) => {
+  const raw = Array.isArray(req.body?.items) ? req.body.items : [];
+  const items = [];
+  for (const it of raw) {
+    const name = cleanName(it.name);
+    if (!name) continue;
+    const unit = INCOME_UNITS.has(it.unit) ? it.unit : 'pcs';
+    const quantity = Number(it.quantity ?? 0);
+    if (!Number.isFinite(quantity) || quantity < 0) {
+      return res.status(400).json({ error: `Проверьте количество у «${name}»` });
+    }
+    items.push({ name, unit, stock: toStockDeltaGrams(quantity, unit) });
+  }
+  if (!items.length) return res.status(400).json({ error: 'Добавьте хотя бы один товар' });
+  if (items.length > 200) return res.status(400).json({ error: 'Слишком много товаров за раз' });
+  if (items.some(it => weightLocked(req, it.unit))) return featureLocked(res, 'stock_weight');
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const created = [];
+    for (const it of items) {
+      // «Заканчивается» по умолчанию: меньше 5 штук или меньше 1 кг / 1 л
+      const min = it.unit === 'pcs' ? 5 : (it.unit === 'kg' || it.unit === 'l') ? 1000 : 300;
+      const r = await client.query(
+        `INSERT INTO ingredients (venue_id, name, category, unit, stock_grams, min_grams)
+         VALUES ($1,$2,'kitchen',$3,$4,$5) RETURNING *`,
+        [req.user.venueId, it.name, it.unit, it.stock, min]
+      );
+      created.push(r.rows[0]);
+    }
+    await touchInventory(client, req.user.venueId, false);
+    await client.query('COMMIT');
+    res.json(created);
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+});
+
+// POST /stock/inventory — пересчёт склада: новые остатки всех товаров разом
+// body: { items: [{ id, stock_grams }] } — остаток в тех же единицах, что хранит база
+router.post('/inventory', requireRole('owner', 'admin'), async (req, res) => {
+  const raw = Array.isArray(req.body?.items) ? req.body.items : [];
+  const items = [];
+  for (const it of raw) {
+    const id = Number(it.id);
+    if (!Number.isInteger(id) || id <= 0) continue;
+    try {
+      items.push({ id, stock: parseNonNegativeStock(it.stock_grams) });
+    } catch (err) {
+      return res.status(400).json({ error: err.message });
+    }
+  }
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    for (const it of items) {
+      await client.query(
+        'UPDATE ingredients SET stock_grams = $1, updated_at = NOW() WHERE id = $2 AND venue_id = $3',
+        [it.stock, it.id, req.user.venueId]
+      );
+    }
+    await touchInventory(client, req.user.venueId, true);
+    const venue = await client.query(
+      'SELECT inventory_every_days, last_inventory_at FROM venues WHERE id = $1',
+      [req.user.venueId]
+    );
+    await client.query('COMMIT');
+    res.json({ updated: items.length, ...venue.rows[0] });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+});
+
+// PUT /stock/inventory-settings — как часто напоминать о пересчёте склада
+router.put('/inventory-settings', requireRole('owner', 'admin'), async (req, res) => {
+  const every = Number(req.body?.every_days);
+  if (!INVENTORY_PERIODS.has(every)) return res.status(400).json({ error: 'Выберите, как часто пересчитывать склад' });
+  const r = await pool.query(
+    `UPDATE venues SET inventory_every_days = $1,
+       last_inventory_at = COALESCE(last_inventory_at, NOW())
+     WHERE id = $2 RETURNING inventory_every_days, last_inventory_at`,
+    [every, req.user.venueId]
+  );
+  res.json(r.rows[0]);
+});
+
 // POST /stock — новый ингредиент (owner, admin)
 router.post('/', requireRole('owner', 'admin'), async (req, res) => {
   const { name, min_grams = 300, category = 'kitchen' } = req.body;
@@ -68,14 +181,22 @@ router.post('/', requireRole('owner', 'admin'), async (req, res) => {
     return res.status(400).json({ error: 'Проверьте категорию и единицу измерения' });
   }
   let normalizedMinGrams;
+  let initialStock = 0; // сколько товара есть прямо сейчас (необязательно)
   try {
     normalizedMinGrams = parseNonNegativeStock(min_grams);
+    if (req.body.stock_grams !== undefined && req.body.stock_grams !== null && req.body.stock_grams !== '') {
+      initialStock = parseNonNegativeStock(req.body.stock_grams);
+    }
   } catch (err) {
     return res.status(400).json({ error: err.message });
   }
   const r = await pool.query(
     'INSERT INTO ingredients (venue_id, name, category, unit, stock_grams, min_grams) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
-    [req.user.venueId, name, category, unit, 0, normalizedMinGrams]
+    [req.user.venueId, cleanName(name), category, unit, initialStock, normalizedMinGrams]
+  );
+  await pool.query(
+    'UPDATE venues SET last_inventory_at = NOW() WHERE id = $1 AND last_inventory_at IS NULL',
+    [req.user.venueId]
   );
   res.json(r.rows[0]);
 });

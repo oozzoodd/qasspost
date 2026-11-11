@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>vzlyot.post — касса для фастфуда</title>
-  <meta name="description" content="Касса для шаурмы, бургерной и кофейни: меню, смены, сотрудники и выручка. Работает в браузере на планшете, телефоне и ноутбуке. 14 дней бесплатно.">
+  <meta name="description" content="Касса для шаурмы, бургерной и кофейни: меню, смены, сотрудники, склад и печать чеков. Работает в браузере на планшете, телефоне и ноутбуке. 14 дней бесплатно.">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -194,8 +194,10 @@
     .plan .btn { width: 100%; }
     .plan .btn-line { border-color: var(--line); color: var(--ink); }
     .plan .btn-line:hover { border-color: var(--navy); }
-    .biz-note { margin-top: 18px; display: inline-block; padding: 8px 14px; border-radius: 12px; background: #FFF0CC; color: #6E4307; font-size: 14px; font-weight: 600; }
     .plans-note { margin-top: 22px; color: var(--ink-soft); font-size: 15px; }
+    .plans.single { grid-template-columns: minmax(0, 1fr); max-width: 520px; margin-left: auto; margin-right: auto; }
+    .plans.single + .plans-note { text-align: center; }
+    .plans-note a { color: var(--coral-text); font-weight: 700; }
 
     /* ── Регистрация на фоне фото ──────────────────────── */
     .signup-band { position: relative; color: var(--cream); overflow: hidden; scroll-margin-top: 0; }
@@ -440,7 +442,7 @@
         </div>
         <div class="story-text">
           <h3 data-i18n="story.2t">У каждого сотрудника свой PIN-код</h3>
-          <p data-i18n="story.2p">Кассир входит по четырём цифрам и видит только кассу. Меню, отчёты и настройки остаются у владельца и администратора.</p>
+          <p data-i18n="story.2p">Кассир входит по четырём цифрам и видит только кассу. Меню, склад и настройки остаются у владельца и администратора.</p>
           <ul>
             <li data-i18n="story.2a">Видно, кто открыл смену и кто пробил чек</li>
             <li data-i18n="story.2b">Сменить сотрудника — одно касание</li>
@@ -452,17 +454,16 @@
       <div class="story">
         <div class="story-media">
           <img src="https://images.unsplash.com/photo-1753351052617-62818ffc9173?auto=format&fit=crop&w=1100&q=70" alt="Владельцы кафе стоят у своей стойки" data-i18n-alt="story.3alt" loading="lazy">
-          <div class="stats-shot"><img src="/img/screen-analytics.jpg" alt="Аналитика: выручка, средний чек, популярные блюда" data-i18n-alt="story.3shot" loading="lazy" width="1260" height="322"></div>
+          <div class="stats-shot"><img src="/img/screen-stock.jpg" alt="Склад в кассе: остатки товаров и напоминание о пересчёте" data-i18n-alt="story.3shot" loading="lazy" width="1260" height="560"></div>
         </div>
         <div class="story-text">
-          <h3 data-i18n="story.3t">Выручка у вас в телефоне</h3>
-          <p data-i18n="story.3p">Сколько продали сегодня, за неделю и за месяц, какой средний чек и что берут чаще всего. Даже если вы сейчас не на точке.</p>
+          <h3 data-i18n="story.3t">Склад без сложных техкарт</h3>
+          <p data-i18n="story.3p">Впишите один раз, что у вас есть: мясо, хлеб, напитки, упаковку. Потом пересчитывайте склад так часто, как удобно, — касса сама напомнит, когда пора.</p>
           <ul>
-            <li data-i18n="story.3a">Отчёты по времени Ташкента</li>
-            <li data-i18n="story.3b">Наличные и карта отдельно</li>
-            <li data-i18n="story.3c">Самые популярные блюда</li>
+            <li data-i18n="story.3a">Штуки, килограммы и литры</li>
+            <li data-i18n="story.3b">Напоминание раз в 3 дня, неделю, 2 недели или месяц</li>
+            <li data-i18n="story.3c">Видно, что заканчивается</li>
           </ul>
-          <p class="biz-note" data-i18n="story.3note">Аналитика входит в тариф «Бизнес». На «Старте» видна выручка за смену.</p>
         </div>
       </div>
     </div>
@@ -475,7 +476,7 @@
       <ol class="steps">
         <li><h3 data-i18n="steps.1t">Зарегистрируйтесь</h3><p data-i18n="steps.1p">Имя, название точки, номер телефона и пароль. Касса откроется сразу.</p></li>
         <li><h3 data-i18n="steps.2t">Добавьте меню</h3><p data-i18n="steps.2p">Только названия и цены. Десять позиций заносятся за пять минут.</p></li>
-        <li><h3 data-i18n="steps.3t">Откройте смену</h3><p data-i18n="steps.3p">И принимайте заказы с любого устройства, где есть браузер.</p></li>
+        <li><h3 data-i18n="steps.3t">Откройте смену</h3><p data-i18n="steps.3p">И принимайте заказы. Что настроить дальше — сотрудников, склад — касса подскажет сама.</p></li>
       </ol>
     </div>
   </section>
@@ -484,48 +485,26 @@
   <section id="plans">
     <div class="wrap">
       <h2 data-i18n="plans.title">Тарифы</h2>
-      <p class="lead" data-i18n="plans.lead">Начните с простого. Когда понадобятся аналитика, техкарты, склад по граммам, финансы и клиенты, переключим на «Бизнес» — все данные сохранятся.</p>
-      <div class="plans">
+      <p class="lead" data-i18n="plans.lead">Один тариф — и в нём всё, что нужно точке: касса, меню, склад, сотрудники и печать чеков. Без лишних разделов, в которых легко запутаться.</p>
+      <div class="plans single">
         <article class="plan main">
           <span class="plan-badge" data-i18n="plans.badge">14 дней бесплатно</span>
           <h3 data-i18n="plans.start">Старт</h3>
-          <p class="plan-for" data-i18n="plans.startFor">Одна точка, быстрый запуск</p>
+          <p class="plan-for" data-i18n="plans.startFor">Всё для одной точки</p>
           <div class="plan-price num" data-plan="start">—</div>
           <ul>
             <li data-i18n="plans.f1">Касса, меню и смены</li>
             <li data-i18n="plans.f2">Сотрудники с PIN-кодами</li>
-            <li data-i18n="plans.f3">Выручка за смену и список чеков</li>
-            <li data-i18n="plans.f4">Остатки поштучных товаров</li>
+            <li data-i18n="plans.f3">Список чеков: отмена и повторная печать</li>
+            <li data-i18n="plans.f4">Склад в штуках, килограммах и литрах</li>
+            <li data-i18n="plans.f5">Пересчёт склада с напоминаниями</li>
+            <li data-i18n="plans.f6">Печать чеков на принтер 58 или 80 мм</li>
+            <li data-i18n="plans.f7">Подсказки по шагам после регистрации</li>
           </ul>
           <a class="btn btn-coral" href="#signup" data-i18n="plans.cta">Начать бесплатно</a>
         </article>
-        <article class="plan">
-          <h3 data-i18n="plans.business">Бизнес</h3>
-          <p class="plan-for" data-i18n="plans.businessFor">Полный учёт для точки</p>
-          <div class="plan-price num" data-plan="business">—</div>
-          <ul>
-            <li data-i18n="plans.f5">Всё, что есть в «Старте»</li>
-            <li data-i18n="plans.f12">Аналитика: выручка за период, средний чек, популярные блюда</li>
-            <li data-i18n="plans.f6">Техкарты: ингредиенты списываются сами</li>
-            <li data-i18n="plans.f7">Склад по граммам и литрам</li>
-            <li data-i18n="plans.f8">Финансы: расходы и прибыль</li>
-            <li data-i18n="plans.f9">Клиенты и бонусы</li>
-          </ul>
-          <a class="btn btn-line" href="#signup" data-i18n="plans.cta">Начать бесплатно</a>
-        </article>
-        <article class="plan">
-          <h3 data-i18n="plans.network">Сеть</h3>
-          <p class="plan-for" data-i18n="plans.networkFor">Для сети точек, цену обсудим</p>
-          <div class="plan-price num" data-plan="network">—</div>
-          <ul>
-            <li data-i18n="plans.f10">Всё, что есть в «Бизнесе»</li>
-            <li class="soon" data-i18n="plans.f11">Несколько точек в одном аккаунте — скоро</li>
-          </ul>
-          <a class="btn btn-line" id="network-cta" href="#signup" data-i18n="plans.cta">Начать бесплатно</a>
-        </article>
       </div>
-      <span hidden data-i18n="plans.dealCta">Обсудить цену</span>
-      <p class="plans-note" data-i18n="plans.note">Пробный период — на тарифе «Старт». Тариф выбирается после него, оплата через Click, Payme или наличными.</p>
+      <p class="plans-note"><span data-i18n="plans.note">Первые 14 дней бесплатно. Дальше — оплата через Click, Payme или наличными.</span> <span data-i18n="plans.network">Несколько точек?</span> <a id="network-cta" href="#signup" data-i18n="plans.dealCta">Обсудить цену</a></p>
     </div>
   </section>
 
@@ -590,9 +569,10 @@
         <details><summary data-i18n="faq.1q">Нужно ли покупать оборудование?</summary><p data-i18n="faq.1a">Нет. Касса открывается в браузере — на телефоне, планшете или ноутбуке, которые у вас уже есть.</p></details>
         <details><summary data-i18n="faq.2q">Что будет через 14 дней?</summary><p data-i18n="faq.2a">Касса попросит продлить доступ. Меню, заказы и отчёты никуда не пропадают: после оплаты вы продолжаете с того же места.</p></details>
         <details><summary data-i18n="faq.3q">Как оплатить?</summary><p data-i18n="faq.3a">Через Click, Payme или наличными. После оплаты мы включаем доступ на оплаченный срок.</p></details>
-        <details><summary data-i18n="faq.4q">Можно ли перейти со «Старта» на «Бизнес»?</summary><p data-i18n="faq.4a">Да, в любой момент. Меню, сотрудники и история заказов сохраняются, просто открываются новые разделы.</p></details>
+        <details><summary data-i18n="faq.4q">Как вести склад без техкарт?</summary><p data-i18n="faq.4a">Впишите остатки один раз, а потом пересчитывайте склад раз в 3 дня, неделю, 2 недели или месяц — касса напомнит. Не нужно расписывать граммы для каждого блюда.</p></details>
         <details><summary data-i18n="faq.5q">Работает ли касса без интернета?</summary><p data-i18n="faq.5a">Нет, нужен интернет: заказы сразу сохраняются на сервере, поэтому выручку видно с любого устройства.</p></details>
         <details><summary data-i18n="faq.6q">На каком языке работает касса?</summary><p data-i18n="faq.6a">На русском и узбекском. Язык переключается в настройках кассы.</p></details>
+        <details><summary data-i18n="faq.7q">Можно ли печатать чеки?</summary><p data-i18n="faq.7a">Да. Подойдёт обычный термопринтер чеков на 58 или 80 мм. Печать включается в настройках кассы, чек печатается сразу после оплаты.</p></details>
       </div>
     </div>
   </section>
@@ -633,27 +613,25 @@ const UZ = {
   'story.1t': 'Mehmonga qulay to‘lov', 'story.1p': 'Naqd, karta yoki bir qismi naqd, bir qismi karta. Kassa summani o‘zi bo‘ladi va smena hisobotida to‘g‘ri hisobga oladi.',
   'story.1a': 'Mehmon fikridan qaytsa, chekni bekor qilish', 'story.1b': 'Smena tushumi istalgan payt ko‘rinadi', 'story.1c': 'Ichimliklar qoldig‘i o‘zi kamayadi',
   'story.1alt': 'Mehmon kassada karta bilan to‘lamoqda',
-  'story.2t': 'Har bir xodimning o‘z PIN kodi', 'story.2p': 'Kassir to‘rt raqam bilan kiradi va faqat kassani ko‘radi. Menyu, hisobotlar va sozlamalar egasi hamda administratorda qoladi.',
+  'story.2t': 'Har bir xodimning o‘z PIN kodi', 'story.2p': 'Kassir to‘rt raqam bilan kiradi va faqat kassani ko‘radi. Menyu, ombor va sozlamalar egasi hamda administratorda qoladi.',
   'story.2a': 'Smenani kim ochgani va chekni kim urgani ko‘rinadi', 'story.2b': 'Xodimni almashtirish — bir bosish', 'story.2c': 'Xodim ketdi — o‘chirildi, tarix saqlandi',
   'story.2alt': 'Kassir peshtaxtada planshetda buyurtma qabul qilmoqda',
   'role.cashier': 'kassir', 'role.admin': 'administrator', 'role.owner': 'egasi',
-  'story.3t': 'Tushum telefoningizda', 'story.3p': 'Bugun, hafta va oyda qancha sotildi, o‘rtacha chek qancha va nimani ko‘proq olishadi. Hatto hozir shoxobchada bo‘lmasangiz ham.',
-  'story.3a': 'Hisobotlar Toshkent vaqti bo‘yicha', 'story.3b': 'Naqd va karta alohida', 'story.3c': 'Eng ommabop taomlar', 'story.3note': 'Analitika «Biznes» tarifiga kiradi. «Start»da smena tushumi ko‘rinadi.',
-  'story.3alt': 'Kafe egalari o‘z peshtaxtasi oldida', 'story.3shot': 'Analitika: tushum, o‘rtacha chek, ommabop taomlar',
+  'story.3t': 'Murakkab texkartalarsiz ombor', 'story.3p': 'Bor narsani bir marta yozing: go‘sht, non, ichimliklar, qadoq. Keyin omborni o‘zingizga qulay tez-tezlikda sanang — vaqti kelganda kassa o‘zi eslatadi.',
+  'story.3a': 'Dona, kilogramm va litr', 'story.3b': '3 kunda, haftada, 2 haftada yoki oyda bir eslatma', 'story.3c': 'Nima tugayotgani ko‘rinadi',
+  'story.3alt': 'Kafe egalari o‘z peshtaxtasi oldida', 'story.3shot': 'Kassadagi ombor: tovar qoldiqlari va qayta sanash eslatmasi',
   'steps.title': 'Qanday boshlash kerak',
   'steps.1t': 'Ro‘yxatdan o‘ting', 'steps.1p': 'Ism, shoxobcha nomi, telefon raqami va parol. Kassa darhol ochiladi.',
   'steps.2t': 'Menyuni qo‘shing', 'steps.2p': 'Faqat nom va narxlar. O‘nta pozitsiya besh daqiqada kiritiladi.',
-  'steps.3t': 'Smenani oching', 'steps.3p': 'Va brauzer bor istalgan qurilmadan buyurtma qabul qiling.',
+  'steps.3t': 'Smenani oching', 'steps.3p': 'Va buyurtma qabul qiling. Keyin nimani sozlash kerakligini — xodimlar, ombor — kassa o‘zi aytadi.',
   'plans.title': 'Tariflar',
-  'plans.lead': 'Oddiysidan boshlang. Analitika, texkartalar, gramm bo‘yicha ombor, moliya va mijozlar kerak bo‘lganda «Biznes»ga o‘tkazamiz — barcha ma’lumotlar saqlanadi.',
-  'plans.badge': '14 kun bepul', 'plans.start': 'Start', 'plans.business': 'Biznes', 'plans.network': 'Tarmoq',
-  'plans.startFor': 'Bitta shoxobcha, tez ishga tushirish', 'plans.businessFor': 'Shoxobcha uchun to‘liq hisob', 'plans.networkFor': 'Shoxobchalar tarmog‘i uchun, narx kelishiladi',
-  'plans.f1': 'Kassa, menyu va smenalar', 'plans.f2': 'PIN kodli xodimlar', 'plans.f3': 'Smena tushumi va cheklar ro‘yxati', 'plans.f4': 'Donali tovarlar qoldig‘i',
-  'plans.f5': '«Start»dagi hamma narsa', 'plans.f6': 'Texkartalar: ingredientlar o‘zi hisobdan chiqadi', 'plans.f12': 'Analitika: davr tushumi, o‘rtacha chek, ommabop taomlar', 'plans.f7': 'Gramm va litr bo‘yicha ombor',
-  'plans.f8': 'Moliya: xarajatlar va foyda', 'plans.f9': 'Mijozlar va bonuslar',
-  'plans.f10': '«Biznes»dagi hamma narsa', 'plans.f11': 'Bitta akkauntda bir nechta shoxobcha — tez orada',
+  'plans.lead': 'Bitta tarif — unda shoxobchaga kerak bo‘lgan hamma narsa bor: kassa, menyu, ombor, xodimlar va chek chop etish. Adashtiradigan ortiqcha bo‘limlarsiz.',
+  'plans.badge': '14 kun bepul', 'plans.start': 'Start', 'plans.network': 'Bir nechta shoxobchami?',
+  'plans.startFor': 'Bitta shoxobcha uchun hammasi',
+  'plans.f1': 'Kassa, menyu va smenalar', 'plans.f2': 'PIN kodli xodimlar', 'plans.f3': 'Cheklar ro‘yxati: bekor qilish va qayta chop etish', 'plans.f4': 'Dona, kilogramm va litrda ombor',
+  'plans.f5': 'Eslatmali ombor sanog‘i', 'plans.f6': '58 yoki 80 mm printerda chek chop etish', 'plans.f7': 'Ro‘yxatdan o‘tgach qadamma-qadam maslahatlar',
   'plans.cta': 'Bepul boshlash', 'plans.dealCta': 'Narxni kelishish',
-  'plans.note': 'Sinov muddati «Start» tarifida. Tarif undan keyin tanlanadi, to‘lov Click, Payme yoki naqd orqali.',
+  'plans.note': 'Dastlabki 14 kun bepul. Keyin — Click, Payme yoki naqd orqali to‘lov.',
   'signup.title': 'Kassangizni bugun oching', 'signup.lead': 'Ro‘yxatdan o‘tish bir daqiqa oladi. Dastlabki 14 kun — bepul, karta va shartnomasiz.',
   'signup.f1': 'Kassa ro‘yxatdan o‘tgach darhol ochiladi', 'signup.f2': 'Menyu va buyurtmalar sinov muddatidan keyin ham saqlanadi', 'signup.f3': 'Telefon, planshet va noutbukda ishlaydi',
   'form.title': 'Kassa yaratish', 'form.note': 'Keyin raqam va parol orqali kirish mumkin.',
@@ -664,9 +642,10 @@ const UZ = {
   'faq.1q': 'Uskuna sotib olish kerakmi?', 'faq.1a': 'Yo‘q. Kassa brauzerda ochiladi — sizda bor telefon, planshet yoki noutbukda.',
   'faq.2q': '14 kundan keyin nima bo‘ladi?', 'faq.2a': 'Kassa kirishni uzaytirishni so‘raydi. Menyu, buyurtmalar va hisobotlar yo‘qolmaydi: to‘lovdan so‘ng o‘sha joydan davom etasiz.',
   'faq.3q': 'Qanday to‘lanadi?', 'faq.3a': 'Click, Payme yoki naqd orqali. To‘lovdan keyin to‘langan muddatga kirishni yoqamiz.',
-  'faq.4q': '«Start»dan «Biznes»ga o‘tish mumkinmi?', 'faq.4a': 'Ha, istalgan payt. Menyu, xodimlar va buyurtmalar tarixi saqlanadi, shunchaki yangi bo‘limlar ochiladi.',
+  'faq.4q': 'Texkartasiz omborni qanday yuritish mumkin?', 'faq.4a': 'Qoldiqlarni bir marta yozing, keyin omborni 3 kunda, haftada, 2 haftada yoki oyda bir sanang — kassa eslatadi. Har bir taom uchun grammlarni yozish shart emas.',
   'faq.5q': 'Kassa internetsiz ishlaydimi?', 'faq.5a': 'Yo‘q, internet kerak: buyurtmalar darhol serverda saqlanadi, shuning uchun tushum istalgan qurilmadan ko‘rinadi.',
   'faq.6q': 'Kassa qaysi tilda ishlaydi?', 'faq.6a': 'Rus va o‘zbek tillarida. Til kassa sozlamalarida almashtiriladi.',
+  'faq.7q': 'Chek chop etish mumkinmi?', 'faq.7a': 'Ha. 58 yoki 80 mm li oddiy chek termoprinteri mos keladi. Chop etish kassa sozlamalarida yoqiladi, chek to‘lovdan keyin darhol chiqadi.',
   'foot.photos': 'Suratlar', 'foot.login': 'Kassaga kirish',
 };
 // Тексты, которые появляются из скрипта
@@ -758,7 +737,7 @@ function renderSupport() {
     foot.append(a);
   });
   const cta = document.getElementById('network-cta');
-  if (links.length) {
+  if (cta && links.length) {
     cta.href = links[links.length - 1][0];
     if (cta.href.startsWith('https:')) { cta.target = '_blank'; cta.rel = 'noopener'; }
     cta.dataset.i18n = 'plans.dealCta';

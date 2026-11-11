@@ -7,37 +7,38 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/vendor/tabler/tabler-icons-outline.min.css">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       color-scheme: light;
-      /* Фирменные цвета «Взлёт»: коралловый, тёмно-синий, золотой, кремовый фон */
+      /* Фирменные цвета «Взлёт» (коралловый, тёмно-синий, золотой); вариант дизайна B «Чек-лента»: холодный светлый фон, белые карточки */
       --navy: #1C2B45;
       --gold: #FFB627;
       --sidebar-bg: #1C2B45;
-      --bg: #F7F4EC;
-      --card: #FDFBF4;
+      --bg: #EEF1F6;
+      --card: #FFFFFF;
       --text: #1C2B45;
-      --muted: #5F6779;
-      --border: #E7E0CF;
+      --muted: #6E7A92;
+      --border: #DDE3EC;
       --primary: #FF6A45;
       --primary-hover: #F2542D;
       --accent: #C23A14;
       --danger: #C0392B;
       --warning: #94580A;
       --success: #1A7A42;
-      --surface: #FAF7EF;
+      --surface: #F6F8FB;
       --input: #FFFFFF;
-      --soft: #EFE9D8;
-      --primary-soft: #FFE7DE;
+      --soft: #EEF1F6;
+      --primary-soft: #FFEDE7;
       --success-soft: #E2F4E8;
       --danger-soft: #FCE5E1;
       --warning-soft: #FFF0CC;
-      --table-row: #FAF6EC;
-      --shadow-sm: 0 2px 8px rgba(28,43,69,0.05);
-      --shadow-md: 0 10px 24px rgba(28,43,69,0.12);
-      --shadow: 0 6px 22px rgba(28,43,69,0.08);
+      --table-row: #F7F9FC;
+      --shadow-sm: 0 1px 2px rgba(28,43,69,0.06);
+      --shadow-md: 0 12px 28px rgba(28,43,69,0.14);
+      --shadow: 0 4px 14px rgba(28,43,69,0.07);
     }
     body[data-theme="dark"] {
       color-scheme: dark;
@@ -1206,6 +1207,306 @@
       .menu-hint { flex-direction: column; align-items: stretch; }
     }
 
+    /* ── Оплата: кнопка «Оплатить 86 000», окно оплаты, экран «Готово» ── */
+    .checkout-btn { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 0 20px; }
+    .checkout-btn b { font-weight: 800; white-space: nowrap; }
+    .checkout-btn:disabled { justify-content: center; }
+    .modal.modal-pay { width: 460px; padding: 20px; }
+    .pay-screen { display: grid; gap: 14px; }
+    .pay-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+    .pay-total span { display: block; color: var(--muted); font-size: 13px; font-weight: 700; }
+    .pay-total b { font-size: 34px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; }
+    .pay-close { flex-shrink: 0; width: 40px; height: 40px; border: none; border-radius: 50%; background: var(--soft); color: var(--text); font-size: 16px; cursor: pointer; }
+    .pay-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .pay-tab { min-height: 64px; padding: 6px; border: 2px solid var(--border); border-radius: 14px; background: var(--card); color: var(--text); font: inherit; font-size: 14px; font-weight: 700; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer; }
+    .pay-tab span { font-size: 20px; line-height: 1; }
+    .pay-tab.active { border-color: var(--primary); background: var(--primary-soft); color: var(--accent); }
+    .pay-body { display: grid; gap: 8px; }
+    .pay-label { font-size: 13px; font-weight: 700; color: var(--muted); }
+    .pay-input { width: 100%; min-height: 58px; padding: 10px 16px; border: 2px solid var(--border); border-radius: 14px; background: var(--input); color: var(--text); font: inherit; font-size: 26px; font-weight: 800; outline: none; }
+    .pay-input:focus { border-color: var(--primary); }
+    .pay-input::placeholder { font-size: 15px; font-weight: 600; color: var(--muted); }
+    .pay-quick { display: grid; grid-template-columns: repeat(auto-fit, minmax(72px, 1fr)); gap: 8px; }
+    .pay-quick-btn { min-width: 0; padding: 0 4px; min-height: 48px; border: 1px solid var(--border); border-radius: 12px; background: var(--soft); color: var(--text); font: inherit; font-size: 15px; font-weight: 800; cursor: pointer; }
+    .pay-quick-btn:active, .pay-tab:active { transform: scale(0.97); }
+    .pay-hint { font-size: 14px; line-height: 1.5; color: var(--muted); }
+    .pay-hint b { color: var(--text); font-size: 18px; }
+    .pay-result { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 14px; background: var(--soft); font-weight: 700; }
+    .pay-result:empty { display: none; }
+    .pay-result b { font-size: 24px; font-weight: 800; }
+    .pay-result.change { background: var(--success-soft); color: var(--success); }
+    .pay-result.bad { background: var(--danger-soft); color: var(--danger); }
+    .pay-result.big b { font-size: 32px; }
+    .pay-confirm { width: 100%; min-height: 62px; justify-content: center; border-radius: 14px; font-size: 18px; font-weight: 800; }
+    .pay-done { justify-items: center; text-align: center; }
+    .pay-done-check { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; background: var(--success-soft); color: var(--success); font-size: 34px; font-weight: 800; }
+    .pay-done-title { font-size: 16px; font-weight: 700; color: var(--muted); }
+    .pay-done-label { margin-top: 4px; font-size: 13px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .pay-done-no { font-size: 88px; font-weight: 800; line-height: 1; letter-spacing: -0.03em; color: var(--accent); }
+    .pay-done .pay-result { width: 100%; }
+    .pay-done-actions { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; }
+    .pay-done-actions .btn-secondary { min-height: 62px; justify-content: center; border-radius: 14px; }
+    @media (max-width: 640px) {
+      .modal.modal-pay { width: calc(100vw - 16px); max-height: 94dvh; padding: 16px; }
+      .pay-total b { font-size: 30px; }
+      .pay-done-no { font-size: 76px; }
+      .pay-done-actions { grid-template-columns: 1fr; }
+      .pay-done-actions .btn-secondary { min-height: 50px; order: 2; }
+    }
+    @media (orientation: landscape) and (max-height: 500px) {
+      .modal.modal-pay { width: min(640px, 94vw); padding: 14px 18px; }
+      .pay-screen { gap: 9px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+      .pay-head, .pay-tabs, .pay-body { grid-column: 1 / -1; }
+      .pay-result:empty + .pay-confirm { grid-column: 1 / -1; }
+      .pay-done { grid-template-columns: minmax(0, 1fr); }
+      .pay-total b { font-size: 26px; }
+      .pay-tab { min-height: 46px; flex-direction: row; gap: 8px; }
+      .pay-input { min-height: 48px; font-size: 22px; }
+      .pay-quick-btn { min-height: 40px; }
+      .pay-confirm, .pay-done-actions .btn-secondary { min-height: 50px; }
+      .pay-done-check { width: 44px; height: 44px; font-size: 24px; }
+      .pay-done-no { font-size: 56px; }
+    }
+
+    /* ── Склад: карточки товаров, пересчёт, график ── */
+    .stock-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .stock-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin-bottom: 14px; }
+    .stock-card { display: grid; gap: 6px; padding: 14px; border: 1px solid var(--border); border-radius: 14px; background: var(--card); }
+    .stock-card.low { border-color: var(--warning); }
+    .stock-card.out { border-color: var(--danger); }
+    .stock-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+    .stock-card-top strong { font-size: 15px; line-height: 1.3; word-break: break-word; }
+    .stock-card-qty { font-size: 22px; font-weight: 800; }
+    .stock-card-min { font-size: 12px; }
+    .stock-card-actions { display: flex; gap: 6px; align-items: center; margin-top: 2px; }
+    .stock-card-actions .btn-secondary { flex: 1; justify-content: center; }
+    .stock-empty { grid-column: 1 / -1; }
+    .inv-card { margin-bottom: 14px; }
+    .inv-card.unset { border: 2px solid var(--primary); }
+    .inv-card.due { border: 2px solid var(--warning); background: var(--warning-soft); }
+    .inv-card-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+    .inv-status { font-size: 13px; line-height: 1.5; }
+    .inv-due { color: var(--warning); font-weight: 800; }
+    .inv-periods { display: flex; gap: 8px; flex-wrap: wrap; }
+    .inv-periods .cat-tab { min-height: 42px; }
+    .inv-reminder { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; margin-bottom: 10px; border-radius: 12px; background: var(--warning-soft); border: 1px solid var(--warning); }
+    .inv-reminder span { display: grid; gap: 2px; font-size: 14px; }
+    .inv-reminder small { color: var(--muted); font-size: 12px; }
+    .bulk-head, .bulk-row { display: grid; grid-template-columns: minmax(0, 1fr) 96px 76px; gap: 8px; }
+    .bulk-head { font-size: 12px; font-weight: 700; margin-bottom: 6px; }
+    .bulk-row { margin-bottom: 8px; }
+    .bulk-row input, .bulk-row select { width: 100%; min-height: 46px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--input); color: var(--text); font: inherit; font-size: 16px; outline: none; }
+    .bulk-row input:focus, .bulk-row select:focus { border-color: var(--primary); }
+    .inv-rows { display: grid; gap: 8px; max-height: 52vh; overflow-y: auto; padding-right: 2px; }
+    .inv-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--soft); }
+    .inv-row > span:first-child { display: grid; gap: 2px; min-width: 0; font-size: 14px; }
+    .inv-row small { font-size: 12px; }
+    .inv-input { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .inv-input input { width: 92px; min-height: 46px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--input); color: var(--text); font: inherit; font-size: 17px; font-weight: 700; text-align: right; outline: none; }
+    .inv-input input:focus { border-color: var(--primary); }
+    .inv-input em { font-style: normal; color: var(--muted); min-width: 24px; font-size: 13px; }
+    .settings-top-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .staff-explain { font-size: 13px; line-height: 1.5; margin: -4px 0 12px; }
+
+    /* ── Путеводитель для нового клиента ── */
+    .guide-card { padding: 14px 16px; margin-bottom: 12px; border-radius: 16px; background: var(--card); border: 2px solid var(--primary); box-shadow: 0 8px 24px rgba(255,106,69,0.12); }
+    .guide-card.done { border-color: var(--success); box-shadow: none; }
+    .guide-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; cursor: pointer; }
+    .guide-card.done .guide-head { cursor: default; }
+    .guide-head > div { display: grid; gap: 2px; }
+    .guide-head b { font-size: 16px; }
+    .guide-head .muted-text { font-size: 12px; }
+    .guide-toggle { font-size: 18px; color: var(--muted); padding: 4px 8px; }
+    .guide-bar { height: 6px; margin: 10px 0 4px; border-radius: 3px; background: var(--soft); overflow: hidden; }
+    .guide-bar i { display: block; height: 100%; background: var(--primary); border-radius: 3px; transition: width 0.3s; }
+    .guide-steps { list-style: none; display: grid; gap: 4px; margin: 10px 0 4px; }
+    .guide-steps li { display: flex; gap: 12px; align-items: flex-start; padding: 8px 6px; border-radius: 12px; }
+    .guide-steps li.current { background: var(--primary-soft); padding: 12px 10px; }
+    .guide-steps li.done b { color: var(--muted); text-decoration: line-through; font-weight: 600; }
+    .guide-steps li > div { display: grid; gap: 6px; min-width: 0; font-size: 14px; }
+    .guide-steps p { font-size: 13px; line-height: 1.5; color: var(--muted); }
+    .guide-num { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; background: var(--soft); color: var(--muted); }
+    .guide-steps li.current .guide-num { background: var(--primary); color: #fff; }
+    .guide-steps li.done .guide-num { background: var(--success-soft); color: var(--success); }
+    .guide-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .guide-actions .btn { min-height: 44px; }
+    .guide-current { display: grid; gap: 10px; margin-top: 8px; font-size: 14px; }
+    .guide-hide { font-size: 12px; color: var(--muted); }
+    .guide-strip { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; margin-bottom: 12px; border-radius: 12px; background: var(--primary-soft); font-size: 13px; }
+    @media (max-width: 640px) {
+      .settings-top-grid { grid-template-columns: 1fr; }
+      #stock-metrics, #staff-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 6px; }
+      #stock-metrics .metric, #staff-metrics .metric { padding: 10px; }
+      #stock-metrics .metric-label, #staff-metrics .metric-label { font-size: 11px; }
+      #stock-metrics .metric-value, #staff-metrics .metric-value { font-size: 20px; }
+      .stock-list { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .stock-card { padding: 12px; }
+      .stock-card-qty { font-size: 19px; }
+      .stock-card-actions .btn-secondary { font-size: 12px; padding: 6px 8px; }
+      .stock-actions { width: 100%; justify-content: stretch; }
+      .stock-actions .btn { flex: 1; justify-content: center; padding: 10px 8px; font-size: 13px; }
+      .bulk-head, .bulk-row { grid-template-columns: minmax(0, 1fr) 78px 64px; gap: 6px; }
+      .bulk-row input, .bulk-row select { padding: 10px 8px; }
+      .guide-strip { flex-direction: column; align-items: stretch; }
+      .guide-actions .btn { flex: 1; justify-content: center; }
+      .inv-reminder { flex-direction: column; align-items: stretch; }
+      .page-header { flex-wrap: wrap; gap: 10px; }
+    }
+    @media (max-width: 380px) {
+      .stock-list { grid-template-columns: 1fr; }
+    }
+    /* Окна поверх нижнего меню и панели заказа, иначе кнопки «Сохранить» прячутся под меню */
+    .modal-bg { z-index: 300; }
+
+    /* Таблицы сотрудников и чеков на телефоне — карточками, без прокрутки вбок */
+    @media (max-width: 640px) {
+      .table-wrap table.card-table { min-width: 0 !important; }
+      .card-table thead { display: none; }
+      .card-table, .card-table tbody { display: block; }
+      .card-table tr {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 6px 10px;
+        align-items: center;
+        padding: 12px;
+        margin-bottom: 8px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--card);
+      }
+      .card-table td { padding: 0 !important; border: none !important; max-width: none !important; white-space: normal !important; }
+      .card-table td:last-child { grid-column: 1 / -1; display: flex !important; gap: 6px; justify-content: flex-start !important; flex-wrap: wrap; }
+      .card-table td:last-child .btn { min-height: 40px; }
+      .card-table td[colspan] { grid-column: 1 / -1; }
+      .card-table tr:has(td[colspan]) { display: block; }
+    }
+
+    /* Нижнее меню телефона: пять разделов + «Сменить» помещаются без прокрутки, со значками */
+    @media (max-width: 820px) {
+      .mobile-bottom-nav { overflow-x: visible; gap: 0; padding-left: 2px; padding-right: 2px; }
+      .mobile-bottom-nav button {
+        flex: 1 1 0;
+        min-width: 0;
+        padding: 4px 2px;
+        min-height: 52px;
+        font-size: 10.5px;
+        line-height: 1.15;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .pos-order-bar { bottom: calc(70px + env(safe-area-inset-bottom)); }
+    }
+
+    /* ── Телефон, повёрнутый горизонтально ──
+       Низкий экран: меню разделов — узкая полоса слева, на кассе блюда слева, заказ справа,
+       всё помещается в высоту без прокрутки страницы. */
+    @media (orientation: landscape) and (max-height: 500px) {
+      .sidebar {
+        display: flex !important;
+        position: fixed !important;
+        inset: 0 auto 0 0 !important;
+        width: 78px !important;
+        height: 100dvh !important;
+        padding: 0;
+        z-index: 90;
+        border-right: 1px solid var(--border);
+        box-shadow: none !important;
+        overflow-y: auto;
+      }
+      .sidebar-logo { display: none !important; }
+      .nav { display: flex !important; flex-direction: column; gap: 2px; padding: 6px 4px !important; overflow: visible !important; }
+      .nav-item {
+        flex-direction: column;
+        gap: 2px;
+        padding: 7px 2px !important;
+        margin: 0 !important;
+        font-size: 10px !important;
+        text-align: center;
+        white-space: normal !important;
+        line-height: 1.15;
+      }
+      .nav-item .icon { font-size: 19px; width: auto; }
+      .sidebar-bottom { display: block !important; padding: 4px !important; margin-top: auto; }
+      .sidebar-bottom .user-card { display: none; }
+      .logout-btn { font-size: 10px; padding: 6px 2px; line-height: 1.2; }
+      .main { margin-left: 78px !important; width: calc(100% - 78px) !important; height: auto !important; min-height: 100dvh; }
+      .mobile-bottom-nav { display: none !important; }
+      .page { padding: 8px 12px 14px !important; gap: 8px !important; }
+      .page-header { margin-bottom: 0; }
+      .page-title { font-size: 18px; }
+      .metrics { gap: 8px; }
+      .metric { padding: 10px 12px; }
+      .modal { max-height: 94dvh !important; padding: 16px; }
+      .inv-rows { max-height: 46dvh; }
+      .guide-card { padding: 10px 14px; }
+
+      /* Касса: страница ровно в высоту экрана, блюда и заказ прокручиваются каждый сам */
+      #page-pos.active { height: 100dvh; padding-bottom: 8px !important; overflow: hidden; }
+      #page-pos > .page-header { display: flex !important; }
+      .pos-mobile-header, .pos-mobile-backdrop, .pos-order-bar, .pos-cart-close { display: none !important; }
+      .pos-layout {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) 290px !important;
+        flex: 1;
+        min-height: 0 !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 12px !important;
+        background: var(--card) !important;
+        overflow: hidden !important;
+      }
+      .pos-left { overflow-y: auto; padding: 10px !important; min-height: 0; }
+      .cat-tabs { position: sticky !important; top: -10px !important; z-index: 5; flex-wrap: nowrap !important; overflow-x: auto; scrollbar-width: none; margin: -10px -10px 8px !important; padding: 10px !important; background: var(--card) !important; }
+      .cat-tab { min-height: 36px !important; padding: 6px 12px !important; font-size: 13px !important; flex: 0 0 auto; }
+      .menu-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)) !important; gap: 8px !important; }
+      .menu-card { min-height: 70px !important; padding: 10px !important; }
+      .menu-card-name, .menu-card-price { font-size: 13px !important; }
+      .pos-right {
+        display: flex !important;
+        position: static !important;
+        flex-direction: column;
+        width: auto !important;
+        max-height: none !important;
+        min-height: 0 !important;
+        border-radius: 0 !important;
+        border-left: 1px solid var(--border) !important;
+        border-top: none !important;
+        box-shadow: none !important;
+        animation: none !important;
+      }
+      .pos-right::before { display: none !important; }
+      .pos-cart-header { padding: 10px 12px !important; }
+      .pos-cart-body { flex: 1; min-height: 0; max-height: none !important; padding: 4px 12px !important; }
+      .pos-cart-footer { padding: 8px 12px !important; }
+      .total-row.big { font-size: 16px; }
+      .pay-methods { gap: 6px !important; margin-bottom: 6px; }
+      .pay-btn { min-height: 40px !important; font-size: 12px !important; padding: 6px 4px !important; }
+      #checkout-btn { min-height: 44px !important; font-size: 15px !important; }
+      .pos-layout { grid-template-columns: minmax(0, 1fr) 320px !important; }
+      .pos-cart-header { padding: 8px 12px !important; }
+      .pos-cart-title { font-size: 15px; }
+      .pos-cart-body { overflow-x: hidden; }
+      .cart-row { display: grid !important; grid-template-columns: minmax(0, 1fr) 32px 24px 32px auto; gap: 6px !important; padding: 7px 0 !important; }
+      .cart-name { font-size: 13px !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .qty-btn { width: 32px !important; height: 32px !important; font-size: 17px !important; }
+      .qty-num { font-size: 14px !important; min-width: 0 !important; }
+      .cart-price { font-size: 13px !important; min-width: 0 !important; }
+      .pos-cart-footer .total-row:not(.big) { display: none; }
+      .pos-cart-footer .total-row.big { margin: 0 0 6px; }
+      .pay-btn { display: flex !important; flex-direction: row !important; align-items: center; justify-content: center; gap: 4px; }
+      .daily-cash-bar { display: none !important; }
+      .shift-bar { margin-bottom: 0 !important; padding: 7px 12px !important; }
+      .shift-bar.open { cursor: pointer; flex-wrap: wrap; gap: 4px 10px; }
+      .shift-bar-chevron { display: inline-block; margin-left: 4px; }
+      .app.shift-details-open .shift-details { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; width: 100%; padding-top: 6px; }
+      .shift-details span { display: grid; gap: 1px; font-size: 11px; }
+      .shift-details b { font-size: 13px; }
+    }
+
     /* ── Печать чека на термопринтер 58/80 мм ── */
     .print-settings-texts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }
     .print-settings-texts textarea { width: 100%; resize: vertical; min-height: 64px; }
@@ -1227,8 +1528,188 @@
     .rc-item { margin-bottom: 3px; }
     .rc-item-name { font-weight: 600; word-break: break-word; }
     .rc-total { font-size: 1.35em; font-weight: 800; }
+    .rc-order-no { font-size: 1.9em; font-weight: 800; text-align: center; letter-spacing: 0.02em; margin: 2px 0; }
     .rc-cancelled { border: 2px solid #000; text-align: center; font-weight: 800; padding: 3px; margin: 5px 0; }
     .rc-small { font-size: 0.85em; }
+
+    /* ═══════════════════════════════════════════════════════════
+       ДИЗАЙН B «ЧЕК-ЛЕНТА»
+       Холодный светлый фон, белые карточки, тёмно-синяя полоса разделов слева,
+       у плиток блюд цветная полоска категории, заказ — как настоящий чек с зубчиками.
+       Цифры (цены, суммы, номер заказа) — шрифтом Unbounded, всё остальное — Manrope.
+       Этот слой идёт последним и перекрывает старые стили.
+       ═══════════════════════════════════════════════════════════ */
+    body, .auth-screen, button, input, select, textarea { font-family: 'Manrope', -apple-system, 'Segoe UI', sans-serif; }
+    .menu-card-price, .cart-price, #cart-total, .checkout-btn b, .pay-total b, .pay-result b, .pay-done-no,
+    .pos-order-bar-total, .pos-order-bar-count, .stock-card-qty, .metric-value, .pay-quick-btn {
+      font-family: 'Unbounded', 'Manrope', sans-serif;
+      letter-spacing: -0.02em;
+    }
+    .ti { line-height: 1; vertical-align: -0.12em; }
+    /* Пустые блоки (подсказки, напоминания) не должны давать лишних отступов */
+    #guide-block:empty, #inventory-reminder:empty, .guide-slot:empty, #stock-schedule:empty { display: none; }
+
+    /* Кнопки, поля, карточки */
+    .btn { min-height: 42px; padding: 0 16px; border-radius: 12px; font-weight: 700; gap: 8px; }
+    .btn .ti { font-size: 18px; }
+    .btn-sm { min-height: 34px; padding: 0 12px; border-radius: 10px; font-size: 13px; }
+    .btn-sm .ti { font-size: 16px; }
+    .btn-secondary { background: var(--card); color: var(--text); border: 1.5px solid var(--border); }
+    .btn-secondary:hover { background: var(--card); border-color: color-mix(in srgb, var(--text) 25%, var(--border)); }
+    .btn-icon { width: 36px; height: 36px; min-height: 36px; padding: 0; border-radius: 10px; border: 1.5px solid var(--border); background: var(--card); color: var(--muted); }
+    .btn-icon .ti { font-size: 17px; }
+    .btn-icon:hover { color: var(--text); }
+    .card, .metric { border: none; border-radius: 16px; box-shadow: var(--shadow-sm); }
+    .metric-value { font-weight: 600; }
+    .page-title { font-size: 24px; font-weight: 800; letter-spacing: -0.01em; }
+    .modal { border-radius: 20px; padding: 24px; box-shadow: var(--shadow-md); }
+    .modal-title { font-size: 20px; font-weight: 800; margin-bottom: 18px; }
+    .field label { font-size: 13px; font-weight: 700; color: var(--muted); }
+    .field input, .field select, .field textarea, .inline-control, .search-input {
+      min-height: 44px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 15px; background: var(--input); color: var(--text);
+    }
+    .field input:focus, .field select:focus, .field textarea:focus, .search-input:focus { border-color: var(--primary); outline: none; }
+    .badge { font-weight: 700; font-size: 12px; padding: 4px 10px; }
+
+    /* Категории — белые «таблетки», выбранная — тёмно-синяя */
+    .cat-tab { background: var(--card); color: var(--text); border: none; box-shadow: inset 0 0 0 1.5px var(--border); font-weight: 700; }
+    .cat-tab:hover { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--text) 30%, var(--border)); }
+    .cat-tab.active { background: var(--navy); color: #fff; box-shadow: none; }
+
+    /* Плитки блюд: белые, цветная полоска категории слева */
+    .menu-card {
+      position: relative; border: none !important; border-radius: 16px; background: var(--card);
+      box-shadow: var(--shadow-sm); padding-left: 22px; transform: none !important;
+    }
+    .menu-card::before { content: ''; position: absolute; left: 0; top: 14px; bottom: 14px; width: 6px; border-radius: 0 6px 6px 0; background: var(--cat, #A3AEC2); }
+    .menu-card:hover { box-shadow: var(--shadow); }
+    .menu-card-name { color: var(--text); font-weight: 700; }
+    .menu-card-price { color: var(--text) !important; font-weight: 600; }
+    .menu-card.in-cart { background: var(--card) !important; box-shadow: inset 0 0 0 2.5px var(--primary) !important; }
+    .menu-card-qty { background: var(--primary); color: #fff; }
+    .menu-card.no-stock .menu-card-price { font-family: 'Manrope', sans-serif; font-size: 12px; color: var(--muted) !important; }
+    .menu-card.add-card { box-shadow: none; border: 2px dashed var(--border) !important; padding-left: 16px; }
+    .menu-card.add-card::before { display: none; }
+
+    /* Касса: заказ справа как чек */
+    .pos-layout { background: transparent; border: none; box-shadow: none; overflow: visible; }
+    .pos-left { background: transparent; }
+    .pos-cart-title { font-size: 18px; font-weight: 800; }
+    /* Строка заказа как в чеке: «название ··· цена», под ней «− 1 +» — ровно на любой ширине */
+    .cart-row {
+      display: grid !important;
+      grid-template-columns: 34px 30px 34px minmax(0, 1fr) auto !important;
+      grid-template-areas: "name name name name price" "minus num plus . ." !important;
+      align-items: center; gap: 6px 4px !important; padding: 10px 0 !important;
+      border-bottom: 1px dashed var(--border);
+    }
+    .cart-row .cart-name { grid-area: name; white-space: normal !important; }
+    .cart-row .cart-price { grid-area: price; text-align: right; white-space: nowrap; min-width: 0 !important; }
+    .cart-row .qty-btn { width: 34px !important; height: 34px !important; font-size: 18px !important; }
+    .cart-row .qty-btn:first-of-type { grid-area: minus; }
+    .cart-row .qty-btn:last-of-type { grid-area: plus; }
+    .cart-row .qty-num { grid-area: num; text-align: center; min-width: 0 !important; }
+    .cart-name { font-weight: 700; }
+    .qty-btn { border: none; background: var(--soft); border-radius: 10px; color: var(--text); font-weight: 800; }
+    .qty-btn:hover { background: color-mix(in srgb, var(--text) 10%, var(--soft)); }
+    .total-row.big span:first-child { font-family: 'Manrope', sans-serif; font-size: 15px; color: var(--muted); font-weight: 700; }
+    #cart-total { font-size: 28px; font-weight: 600; }
+    .checkout-btn { border-radius: 16px; }
+    .pay-tab .ti { font-size: 24px; }
+    .pay-quick-btn:first-child { font-family: 'Manrope', sans-serif; letter-spacing: 0; white-space: nowrap; }
+    .pay-quick-btn { background: var(--card); box-shadow: inset 0 0 0 1.5px var(--border); border: none; }
+    .pay-done-check .ti { font-size: 34px; }
+    .pay-confirm .ti { font-size: 22px; }
+    .pos-order-bar-arrow { font-size: 24px; }
+    .pos-mobile-menu-btn .ti { font-size: 22px; }
+    .pos-cart-close .ti { font-size: 18px; }
+
+    /* Строка смены — короткая надпись, а не плашка; выручка и итоги — по нажатию */
+    .daily-cash-bar { display: none !important; }
+    .shift-bar { background: transparent !important; padding: 0 !important; margin: 0 !important; font-size: 13px; font-weight: 700; justify-content: flex-start; gap: 4px 14px; flex-wrap: wrap; }
+    .shift-bar.open { color: var(--success); cursor: pointer; }
+    .shift-bar.open > span:last-child { color: var(--muted); }
+    .shift-bar-chevron { display: inline-block; margin-left: 4px; }
+    .app.shift-details-open .shift-details { display: grid; grid-template-columns: repeat(3, minmax(0, 140px)); gap: 6px 18px; width: 100%; padding-top: 4px; }
+    .shift-details span { display: grid; gap: 1px; font-size: 12px; color: var(--muted); }
+    .shift-details b { font-size: 15px; color: var(--text); }
+    .shift-bar.closed { background: var(--warning-soft) !important; color: var(--warning); padding: 12px 14px !important; border-radius: 14px; justify-content: space-between; }
+
+    /* Боковая полоса разделов (компьютер, планшет и телефон горизонтально) */
+    @media (min-width: 821px), (orientation: landscape) and (max-height: 500px) {
+      .sidebar {
+        display: flex !important; position: fixed !important; inset: 0 auto 0 0 !important;
+        width: 88px !important; height: 100dvh !important; z-index: 90;
+        background: var(--sidebar-bg) !important; border-right: none !important; align-items: stretch;
+      }
+      .main { margin-left: 88px !important; width: calc(100% - 88px) !important; }
+      .sidebar-logo { display: flex !important; justify-content: center; padding: 16px 0 10px !important; border: none !important; }
+      .sidebar-logo .logo-name { display: none; }
+      .sidebar-logo .logo-icon { width: 46px; height: 46px; border-radius: 14px; background: rgba(255,255,255,0.08); }
+      .nav { display: flex !important; flex-direction: column; gap: 4px; padding: 8px 8px !important; overflow-y: auto; }
+      .nav-item {
+        flex-direction: column; gap: 5px; margin: 0 !important; padding: 10px 2px !important; border-radius: 14px;
+        color: #9AA6BF; font-size: 11px !important; font-weight: 700; text-align: center; line-height: 1.15; white-space: normal !important;
+      }
+      .nav-item .icon { font-size: 24px; width: auto; }
+      .nav-item:hover { background: rgba(255,255,255,0.07); color: #fff; }
+      .nav-item.active { background: var(--primary); color: #fff; }
+      .sidebar-bottom { display: block !important; padding: 10px 6px !important; border-top: 1px solid rgba(255,255,255,0.08) !important; }
+      .sidebar-bottom .user-card { flex-direction: column; gap: 4px; padding: 4px 0; }
+      .sidebar-bottom .user-card:hover { background: rgba(255,255,255,0.07); }
+      .sidebar-bottom .avatar { background: rgba(255,255,255,0.1); color: #fff; }
+      .sidebar-bottom .user-info { text-align: center; width: 100%; }
+      .sidebar-bottom .user-name { color: #fff; font-size: 11px; }
+      .sidebar-bottom .user-role { display: none; }
+      .logout-btn { display: flex; flex-direction: column; align-items: center; gap: 3px; color: #FF9477 !important; font-size: 10px !important; font-weight: 700; line-height: 1.2; padding: 6px 2px !important; border-radius: 12px; }
+      .logout-btn .ti { font-size: 19px; }
+      .logout-btn:hover { text-decoration: none; background: rgba(255,255,255,0.07); }
+      /* Заказ — белый чек с зубчиками снизу */
+      .pos-right {
+        background: var(--card) !important; border: none !important; border-radius: 10px 10px 0 0 !important;
+        box-shadow: none !important; padding-bottom: 12px;
+        -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 18px 100%;
+        mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 18px 100%;
+      }
+      .pos-cart-header { text-align: center; border-bottom: 2px dashed var(--border) !important; }
+      .pos-cart-footer { border-top: 2px dashed var(--border) !important; }
+    }
+    /* Телефон горизонтально: экран низкий — без логотипа и карточки сотрудника, пункты плотнее */
+    @media (orientation: landscape) and (max-height: 500px) {
+      .sidebar-logo, .sidebar-bottom .user-card { display: none !important; }
+      .nav { padding: 6px !important; gap: 2px; scrollbar-width: none; }
+      .nav-item { padding: 7px 2px !important; gap: 3px; font-size: 10.5px !important; }
+      .nav-item .icon { font-size: 21px; }
+      .sidebar-bottom { padding: 4px 6px !important; }
+      .page-title { font-size: 20px; }
+    }
+    @media (min-width: 821px) {
+      .page { padding: 24px 28px; gap: 18px; }
+      .pos-layout { gap: 24px; }
+      .menu-grid { gap: 12px; }
+    }
+
+    /* Нижнее меню телефона: значок над подписью, выбранный раздел — коралловый */
+    .mobile-bottom-nav { background: var(--card); border-top: 1px solid var(--border); }
+    .mobile-bottom-nav button .ti { font-size: 22px; }
+    .mobile-bottom-nav button { color: var(--muted); font-weight: 700; }
+    .mobile-bottom-nav button.active { background: transparent; color: var(--primary); }
+    .mobile-bottom-nav .mobile-nav-switch { color: var(--danger); }
+
+    /* Вход и PIN */
+    .auth-box { border-radius: 22px; box-shadow: var(--shadow-md); }
+    .pin-btn { border-radius: 16px; border: none; box-shadow: inset 0 0 0 1.5px var(--border); font-family: 'Unbounded', 'Manrope', sans-serif; font-weight: 600; }
+    .pin-btn:hover { background: var(--soft); }
+    .pin-btn .ti { font-size: 24px; }
+    .pin-btn.pin-ok { background: var(--primary); color: #fff; box-shadow: none; }
+    .pin-btn.pin-ok:hover { background: var(--primary-hover); }
+    .expired-icon .ti { font-size: 46px; color: var(--warning); }
+    .setup-done-icon .ti { font-size: 48px; color: var(--success); }
+    .guide-head b .ti, .support-note .ti { color: var(--success); }
+
+    /* Тёмная тема: выбранная категория — светлая, чтобы не сливалась с фоном */
+    body[data-theme="dark"] .cat-tab.active { background: #EDEFF9; color: #11172A; }
+    body[data-theme="dark"] .menu-card { box-shadow: none; }
 
     @media print {
       html.printing-receipt, html.printing-receipt body { height: auto !important; min-height: 0 !important; overflow: visible !important; background: #fff !important; }
@@ -1278,7 +1759,7 @@
 <!-- ═══════════════ SUBSCRIPTION EXPIRED ═══════════════ -->
 <div class="auth-screen" id="screen-expired" style="display:none;">
   <div class="auth-box expired-box">
-    <div class="expired-icon">⏰</div>
+    <div class="expired-icon"><i class="ti ti-clock-exclamation" aria-hidden="true"></i></div>
     <div class="auth-title" data-i18n="auth.expiredTitle">Подписка истекла</div>
     <p class="muted-text" style="font-size:13px;margin-bottom:16px;line-height:1.6;" data-i18n="auth.expiredText">Доступ к системе временно ограничен. Свяжитесь с поддержкой для продления тарифа.</p>
     <div id="expired-support" style="margin-bottom:12px;"></div>
@@ -1299,20 +1780,12 @@
       <span class="logo-name" id="brand-name">vzlyot.post</span>
     </div>
     <nav class="nav">
-      <div class="nav-group-label" data-i18n="sidebar.main">Основное</div>
-      <div class="nav-item active" onclick="nav('pos',this)"><span class="icon">🧾</span><span data-i18n="nav.pos">Касса</span></div>
-      <div class="nav-item" data-roles="owner,admin" onclick="nav('menu',this)"><span class="icon">🍔</span><span data-i18n="nav.menu">Меню</span></div>
-      <div class="nav-group-label" data-i18n="sidebar.stock">Склад</div>
-      <div class="nav-item" data-roles="owner,admin" onclick="nav('stock',this)"><span class="icon">📦</span><span data-i18n="nav.stock">Остатки</span></div>
-      <div class="nav-item" data-roles="owner,admin" data-feature="recipes" onclick="nav('recipes',this)"><span class="icon">📋</span><span data-i18n="nav.recipes">Тех.карты</span></div>
-      <div class="nav-group-label" data-i18n="sidebar.business">Бизнес</div>
-      <div class="nav-item" data-feature="clients" onclick="nav('clients',this)"><span class="icon">👥</span><span data-i18n="nav.clients">Клиенты</span></div>
-      <div class="nav-item" data-roles="owner" onclick="nav('staff',this)"><span class="icon">👤</span><span data-i18n="nav.staff">Сотрудники</span></div>
-      <div class="nav-item" data-roles="owner,admin" onclick="nav('analytics',this)"><span class="icon">📊</span><span id="nav-analytics-label" data-i18n="nav.analytics">Аналитика</span></div>
-      <div class="nav-item" data-roles="owner,admin" data-feature="finance" onclick="nav('finance',this)"><span class="icon">💰</span><span data-i18n="nav.finance">Финансы</span></div>
-      <div class="nav-group-label" data-i18n="sidebar.system">Система</div>
-      <div class="nav-item" onclick="nav('settings',this)"><span class="icon">⚙️</span><span data-i18n="nav.settings">Настройки</span></div>
-      <div class="nav-item nav-upgrade" id="nav-upgrade" style="display:none;" onclick="openUpgradeModal()"><span class="icon">⭐</span><span data-i18n="nav.upgrade">Тариф «Бизнес»</span></div>
+      <!-- Только пять разделов: остальное (техкарты, клиенты, аналитика, финансы) выключено в config/plans.js -->
+      <div class="nav-item active" onclick="nav('pos',this)"><i class="ti ti-cash-register icon" aria-hidden="true"></i><span data-i18n="nav.pos">Касса</span></div>
+      <div class="nav-item" data-roles="owner,admin" onclick="nav('menu',this)"><i class="ti ti-tools-kitchen-2 icon" aria-hidden="true"></i><span data-i18n="nav.menu">Меню</span></div>
+      <div class="nav-item" data-roles="owner,admin" onclick="nav('stock',this)"><i class="ti ti-box icon" aria-hidden="true"></i><span data-i18n="mobile.stock">Склад</span></div>
+      <div class="nav-item" data-roles="owner" onclick="nav('staff',this)"><i class="ti ti-users icon" aria-hidden="true"></i><span data-i18n="nav.staff">Сотрудники</span></div>
+      <div class="nav-item" onclick="nav('settings',this)"><i class="ti ti-settings icon" aria-hidden="true"></i><span data-i18n="nav.settings">Настройки</span></div>
     </nav>
     <div class="sidebar-bottom">
       <div class="user-card" onclick="nav('settings',null)">
@@ -1322,7 +1795,7 @@
           <div class="user-role" id="user-role-display">—</div>
         </div>
       </div>
-      <div class="logout-btn" onclick="staffLogout()" data-i18n="sidebar.switchStaff">Сменить сотрудника</div>
+      <div class="logout-btn" onclick="staffLogout()"><i class="ti ti-switch-horizontal" aria-hidden="true"></i><span data-i18n="sidebar.switchStaff">Сменить сотрудника</span></div>
     </div>
   </aside>
 
@@ -1332,20 +1805,23 @@
     <div class="page active" id="page-pos">
       <div class="pos-mobile-backdrop" onclick="closeMobilePanels()"></div>
       <div class="pos-mobile-header">
-        <button class="btn btn-secondary btn-sm pos-mobile-menu-btn" onclick="toggleMobileNav()" aria-label="Меню" data-i18n-aria-label="pos.mobileMenu">☰</button>
+        <button class="btn btn-secondary btn-sm pos-mobile-menu-btn" onclick="toggleMobileNav()" aria-label="Меню" data-i18n-aria-label="pos.mobileMenu"><i class="ti ti-menu-2" aria-hidden="true"></i></button>
         <div class="pos-mobile-title" data-i18n="pos.title">Касса</div>
-        <span aria-hidden="true"></span>
+        <button class="btn btn-secondary btn-sm pos-mobile-menu-btn" onclick="showPage('analytics')" aria-label="Чеки" data-i18n-aria-label="nav.orders"><i class="ti ti-receipt" aria-hidden="true"></i></button>
       </div>
       <!-- Телефон: заказ — большая полоса внизу, появляется, когда в заказе есть блюда -->
       <button type="button" class="pos-order-bar" id="pos-order-bar" onclick="toggleMobileCart()">
         <span class="pos-order-bar-count" id="mobile-cart-count">0</span>
         <span class="pos-order-bar-label" data-i18n="pos.order">Заказ</span>
         <span class="pos-order-bar-total" id="mobile-cart-total">0</span>
-        <span class="pos-order-bar-arrow" aria-hidden="true">›</span>
+        <i class="ti ti-chevron-right pos-order-bar-arrow" aria-hidden="true"></i>
       </button>
       <div class="page-header">
         <div class="page-title" data-i18n="pos.title">Касса</div>
+        <button class="btn btn-secondary" onclick="showPage('analytics')"><i class="ti ti-receipt" aria-hidden="true"></i><span data-i18n="nav.orders">Чеки</span></button>
       </div>
+      <div id="guide-block"></div>
+      <div id="inventory-reminder"></div>
       <div id="shift-bar-block"></div>
       <div class="pos-layout">
         <div class="pos-left">
@@ -1356,7 +1832,7 @@
           <div class="pos-cart-header">
             <div class="pos-cart-title" data-i18n="pos.currentOrder">Текущий заказ</div>
             <div class="pos-cart-num" id="cart-client-name"></div>
-            <button type="button" class="pos-cart-close" onclick="closeMobilePanels()" aria-label="Закрыть">✕</button>
+            <button type="button" class="pos-cart-close" onclick="closeMobilePanels()" aria-label="Закрыть"><i class="ti ti-x" aria-hidden="true"></i></button>
           </div>
           <div class="pos-cart-body" id="cart-body">
             <div class="cart-empty" data-i18n="pos.addItems">Добавьте позиции из меню</div>
@@ -1373,19 +1849,8 @@
                 <button class="btn btn-secondary btn-sm" onclick="openQuickClientModal()" data-i18n="pos.addClient">+ Клиент</button>
               </div>
             </div>
-            <div class="pay-methods">
-              <button class="pay-btn" id="pay-cash" onclick="setPay('cash')">💵 <span data-i18n="pos.cash">Наличные</span></button>
-              <button class="pay-btn" id="pay-card" onclick="setPay('card')">💳 <span data-i18n="pos.card">Карта</span></button>
-              <button class="pay-btn" id="pay-mixed" onclick="setPay('mixed')">🧾 <span data-i18n="pos.mixed">Раздельно</span></button>
-            </div>
-            <div class="split-payment" id="split-payment">
-              <div class="split-payment-fields">
-                <label><span data-i18n="pos.cashAmount">Сумма наличными</span><input type="number" id="split-cash-amount" min="0" step="1" value="0" oninput="renderCart()"></label>
-                <label><span data-i18n="pos.cardAmount">Сумма картой</span><input type="number" id="split-card-amount" min="0" step="1" value="0" oninput="renderCart()"></label>
-              </div>
-              <div class="split-payment-note" id="split-payment-note"></div>
-            </div>
-            <button class="btn btn-primary" style="width:100%;justify-content:center;" id="checkout-btn" onclick="checkout()" disabled data-i18n="pos.checkout">Оформить заказ</button>
+            <!-- Одна кнопка: способ оплаты, сдача и номер заказа — в окне оплаты -->
+            <button class="btn btn-primary checkout-btn" id="checkout-btn" onclick="openPayment()" disabled><span data-i18n="pay.payBtn">Оплатить</span><b id="checkout-total"></b></button>
           </div>
         </div>
       </div>
@@ -1398,6 +1863,7 @@
         <div class="page-title" data-i18n="menu.title">Меню</div>
         <button class="btn btn-secondary" id="menu-setup-btn" onclick="openSetupWizard()" data-i18n="setup.openBtn">Заполнить по шагам</button>
       </div>
+      <div class="guide-slot"></div>
       <div id="menu-hint"></div>
       <div class="cat-tabs" id="menu-cat-tabs"></div>
       <div id="menu-cat-tools"></div>
@@ -1408,27 +1874,23 @@
     <div class="page" id="page-stock">
       <div class="page-header">
         <div class="page-title" data-i18n="stock.title">Склад</div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-secondary" onclick="openIncomeModal()">📥 <span data-i18n="stock.income">Приход</span></button>
-          <button class="btn btn-primary" onclick="openIngModal(null)" data-i18n="stock.addItem">+ Добавить</button>
+        <div class="stock-actions" id="stock-actions">
+          <button class="btn btn-secondary" onclick="openInventoryModal()"><i class="ti ti-list-check" aria-hidden="true"></i><span data-i18n="inv.recount">Пересчитать</span></button>
+          <button class="btn btn-secondary" onclick="openIncomeModal()"><i class="ti ti-truck-delivery" aria-hidden="true"></i><span data-i18n="stock.income">Приход</span></button>
+          <button class="btn btn-primary" onclick="openStockBulkModal()" data-i18n="inv.addItems">+ Добавить товары</button>
         </div>
       </div>
+      <div class="guide-slot"></div>
+      <div id="stock-schedule"></div>
       <div class="metrics" id="stock-metrics"></div>
-      <div style="margin-bottom:12px;">
+      <div id="stock-search-wrap" style="margin-bottom:12px;">
         <input class="search-input" id="stock-search" placeholder="Поиск товара..." data-i18n-placeholder="stock.searchPlaceholder" oninput="searchStock(this.value)">
       </div>
-      <div class="card">
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th data-i18n="stock.name">Название</th><th data-i18n="stock.category">Категория</th><th data-i18n="stock.balance">Остаток</th><th data-i18n="stock.unit">Ед.</th><th data-i18n="stock.minimum">Минимум</th><th data-i18n="stock.status">Статус</th><th data-i18n="stock.incomeAction">Приход</th><th></th></tr></thead>
-            <tbody id="stock-tbody"></tbody>
-          </table>
-        </div>
-      </div>
-      <div class="card">
+      <div class="stock-list" id="stock-list"></div>
+      <div class="card" id="stock-history-card">
         <div class="card-title" data-i18n="stock.history">История приходов</div>
         <div class="table-wrap">
-          <table>
+          <table class="card-table">
             <thead><tr><th data-i18n="stock.product">Товар</th><th data-i18n="stock.quantity">Количество</th><th data-i18n="stock.price">Цена</th><th data-i18n="stock.amount">Сумма</th><th data-i18n="stock.comment">Комментарий</th><th data-i18n="stock.staff">Сотрудник</th><th data-i18n="stock.time">Время</th></tr></thead>
             <tbody id="stock-incomes-tbody">
               <tr><td colspan="7" class="empty-state" data-i18n="stock.loading">Загрузка...</td></tr>
@@ -1478,10 +1940,12 @@
         <div class="page-title" data-i18n="staff.title">Сотрудники</div>
         <button class="btn btn-primary" onclick="openStaffModal(null)" data-i18n="staff.addStaff">+ Добавить</button>
       </div>
+      <div class="guide-slot"></div>
+      <p class="muted-text staff-explain" data-i18n="guide.staffExplain">Каждый сотрудник входит в кассу по своему PIN-коду из 4 цифр. Кассир только продаёт, администратор ещё ведёт меню и склад.</p>
       <div class="metrics" id="staff-metrics"></div>
       <div class="card">
         <div class="table-wrap">
-          <table>
+          <table class="card-table">
             <thead><tr><th data-i18n="staff.employee">Сотрудник</th><th data-i18n="staff.phone">Телефон</th><th data-i18n="staff.role">Роль</th><th data-i18n="staff.status">Статус</th><th></th></tr></thead>
             <tbody id="staff-tbody"></tbody>
           </table>
@@ -1493,6 +1957,7 @@
     <div class="page" id="page-analytics">
       <div class="page-header">
         <div class="page-title" id="analytics-page-title" data-i18n="analytics.title">Аналитика</div>
+        <button class="btn btn-secondary" onclick="showPage('pos')"><i class="ti ti-arrow-left" aria-hidden="true"></i><span data-i18n="nav.pos">Касса</span></button>
       </div>
       <!-- Сводка и графики — только на тарифе с аналитикой; на «Старте» здесь только список чеков -->
       <div id="analytics-stats" style="display:contents;">
@@ -1506,7 +1971,7 @@
       <div class="card">
         <div class="card-title" data-i18n="analytics.orderHistory">История заказов</div>
         <div class="table-wrap">
-          <table>
+          <table class="card-table">
             <thead><tr><th>№</th><th data-i18n="analytics.composition">Состав</th><th data-i18n="analytics.amount">Сумма</th><th data-i18n="analytics.payment">Оплата</th><th data-i18n="staff.status">Статус</th><th data-i18n="analytics.client">Клиент</th><th data-i18n="analytics.time">Время</th><th></th></tr></thead>
             <tbody id="orders-tbody"></tbody>
           </table>
@@ -1560,7 +2025,8 @@
     <!-- НАСТРОЙКИ -->
     <div class="page" id="page-settings">
       <div class="page-header"><div class="page-title" data-i18n="settings.title">Настройки</div></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div class="guide-slot"></div>
+      <div class="settings-top-grid">
         <div class="card">
           <div class="card-title" data-i18n="settings.account">Аккаунт</div>
           <div id="account-info" class="muted-text" style="font-size:13px;line-height:1.8;"></div>
@@ -1651,16 +2117,12 @@
 
   </main>
 <nav class="mobile-bottom-nav" aria-label="Мобильное меню" data-i18n-aria-label="mobile.menuLabel" data-i18n-title="mobile.menuLabel">
-    <button type="button" data-page="pos" onclick="showPage('pos')" data-i18n="nav.pos">Касса</button>
-    <button type="button" data-page="menu" onclick="showPage('menu')" data-i18n="nav.menu">Меню</button>
-    <button type="button" data-page="stock" onclick="showPage('stock')" data-i18n="mobile.stock">Склад</button>
-    <button type="button" data-page="recipes" onclick="showPage('recipes')" data-i18n="nav.recipes">Тех.карты</button>
-    <button type="button" data-page="clients" onclick="showPage('clients')" data-i18n="nav.clients">Клиенты</button>
-    <button type="button" data-page="staff" onclick="showPage('staff')" data-i18n="nav.staff">Сотрудники</button>
-    <button type="button" data-page="analytics" id="mobile-analytics-label" onclick="showPage('analytics')" data-i18n="nav.analytics">Аналитика</button>
-    <button type="button" data-page="finance" onclick="showPage('finance')" data-i18n="nav.finance">Финансы</button>
-    <button type="button" data-page="settings" onclick="showPage('settings')" data-i18n="nav.settings">Настройки</button>
-    <button type="button" class="mobile-nav-switch" onclick="staffLogout()" data-i18n="mobile.switchStaff">Сменить</button>
+    <button type="button" data-page="pos" onclick="showPage('pos')"><i class="ti ti-cash-register" aria-hidden="true"></i><span data-i18n="nav.pos">Касса</span></button>
+    <button type="button" data-page="menu" onclick="showPage('menu')"><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i><span data-i18n="nav.menu">Меню</span></button>
+    <button type="button" data-page="stock" onclick="showPage('stock')"><i class="ti ti-box" aria-hidden="true"></i><span data-i18n="mobile.stock">Склад</span></button>
+    <button type="button" data-page="staff" onclick="showPage('staff')"><i class="ti ti-users" aria-hidden="true"></i><span data-i18n="nav.staff">Сотрудники</span></button>
+    <button type="button" data-page="settings" onclick="showPage('settings')"><i class="ti ti-settings" aria-hidden="true"></i><span data-i18n="nav.settings">Настройки</span></button>
+    <button type="button" class="mobile-nav-switch" onclick="staffLogout()"><i class="ti ti-switch-horizontal" aria-hidden="true"></i><span data-i18n="mobile.switchStaff">Сменить</span></button>
   </nav>
 </div>
 
@@ -1749,9 +2211,6 @@ let financeShifts = [];
 
 let cart = {};
 let cartClientId = null;
-let payMethod = null;
-let mixedCashAmount = 0;
-let mixedCardAmount = 0;
 let activePoscat = 'all';
 let activeMenuCat = 'all';
 let clientViewMode = 'table';
@@ -1787,6 +2246,7 @@ async function api(path, { method = 'GET', body, token } = {}) {
 // HELPERS
 // ═══════════════════════════════════════════════════════════
 const fmt = n => Math.round(n).toLocaleString(appLang === 'uz' ? 'uz-UZ' : 'ru-RU') + ' ' + t('common.currency');
+const fmtNum = n => Math.round(n).toLocaleString(appLang === 'uz' ? 'uz-UZ' : 'ru-RU');
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, c =>
     ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
@@ -1832,9 +2292,9 @@ const I18N = {
     'welcome.text': 'Пробный период уже идёт — всё бесплатно. Оплата не нужна.',
     'welcome.pinLabel': 'Ваш PIN для входа в кассу',
     'welcome.pinHint': 'Запомните его: PIN вводится при каждом входе в кассу. Сменить можно на экране PIN — «Владелец: задать или сбросить PIN».',
-    'welcome.step1': 'Добавьте блюда в разделе «Меню»',
-    'welcome.step2': 'Откройте смену',
-    'welcome.step3': 'Принимайте заказы на экране «Касса»',
+    'welcome.step1': 'Создайте меню',
+    'welcome.step2': 'Добавьте сотрудников и пробейте первый заказ',
+    'welcome.step3': 'Заполните склад — подсказки будут на экране «Касса»',
     'welcome.start': 'Заполнить меню',
     'view.banner': 'Режим просмотра',
     'view.readonly': 'изменения отключены',
@@ -2215,9 +2675,9 @@ const I18N = {
     'stock.totalItems': 'Всего позиций',
     'stock.lowItems': 'Заканчивается',
     'stock.emptyItems': 'Нет на складе',
-    'stock.editItem': 'Редактировать ингредиент',
-    'stock.newItem': 'Новый ингредиент',
-    'stock.storageUnit': 'Единица хранения',
+    'stock.editItem': 'Изменить товар',
+    'stock.newItem': 'Новый товар',
+    'stock.storageUnit': 'Как считаем',
     'stock.minBalance': 'Мин. остаток',
     'stock.item': 'Ингредиент',
     'stock.measureUnit': 'Ед. изм.',
@@ -2313,7 +2773,96 @@ const I18N = {
     'print.cancelled': 'ЧЕК ОТМЕНЁН',
     'print.error': 'Не удалось напечатать чек',
     'print.hintOff': 'Сейчас чек после оплаты не печатается. Включите, если к этой кассе подключён принтер чеков. Настройка запоминается на этом устройстве.',
-    'print.hintOn': 'Чек отправляется в окно печати браузера — один раз выберите там свой принтер чеков. Чтобы чек печатался сразу, без окна, сделайте принтер чеков основным и запускайте Chrome с параметром <code>--kiosk-printing</code>. Настройка запоминается на этом устройстве.'
+    'print.hintOn': 'Чек отправляется в окно печати браузера — один раз выберите там свой принтер чеков. Чтобы чек печатался сразу, без окна, сделайте принтер чеков основным и запускайте Chrome с параметром <code>--kiosk-printing</code>. Настройка запоминается на этом устройстве.',
+    'inv.recount': 'Пересчитать',
+    'inv.addItems': '+ Добавить товары',
+    'inv.emptyTitle': 'Склад пока пустой',
+    'inv.emptyText': 'Впишите всё, что у вас сейчас есть: мясо, хлеб, овощи, напитки, упаковку. Сколько штук, килограммов или литров — примерно, потом поправите.',
+    'inv.fillStock': 'Заполнить склад',
+    'inv.warnWhenLess': 'Предупредить, когда меньше',
+    'inv.namePlaceholder': 'Например: Котлеты',
+    'inv.haveNow': 'Сколько есть сейчас',
+    'inv.minAuto': 'Само: 5 шт или 1 кг',
+    'inv.needName': 'Впишите название товара',
+    'inv.every3': 'Каждые 3 дня',
+    'inv.every7': 'Раз в неделю',
+    'inv.every14': 'Раз в 2 недели',
+    'inv.every30': 'Раз в месяц',
+    'inv.never': 'Не напоминать',
+    'inv.dueNow': 'Пора пересчитать склад',
+    'inv.last': 'Последний пересчёт',
+    'inv.next': 'следующий',
+    'inv.noReminders': 'Напоминания выключены — пересчитывайте, когда удобно.',
+    'inv.chooseHint': 'Выберите, как часто вы будете пересчитывать склад — касса напомнит.',
+    'inv.scheduleTitle': 'Как часто пересчитывать склад',
+    'inv.recountNow': 'Пересчитать сейчас',
+    'inv.periodSaved': 'Сохранено. Касса напомнит, когда пора',
+    'inv.lastDaysAgo': 'Последний раз — {n} дн. назад',
+    'inv.bulkTitle': 'Добавить товары на склад',
+    'inv.bulkText': 'Одна строка — один товар. Впишите название и сколько его есть сейчас. Килограммы и литры можно с запятой: 2,5.',
+    'inv.ex1': 'Котлеты',
+    'inv.ex2': 'Булочки',
+    'inv.ex3': 'Масло подсолнечное',
+    'inv.ex4': 'Стаканы',
+    'inv.addRow': 'Ещё товар',
+    'inv.saveItems': 'Сохранить',
+    'inv.needOne': 'Впишите хотя бы один товар',
+    'inv.badQty': 'Проверьте количество у «{name}»',
+    'inv.itemsAdded': 'Добавлено товаров: {n}',
+    'inv.recountTitle': 'Пересчёт склада',
+    'inv.recountText': 'Посчитайте, сколько каждого товара есть на самом деле, и впишите. Если не изменилось — оставьте как есть.',
+    'inv.wasInSystem': 'было в кассе',
+    'inv.saveRecount': 'Сохранить остатки',
+    'inv.fillAll': 'Впишите количество у каждого товара (можно 0)',
+    'inv.recountSaved': 'Склад пересчитан, остатки обновлены',
+    'guide.title': 'Начните работу',
+    'guide.progress': 'Готово {done} из {all}',
+    'guide.step': 'Шаг',
+    'guide.nextStep': 'Следующий шаг',
+    'guide.hide': 'Скрыть подсказки',
+    'guide.close': 'Закрыть',
+    'guide.showAgain': 'Показать путеводитель',
+    'guide.allDone': 'Касса полностью настроена!',
+    'guide.allDoneText': 'Меню, сотрудники, склад — всё на месте. Хороших продаж!',
+    'guide.menuTitle': 'Создайте меню',
+    'guide.menuText': 'Впишите блюда и цены — они появятся кнопками на кассе. Займёт пару минут.',
+    'guide.menuBtn': 'Создать меню',
+    'guide.staffTitle': 'Добавьте сотрудников',
+    'guide.staffText': 'У каждого кассира свой PIN-код из 4 цифр — так видно, кто открыл смену и пробил чек.',
+    'guide.staffBtn': 'Добавить сотрудника',
+    'guide.staffSkip': 'Работаю один',
+    'guide.staffExplain': 'Каждый сотрудник входит в кассу по своему PIN-коду из 4 цифр. Кассир только продаёт, администратор ещё ведёт меню и склад.',
+    'guide.saleTitle': 'Пробейте первый заказ',
+    'guide.saleText': 'Откройте смену, нажмите на блюда и выберите оплату. Если это проба — чек потом можно отменить в «Чеках».',
+    'guide.saleBtn': 'Открыть кассу',
+    'guide.saleToast': 'Смена открыта. Нажмите на блюдо, чтобы добавить его в заказ',
+    'guide.stockTitle': 'Заполните склад',
+    'guide.stockText': 'Впишите всё, что у вас есть: продукты, напитки, упаковку. Без техкарт — просто сколько штук или килограммов.',
+    'guide.stockBtn': 'Заполнить склад',
+    'guide.scheduleTitle': 'Выберите, как часто пересчитывать склад',
+    'guide.scheduleText': 'Раз в 3 дня, неделю, 2 недели или месяц — касса сама напомнит, что пора пересчитать.',
+    'guide.scheduleBtn': 'Выбрать',
+    'pay.payBtn': 'Оплатить',
+    'pay.toPay': 'К оплате',
+    'pay.received': 'Сколько дал гость',
+    'pay.noChange': 'Без сдачи',
+    'pay.noChangeHint': 'Пусто — без сдачи',
+    'pay.noChangeShort': 'Сдачи нет',
+    'pay.change': 'Сдача',
+    'pay.notEnough': 'Не хватает',
+    'pay.cardHint': 'Проведите оплату на терминале. Когда терминал напечатает чек, нажмите «Принять оплату».',
+    'pay.mixedShort': 'Раздельно',
+    'pay.mixedCash': 'Сколько наличными',
+    'pay.mixedCard': 'Остальное картой',
+    'pay.accept': 'Принять оплату',
+    'pay.paid': 'Оплачено',
+    'pay.orderNo': 'Номер заказа',
+    'pay.print': 'Чек',
+    'pay.printAgain': 'Ещё чек',
+    'pay.newOrder': 'Новый заказ',
+    'print.orderNo': 'ЗАКАЗ №',
+    'print.received': 'Получено',
+    'print.change': 'Сдача'
   },
   uz: {
     'nav.pos': 'Kassa',
@@ -2347,9 +2896,9 @@ const I18N = {
     'welcome.text': 'Sinov muddati boshlandi — hammasi bepul. To‘lov shart emas.',
     'welcome.pinLabel': 'Kassaga kirish uchun PIN kodingiz',
     'welcome.pinHint': 'Uni eslab qoling: PIN har safar kassaga kirishda so‘raladi. PIN ekranida «Egasi: PIN o‘rnatish yoki tiklash» orqali o‘zgartirish mumkin.',
-    'welcome.step1': '«Menyu» bo‘limida taomlarni qo‘shing',
-    'welcome.step2': 'Smenani oching',
-    'welcome.step3': '«Kassa» ekranida buyurtma qabul qiling',
+    'welcome.step1': 'Menyu yarating',
+    'welcome.step2': 'Xodimlarni qo‘shing va birinchi buyurtmani o‘tkazing',
+    'welcome.step3': 'Omborni to‘ldiring — maslahatlar «Kassa» ekranida bo‘ladi',
     'welcome.start': 'Menyu qo‘shish',
     'view.banner': 'Ko‘rish rejimi',
     'view.readonly': 'o‘zgartirishlar o‘chirilgan',
@@ -2730,9 +3279,9 @@ const I18N = {
     'stock.totalItems': 'Jami pozitsiyalar',
     'stock.lowItems': 'Tugab bormoqda',
     'stock.emptyItems': 'Omborda yo‘q',
-    'stock.editItem': 'Ingredientni tahrirlash',
-    'stock.newItem': 'Yangi ingredient',
-    'stock.storageUnit': 'Saqlash birligi',
+    'stock.editItem': 'Tovarni o‘zgartirish',
+    'stock.newItem': 'Yangi tovar',
+    'stock.storageUnit': 'Qanday hisoblaymiz',
     'stock.minBalance': 'Min. qoldiq',
     'stock.item': 'Ingredient',
     'stock.measureUnit': 'O‘lchov birligi',
@@ -2828,7 +3377,96 @@ const I18N = {
     'print.cancelled': 'CHEK BEKOR QILINGAN',
     'print.error': 'Chekni chop etib bo‘lmadi',
     'print.hintOff': 'Hozir to‘lovdan keyin chek chop etilmaydi. Agar bu kassaga chek printeri ulangan bo‘lsa, yoqing. Sozlama shu qurilmada saqlanadi.',
-    'print.hintOn': 'Chek brauzerning chop etish oynasiga yuboriladi — u yerda bir marta chek printeringizni tanlang. Chek oynasiz darhol chiqishi uchun chek printerini asosiy qiling va Chrome’ni <code>--kiosk-printing</code> parametri bilan ishga tushiring. Sozlama shu qurilmada saqlanadi.'
+    'print.hintOn': 'Chek brauzerning chop etish oynasiga yuboriladi — u yerda bir marta chek printeringizni tanlang. Chek oynasiz darhol chiqishi uchun chek printerini asosiy qiling va Chrome’ni <code>--kiosk-printing</code> parametri bilan ishga tushiring. Sozlama shu qurilmada saqlanadi.',
+    'inv.recount': 'Qayta sanash',
+    'inv.addItems': '+ Tovar qo‘shish',
+    'inv.emptyTitle': 'Ombor hozircha bo‘sh',
+    'inv.emptyText': 'Hozir bor hamma narsani yozing: go‘sht, non, sabzavot, ichimliklar, qadoq. Necha dona, kilogramm yoki litr — taxminan, keyin to‘g‘rilaysiz.',
+    'inv.fillStock': 'Omborni to‘ldirish',
+    'inv.warnWhenLess': 'Ogohlantirish, kamroq bo‘lsa',
+    'inv.namePlaceholder': 'Masalan: Kotlet',
+    'inv.haveNow': 'Hozir qancha bor',
+    'inv.minAuto': 'O‘zi: 5 dona yoki 1 kg',
+    'inv.needName': 'Tovar nomini yozing',
+    'inv.every3': 'Har 3 kunda',
+    'inv.every7': 'Haftada bir',
+    'inv.every14': '2 haftada bir',
+    'inv.every30': 'Oyda bir',
+    'inv.never': 'Eslatmaslik',
+    'inv.dueNow': 'Omborni qayta sanash vaqti keldi',
+    'inv.last': 'Oxirgi sanash',
+    'inv.next': 'keyingisi',
+    'inv.noReminders': 'Eslatmalar o‘chirilgan — qulay paytda sanang.',
+    'inv.chooseHint': 'Omborni qanchalik tez-tez sanashingizni tanlang — kassa eslatadi.',
+    'inv.scheduleTitle': 'Omborni qanchalik tez-tez sanash',
+    'inv.recountNow': 'Hozir sanash',
+    'inv.periodSaved': 'Saqlandi. Vaqti kelganda kassa eslatadi',
+    'inv.lastDaysAgo': 'Oxirgi marta — {n} kun oldin',
+    'inv.bulkTitle': 'Omborga tovar qo‘shish',
+    'inv.bulkText': 'Bir qator — bitta tovar. Nomi va hozir qanchaligini yozing. Kilogramm va litrni vergul bilan yozish mumkin: 2,5.',
+    'inv.ex1': 'Kotlet',
+    'inv.ex2': 'Bulochka',
+    'inv.ex3': 'Kungaboqar yog‘i',
+    'inv.ex4': 'Stakan',
+    'inv.addRow': 'Yana tovar',
+    'inv.saveItems': 'Saqlash',
+    'inv.needOne': 'Kamida bitta tovar yozing',
+    'inv.badQty': '«{name}» miqdorini tekshiring',
+    'inv.itemsAdded': 'Tovarlar qo‘shildi: {n}',
+    'inv.recountTitle': 'Omborni qayta sanash',
+    'inv.recountText': 'Har bir tovardan haqiqatda qancha borligini sanab, yozing. O‘zgarmagan bo‘lsa — shundayligicha qoldiring.',
+    'inv.wasInSystem': 'kassada edi',
+    'inv.saveRecount': 'Qoldiqlarni saqlash',
+    'inv.fillAll': 'Har bir tovar miqdorini yozing (0 ham mumkin)',
+    'inv.recountSaved': 'Ombor sanaldi, qoldiqlar yangilandi',
+    'guide.title': 'Ishni boshlang',
+    'guide.progress': '{all} tadan {done} tasi tayyor',
+    'guide.step': 'Qadam',
+    'guide.nextStep': 'Keyingi qadam',
+    'guide.hide': 'Maslahatlarni yashirish',
+    'guide.close': 'Yopish',
+    'guide.showAgain': 'Yo‘l ko‘rsatkichni ko‘rsatish',
+    'guide.allDone': 'Kassa to‘liq sozlandi!',
+    'guide.allDoneText': 'Menyu, xodimlar, ombor — hammasi joyida. Savdolaringiz baraka topsin!',
+    'guide.menuTitle': 'Menyu yarating',
+    'guide.menuText': 'Taomlar va narxlarni yozing — ular kassada tugma bo‘lib chiqadi. Bir-ikki daqiqa oladi.',
+    'guide.menuBtn': 'Menyu yaratish',
+    'guide.staffTitle': 'Xodimlarni qo‘shing',
+    'guide.staffText': 'Har bir kassirning 4 xonali o‘z PIN kodi bor — smenani kim ochgani va chekni kim urgani ko‘rinadi.',
+    'guide.staffBtn': 'Xodim qo‘shish',
+    'guide.staffSkip': 'Yolg‘iz ishlayman',
+    'guide.staffExplain': 'Har bir xodim kassaga 4 xonali o‘z PIN kodi bilan kiradi. Kassir faqat sotadi, administrator menyu va omborni ham yuritadi.',
+    'guide.saleTitle': 'Birinchi buyurtmani o‘tkazing',
+    'guide.saleText': 'Smenani oching, taomlarni bosing va to‘lovni tanlang. Bu sinov bo‘lsa — chekni keyin «Cheklar»da bekor qilish mumkin.',
+    'guide.saleBtn': 'Kassani ochish',
+    'guide.saleToast': 'Smena ochildi. Taomni buyurtmaga qo‘shish uchun ustiga bosing',
+    'guide.stockTitle': 'Omborni to‘ldiring',
+    'guide.stockText': 'Bor hamma narsani yozing: mahsulotlar, ichimliklar, qadoq. Texkartasiz — shunchaki necha dona yoki kilogramm.',
+    'guide.stockBtn': 'Omborni to‘ldirish',
+    'guide.scheduleTitle': 'Omborni qanchalik tez-tez sanashni tanlang',
+    'guide.scheduleText': '3 kunda, haftada, 2 haftada yoki oyda bir — vaqti kelganda kassa o‘zi eslatadi.',
+    'guide.scheduleBtn': 'Tanlash',
+    'pay.payBtn': 'To‘lash',
+    'pay.toPay': 'To‘lovga',
+    'pay.received': 'Mehmon qancha berdi',
+    'pay.noChange': 'Qaytimsiz',
+    'pay.noChangeHint': 'Bo‘sh — qaytimsiz',
+    'pay.noChangeShort': 'Qaytim yo‘q',
+    'pay.change': 'Qaytim',
+    'pay.notEnough': 'Yetmaydi',
+    'pay.cardHint': 'To‘lovni terminalda o‘tkazing. Terminal chek chiqargach, «To‘lovni qabul qilish»ni bosing.',
+    'pay.mixedShort': 'Aralash',
+    'pay.mixedCash': 'Naqd qancha',
+    'pay.mixedCard': 'Qolgani karta bilan',
+    'pay.accept': 'To‘lovni qabul qilish',
+    'pay.paid': 'To‘landi',
+    'pay.orderNo': 'Buyurtma raqami',
+    'pay.print': 'Chek',
+    'pay.printAgain': 'Yana chek',
+    'pay.newOrder': 'Yangi buyurtma',
+    'print.orderNo': 'BUYURTMA №',
+    'print.received': 'Olindi',
+    'print.change': 'Qaytim'
   }
 };
 
@@ -2966,7 +3604,8 @@ function showPinScreen() {
 function renderPinGrid() {
   const grid = document.getElementById('pin-grid');
   const keys = ['1','2','3','4','5','6','7','8','9','←','0','✓'];
-  grid.innerHTML = keys.map(k => `<button class="pin-btn" onclick="pinPress('${k}')">${k}</button>`).join('');
+  const label = k => k === '←' ? '<i class="ti ti-backspace" aria-hidden="true"></i>' : k === '✓' ? '<i class="ti ti-check" aria-hidden="true"></i>' : k;
+  grid.innerHTML = keys.map(k => `<button class="pin-btn ${k === '✓' ? 'pin-ok' : ''}" onclick="pinPress('${k}')" aria-label="${k}">${label(k)}</button>`).join('');
 }
 function renderPinDisplay() {
   document.getElementById('pin-display').innerHTML = [0,1,2,3].map(i =>
@@ -3138,22 +3777,12 @@ function applyRolePermissions() {
   // Кассир видит клиентов, но править и удалять их могут только владелец и админ
   document.getElementById('app').classList.toggle('role-cashier', currentUser.role === 'cashier');
 
-  // Разделы, которых нет в тарифе, скрываем; владельцу показываем, что даёт «Бизнес»
-  document.querySelectorAll('.nav-item[data-feature]').forEach(el => {
-    el.style.display = hasFeature(el.dataset.feature) ? '' : 'none';
-  });
-  const simplePlan = !hasFeature('recipes');
-  document.getElementById('nav-upgrade').style.display = simplePlan && currentUser.role === 'owner' ? '' : 'none';
+  // Выключенные разделы (клиенты, финансы) не показываем и внутри экранов
   const showClients = hasFeature('clients') ? '' : 'none';
   document.getElementById('cart-client-sel').style.display = showClients;
   document.getElementById('cart-client-picker').style.display = showClients;
   document.getElementById('expenses-card').style.display = hasFeature('finance') ? '' : 'none';
-  // Без аналитики раздел называется «Чеки»: там только последние чеки и их отмена
-  const ordersKey = hasFeature('analytics') ? 'nav.analytics' : 'nav.orders';
-  ['nav-analytics-label', 'mobile-analytics-label'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) { el.dataset.i18n = ordersKey; el.textContent = t(ordersKey); }
-  });
+  // Без аналитики страница называется «Чеки»: последние чеки, печать и отмена. Открывается из «Кассы»
   const titleEl = document.getElementById('analytics-page-title');
   titleEl.dataset.i18n = hasFeature('analytics') ? 'analytics.title' : 'nav.orders';
   titleEl.textContent = t(titleEl.dataset.i18n);
@@ -3174,8 +3803,8 @@ async function loadSupport() {
 function hasSupport() { return Boolean(SUPPORT.phone || SUPPORT.telegram); }
 function supportButtons(quiet = false) {
   const items = [];
-  if (SUPPORT.telegram) items.push(`<a class="btn ${quiet ? 'btn-secondary' : 'btn-primary'}" href="https://t.me/${encodeURIComponent(SUPPORT.telegram)}" target="_blank" rel="noopener">✈️ ${t('support.telegram')}</a>`);
-  if (SUPPORT.phone) items.push(`<a class="btn btn-secondary" href="tel:${esc(SUPPORT.phone)}">📞 ${t('support.call')}: ${esc(SUPPORT.phone)}</a>`);
+  if (SUPPORT.telegram) items.push(`<a class="btn ${quiet ? 'btn-secondary' : 'btn-primary'}" href="https://t.me/${encodeURIComponent(SUPPORT.telegram)}" target="_blank" rel="noopener"><i class="ti ti-brand-telegram" aria-hidden="true"></i>${t('support.telegram')}</a>`);
+  if (SUPPORT.phone) items.push(`<a class="btn btn-secondary" href="tel:${esc(SUPPORT.phone)}"><i class="ti ti-phone" aria-hidden="true"></i>${t('support.call')}: ${esc(SUPPORT.phone)}</a>`);
   return items.length ? `<div class="support-box">${items.join('')}</div>` : '';
 }
 function renderExpiredSupport() {
@@ -3204,7 +3833,7 @@ function showWelcomeIfNew() {
   let data;
   try { data = JSON.parse(raw); } catch { return false; }
   if (!data || !/^\d{4}$/.test(String(data.pin))) return false;
-  showModal(`<div class="modal-title">🎉 ${t('welcome.title')}</div>
+  showModal(`<div class="modal-title">${t('welcome.title')}</div>
     <p style="font-size:13px;line-height:1.6;">${t('welcome.text')}</p>
     <div class="welcome-pin"><span>${t('welcome.pinLabel')}</span><strong>${esc(data.pin)}</strong></div>
     <p class="muted-text" style="font-size:12px;line-height:1.6;">${t('welcome.pinHint')}</p>
@@ -3223,7 +3852,7 @@ function showWelcomeIfNew() {
 function showViewBanner() {
   if (!viewMode) return;
   const el = document.getElementById('view-banner');
-  el.innerHTML = `<span>👁 ${t('view.banner')}: <strong>${esc(venueInfo?.name || '')}</strong> — ${t('view.readonly')}</span>
+  el.innerHTML = `<span><i class="ti ti-eye" aria-hidden="true"></i> ${t('view.banner')}: <strong>${esc(venueInfo?.name || '')}</strong> — ${t('view.readonly')}</span>
     <button type="button" onclick="leaveViewMode()">${t('view.exit')}</button>`;
   el.style.display = 'flex';
 }
@@ -3248,8 +3877,8 @@ function leaveViewMode(message) {
 // NAVIGATION
 // ═══════════════════════════════════════════════════════════
 function nav(page, el) {
-  // Раздела нет в тарифе — вместо «нет прав» объясняем, как его открыть
-  if (PAGE_FEATURE[page] && !hasFeature(PAGE_FEATURE[page])) { openUpgradeModal(); return; }
+  // Выключенный раздел (техкарты, клиенты, финансы) не открываем
+  if (PAGE_FEATURE[page] && !hasFeature(PAGE_FEATURE[page])) return;
   if (!pageAllowed(page)) { toast(t('common.accessDenied')); return; }
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -3259,6 +3888,9 @@ function nav(page, el) {
   closeMobilePanels();
   const renders = {pos:renderPos,menu:renderMenu,stock:renderStock,recipes:renderRecipes,clients:renderClients,staff:renderStaff,analytics:renderAnalytics,finance:renderFinance,settings:renderSettings};
   if (renders[page]) renders[page]();
+  if (page !== 'pos') renderGuide();
+  document.getElementById('main')?.scrollTo?.(0, 0);
+  window.scrollTo(0, 0);
 }
 function showPage(page) {
   const item = Array.from(document.querySelectorAll('.nav-item'))
@@ -3276,7 +3908,7 @@ function setMobileNavActive(page) {
 // ═══════════════════════════════════════════════════════════
 function showModal(html) {
   const body = document.getElementById('modal-body');
-  body.classList.remove('modal-wide');
+  body.classList.remove('modal-wide', 'modal-pay');
   body.innerHTML = html;
   document.getElementById('modal-bg').classList.add('open');
 }
@@ -3315,7 +3947,7 @@ function renderShiftBar() {
   const shiftRevenue = dailySummary?.total || 0;
   // На телефоне строка смены раскрывается: наличные, карта, сколько заказов
   el.innerHTML = `<div class="shift-bar ${open ? 'open' : 'closed'}" ${open ? 'onclick="toggleShiftDetails()"' : ''}>
-    <span>${open ? '✅ ' + t('shift.opened') : '⛔ ' + t('pos.shiftClosed') + ' — ' + t('pos.salesUnavailable')}</span>
+    <span>${open ? '<i class="ti ti-circle-check" aria-hidden="true"></i> ' + t('shift.opened') : '<i class="ti ti-lock" aria-hidden="true"></i> ' + t('pos.shiftClosed') + ' — ' + t('pos.salesUnavailable')}</span>
     ${open
       ? '<span style="font-weight:600;">' + t('settings.shiftRevenue') + ': ' + fmt(shiftRevenue) + '<span class="shift-bar-chevron">▾</span></span>'
         + `<div class="shift-details">
@@ -3398,6 +4030,12 @@ function catNameOf(item) {
   const c = menuCatsData.find(c => c.id === item.category_id);
   return c ? c.name : '';
 }
+// У каждой категории свой цвет — полоска на плитке блюда: кассир находит блюдо глазами
+const CAT_COLORS = ['#FF6A45', '#FFB627', '#3BB4C1', '#E8547A', '#7A5AF0', '#22A699', '#F08A24', '#4C7EF3'];
+function catColorOf(item) {
+  const i = menuCatsData.findIndex(c => c.id === item.category_id);
+  return i < 0 ? '#A3AEC2' : CAT_COLORS[i % CAT_COLORS.length];
+}
 
 async function loadRecipeFor(itemId) {
   if (recipesData[itemId]) return recipesData[itemId];
@@ -3411,6 +4049,8 @@ async function preloadAllRecipes() {
 }
 
 function renderPos() {
+  renderGuide();
+  renderInventoryReminder();
   renderShiftBar();
   renderDailyCashBar();
   const cats = ['all', ...menuCats];
@@ -3510,7 +4150,7 @@ function renderPosMenu() {
     // Блюдо уже в заказе: карточка подсвечена, в углу — сколько штук
     const qty = cart[item.id] || 0;
     const cls = ['menu-card', ok ? '' : 'no-stock', qty ? 'in-cart' : '', item.id === lastAddedId ? 'just-added' : ''].join(' ');
-    return `<div class="${cls}" ${ok?`onclick="addToCart(${item.id})"`:''}>
+    return `<div class="${cls}" style="--cat:${catColorOf(item)}" ${ok?`onclick="addToCart(${item.id})"`:''}>
       ${qty ? `<span class="menu-card-qty">×${qty}</span>` : ''}
       <div class="menu-card-name">${esc(item.name)}</div>
       <div class="menu-card-price">${ok ? fmt(item.price) : unavailableReason(item)}</div>
@@ -3546,64 +4186,16 @@ function cartTotal() {
     return sum + (item ? item.price * cart[id] : 0);
   }, 0);
 }
-function syncMixedAmountsFromInputs() {
-  const cashEl = document.getElementById('split-cash-amount');
-  const cardEl = document.getElementById('split-card-amount');
-  if (cashEl) mixedCashAmount = Math.max(0, Math.round(Number(cashEl.value) || 0));
-  if (cardEl) mixedCardAmount = Math.max(0, Math.round(Number(cardEl.value) || 0));
-}
-function paymentAmounts(total = cartTotal()) {
-  if (payMethod === 'cash') return { cash: total, card: 0, diff: 0, valid: true };
-  if (payMethod === 'card') return { cash: 0, card: total, diff: 0, valid: true };
-  if (payMethod === 'mixed') {
-    syncMixedAmountsFromInputs();
-    const paid = mixedCashAmount + mixedCardAmount;
-    return { cash: mixedCashAmount, card: mixedCardAmount, diff: total - paid, valid: paid === total };
-  }
-  return { cash: 0, card: 0, diff: total, valid: false };
-}
-function renderSplitPayment(total) {
-  const box = document.getElementById('split-payment');
-  const cashEl = document.getElementById('split-cash-amount');
-  const cardEl = document.getElementById('split-card-amount');
-  const note = document.getElementById('split-payment-note');
-  if (!box || !cashEl || !cardEl || !note) return;
-  box.classList.toggle('open', payMethod === 'mixed');
-  if (payMethod !== 'mixed') {
-    note.textContent = '';
-    note.classList.remove('error');
-    return;
-  }
-  if (document.activeElement !== cashEl) cashEl.value = mixedCashAmount;
-  if (document.activeElement !== cardEl) cardEl.value = mixedCardAmount;
-  const payment = paymentAmounts(total);
-  note.classList.toggle('error', payment.diff !== 0);
-  note.textContent = payment.diff >= 0
-    ? `${t('pos.remainingToPay')}: ${fmt(payment.diff)}`
-    : `${t('pos.overpaid')}: ${fmt(Math.abs(payment.diff))}`;
-}
-function setPay(m) {
-  payMethod = m;
-  const total = cartTotal();
-  if (m === 'mixed' && mixedCashAmount + mixedCardAmount === 0) {
-    mixedCashAmount = total;
-    mixedCardAmount = 0;
-  }
-  document.getElementById('pay-cash').className = 'pay-btn' + (m==='cash'?' active':'');
-  document.getElementById('pay-card').className = 'pay-btn' + (m==='card'?' active':'');
-  document.getElementById('pay-mixed').className = 'pay-btn' + (m==='mixed'?' active':'');
-  renderSplitPayment(total);
-  renderCart();
-}
 function renderCart() {
   const keys = Object.keys(cart);
   const body = document.getElementById('cart-body');
+  const btn = document.getElementById('checkout-btn');
   if (!keys.length) {
     body.innerHTML = `<div class="cart-empty">${t('pos.addItems')}</div>`;
     document.getElementById('cart-total').textContent = fmt(0);
     document.getElementById('cart-count').textContent = '0';
-    document.getElementById('checkout-btn').disabled = true;
-    renderSplitPayment(0);
+    document.getElementById('checkout-total').textContent = '';
+    btn.disabled = true;
     updateMobileCartButton(0, 0);
     return;
   }
@@ -3620,57 +4212,224 @@ function renderCart() {
     </div>`;}).join('');
   document.getElementById('cart-total').textContent = fmt(total);
   document.getElementById('cart-count').textContent = count;
-  renderSplitPayment(total);
-  const payment = paymentAmounts(total);
-  document.getElementById('checkout-btn').disabled = !payMethod || (payMethod === 'mixed' && !payment.valid);
+  document.getElementById('checkout-total').textContent = fmt(total);
+  btn.disabled = false;
   updateMobileCartButton(count, total);
 }
-async function checkout() {
-  const keys = Object.keys(cart);
-  if (!keys.length || !payMethod) return;
-  const items = keys.map(id => ({ id: +id, qty: cart[id] }));
-  const total = cartTotal();
-  const payment = paymentAmounts(total);
-  if (!payment.valid) {
-    toast(t('pos.paymentMismatch'));
-    renderCart();
-    return;
+
+// ═══════════════════════════════════════════════════════════
+// ОПЛАТА
+// «Оплатить 86 000» → окно оплаты: наличные (сколько дал гость, сдача), карта или
+// раздельно → «Принять оплату» → экран «Готово» с номером заказа → «Новый заказ».
+// Самый быстрый путь — два нажатия: «Оплатить» и «Принять оплату» (наличные без сдачи).
+// ═══════════════════════════════════════════════════════════
+let payState = null; // { method, received, mixedCash, busy, done }
+
+function digitsOnly(value) { return String(value ?? '').replace(/\D/g, ''); }
+function payTotal() { return cartTotal(); }
+
+// Подсказки «сколько дал гость»: ближайшие круглые суммы больше итога (купюры 5, 10, 50, 100, 200 тысяч)
+function cashSuggestions(total) {
+  const set = new Set();
+  [5000, 10000, 50000, 100000, 200000].forEach(step => {
+    const v = Math.ceil(total / step) * step;
+    if (v > total) set.add(v);
+  });
+  return [...set].sort((a, b) => a - b).slice(0, 3);
+}
+
+// Сколько платят наличными и картой, сколько дал гость, сдача; valid — можно принимать
+function paymentPlan() {
+  const total = payTotal();
+  const s = payState;
+  if (s.method === 'card') return { method: 'card', cash: 0, card: total, received: null, change: 0, short: 0, valid: total > 0 };
+  if (s.method === 'mixed') {
+    const cash = Math.min(Number(digitsOnly(s.mixedCash)) || 0, total);
+    const card = total - cash;
+    return { method: cash === 0 ? 'card' : card === 0 ? 'cash' : 'mixed', cash, card, received: null, change: 0, short: 0, valid: total > 0 };
   }
+  // Наличные: пустое поле = гость дал без сдачи
+  const received = s.received === '' ? total : Number(digitsOnly(s.received)) || 0;
+  return {
+    method: 'cash', cash: total, card: 0,
+    received: s.received === '' ? null : received,
+    change: Math.max(0, received - total),
+    short: Math.max(0, total - received),
+    valid: total > 0 && received >= total,
+  };
+}
+
+function openPayment() {
+  if (!Object.keys(cart).length) return;
+  if (!(currentShift && !currentShift.closed_at)) { toast(t('pos.openShiftFirst') + '!'); return; }
+  closeMobilePanels();
+  payState = { method: 'cash', received: '', mixedCash: '', busy: false, done: null };
+  renderPayment();
+}
+function setPayMethod(method) {
+  payState.method = method;
+  renderPayment();
+}
+function setReceived(value) {
+  payState.received = value === '' ? '' : String(value);
+  const input = document.getElementById('pay-received');
+  if (input) input.value = payState.received === '' ? '' : Number(payState.received).toLocaleString(appLang === 'uz' ? 'uz-UZ' : 'ru-RU');
+  updatePaymentInfo();
+}
+function onReceivedInput(el) {
+  payState.received = digitsOnly(el.value);
+  updatePaymentInfo();
+}
+function onMixedInput(el) {
+  payState.mixedCash = digitsOnly(el.value);
+  updatePaymentInfo();
+}
+
+function renderPayment() {
+  const total = payTotal();
+  const s = payState;
+  const tab = (m, icon, key) => `<button type="button" class="pay-tab ${s.method === m ? 'active' : ''}" onclick="setPayMethod('${m}')"><i class="ti ${icon}" aria-hidden="true"></i>${t(key)}</button>`;
+  let body = '';
+  if (s.method === 'cash') {
+    body = `<label class="pay-label" for="pay-received">${t('pay.received')}</label>
+      <input class="pay-input" id="pay-received" type="text" inputmode="numeric" autocomplete="off"
+        value="${s.received === '' ? '' : esc(Number(s.received).toLocaleString(appLang === 'uz' ? 'uz-UZ' : 'ru-RU'))}"
+        placeholder="${esc(t('pay.noChangeHint'))}" oninput="onReceivedInput(this)">
+      <div class="pay-quick">
+        <button type="button" class="pay-quick-btn" onclick="setReceived('')">${t('pay.noChange')}</button>
+        ${cashSuggestions(total).map(v => `<button type="button" class="pay-quick-btn" onclick="setReceived(${v})">${fmtNum(v)}</button>`).join('')}
+      </div>`;
+  } else if (s.method === 'card') {
+    body = `<p class="pay-hint">${t('pay.cardHint')}</p>`;
+  } else {
+    body = `<label class="pay-label" for="pay-mixed-cash">${t('pay.mixedCash')}</label>
+      <input class="pay-input" id="pay-mixed-cash" type="text" inputmode="numeric" autocomplete="off" value="${esc(s.mixedCash)}" placeholder="0" oninput="onMixedInput(this)">
+      <p class="pay-hint" id="pay-mixed-card"></p>`;
+  }
+  showModal(`<div class="pay-screen">
+    <div class="pay-head">
+      <div class="pay-total"><span>${t('pay.toPay')}</span><b>${fmt(total)}</b></div>
+      <button type="button" class="pay-close" onclick="closePayment()" aria-label="${t('common.cancel')}"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </div>
+    <div class="pay-tabs">
+      ${tab('cash', 'ti-cash', 'pos.cash')}
+      ${tab('card', 'ti-credit-card', 'pos.card')}
+      ${tab('mixed', 'ti-arrows-exchange', 'pay.mixedShort')}
+    </div>
+    <div class="pay-body">${body}</div>
+    <div class="pay-result" id="pay-result"></div>
+    <button type="button" class="btn btn-primary pay-confirm" id="pay-confirm" onclick="confirmPayment()"><i class="ti ti-check" aria-hidden="true"></i>${t('pay.accept')}</button>
+  </div>`);
+  document.getElementById('modal-body').classList.add('modal-pay');
+  updatePaymentInfo();
+  // На компьютере сразу можно печатать сумму с клавиатуры; на телефоне клавиатуру не открываем
+  const input = document.getElementById(s.method === 'mixed' ? 'pay-mixed-cash' : 'pay-received');
+  if (input && window.matchMedia('(pointer: fine)').matches) input.focus();
+}
+
+function updatePaymentInfo() {
+  if (!payState || payState.done) return;
+  const plan = paymentPlan();
+  const result = document.getElementById('pay-result');
+  if (result) {
+    if (plan.method === 'cash' && payState.method === 'cash') {
+      result.className = 'pay-result ' + (plan.short ? 'bad' : plan.change ? 'change' : '');
+      result.innerHTML = plan.short
+        ? `<span>${t('pay.notEnough')}</span><b>${fmt(plan.short)}</b>`
+        : plan.change
+          ? `<span>${t('pay.change')}</span><b>${fmt(plan.change)}</b>`
+          : `<span>${t('pay.noChangeShort')}</span><b>${fmt(0)}</b>`;
+    } else {
+      result.className = 'pay-result';
+      result.innerHTML = '';
+    }
+  }
+  const cardLine = document.getElementById('pay-mixed-card');
+  if (cardLine) cardLine.innerHTML = `${t('pay.mixedCard')}: <b>${fmt(plan.card)}</b>`;
+  const btn = document.getElementById('pay-confirm');
+  if (btn) btn.disabled = !plan.valid || payState.busy;
+}
+
+function closePayment() {
+  const done = payState?.done;
+  payState = null;
+  closeModal();
+  if (done) renderPos();
+}
+
+async function confirmPayment() {
+  if (!payState || payState.busy || payState.done) return;
+  const plan = paymentPlan();
+  if (!plan.valid) { updatePaymentInfo(); return; }
+  const keys = Object.keys(cart);
+  if (!keys.length) return;
+  payState.busy = true;
+  updatePaymentInfo();
+  const clientId = cartClientId ? +cartClientId : null;
   try {
     const order = await api('/orders', {
       method: 'POST',
       body: {
-        items,
-        pay_method: payMethod,
-        cash_amount: payment.cash,
-        card_amount: payment.card,
-        client_id: cartClientId ? +cartClientId : null
-      }
+        items: keys.map(id => ({ id: +id, qty: cart[id] })),
+        pay_method: plan.method,
+        cash_amount: plan.cash,
+        card_amount: plan.card,
+        cash_received: plan.received,
+        client_id: clientId,
+      },
     });
-    toast('✅ ' + t('pos.orderCreated') + '! ' + fmt(order.total));
-    // Чек печатается после оплаты, если на этом устройстве включена печать.
-    // Ошибка печати не мешает продаже — заказ уже сохранён.
-    const clientName = cartClientId ? clients.find(c => Number(c.id) === Number(cartClientId))?.name : '';
-    const receipt = printSettings.enabled
-      ? buildReceiptModel(order, { cashier: currentUser?.name || '', client: clientName || '' })
-      : null;
+    orders.unshift(order); // для путеводителя: первая продажа сделана
+    const clientName = clientId ? clients.find(c => Number(c.id) === clientId)?.name : '';
+    payState.done = { order, change: plan.change, receipt: buildReceiptModel(order, { cashier: currentUser?.name || '', client: clientName || '' }) };
     cart = {}; cartClientId = null;
+    renderPaymentDone();
     renderPos();
-    if (receipt) printReceiptModel(receipt);
-    ingredients = await api('/stock');
-    currentShift = await api('/orders/shift/current');
-    dailySummary = await api('/orders/shift/summary');
-    if (cartClientId) clients = await api('/orders/clients/all');
-    cart = {}; cartClientId = null; payMethod = null; mixedCashAmount = 0; mixedCardAmount = 0;
-    document.getElementById('pay-cash').className = 'pay-btn';
-    document.getElementById('pay-card').className = 'pay-btn';
-    document.getElementById('pay-mixed').className = 'pay-btn';
-    renderSplitPayment(0);
-    renderPos();
+    // Чек печатается сразу, если на этом устройстве включена печать. Ошибка печати не мешает продаже
+    if (printSettings.enabled) printReceiptModel(payState.done.receipt);
+    // Остатки, смена и выручка обновляются в фоне — кассир уже может принимать следующий заказ
+    Promise.all([
+      api('/stock'), api('/orders/shift/current'), api('/orders/shift/summary'),
+      clientId ? api('/orders/clients/all') : Promise.resolve(null),
+    ]).then(([stock, shift, summary, clientsData]) => {
+      ingredients = stock; currentShift = shift; dailySummary = summary;
+      if (clientsData) clients = clientsData;
+      if (!payState) renderPos(); else { renderShiftBar(); renderDailyCashBar(); renderPosMenu(); }
+    }).catch(() => {});
   } catch (err) {
+    if (payState) { payState.busy = false; updatePaymentInfo(); }
     toast(t('common.error') + ': ' + err.message);
   }
 }
+
+// Экран «Готово»: крупный номер заказа, сдача, печать и «Новый заказ»
+function renderPaymentDone() {
+  const { order, change } = payState.done;
+  const no = order.order_no || order.id;
+  showModal(`<div class="pay-screen pay-done">
+    <div class="pay-done-check"><i class="ti ti-check" aria-hidden="true"></i></div>
+    <div class="pay-done-title">${t('pay.paid')} · ${fmt(order.total)}</div>
+    <div class="pay-done-label">${t('pay.orderNo')}</div>
+    <div class="pay-done-no">${esc(no)}</div>
+    ${change > 0 ? `<div class="pay-result change big"><span>${t('pay.change')}</span><b>${fmt(change)}</b></div>` : ''}
+    <div class="pay-done-actions">
+      <button type="button" class="btn btn-secondary" onclick="printReceiptModel(payState.done.receipt)"><i class="ti ti-printer" aria-hidden="true"></i>${t(printSettings.enabled ? 'pay.printAgain' : 'pay.print')}</button>
+      <button type="button" class="btn btn-primary pay-confirm" id="pay-new-order" onclick="closePayment()">${t('pay.newOrder')}</button>
+    </div>
+  </div>`);
+  document.getElementById('modal-body').classList.add('modal-pay');
+  if (window.matchMedia('(pointer: fine)').matches) document.getElementById('pay-new-order')?.focus();
+}
+
+// Enter в окне оплаты: «Принять оплату», на экране «Готово» — «Новый заказ»
+document.addEventListener('keydown', e => {
+  if (!payState || e.key !== 'Enter') return;
+  if (!document.getElementById('modal-bg').classList.contains('open')) return;
+  e.preventDefault();
+  if (payState.done) closePayment(); else confirmPayment();
+});
+
+// Старое название: кнопка оплаты могла вызываться как checkout()
+function checkout() { openPayment(); }
 
 // ═══════════════════════════════════════════════════════════
 // MENU — выглядит как экран кассы: категории сверху, блюда карточками
@@ -3732,7 +4491,7 @@ function renderMenu() {
 
   const activeCat = menuCatsData.find(c => c.id === activeMenuCat);
   tools.innerHTML = activeCat
-    ? `<button type="button" class="link-btn" onclick="openCategoryModal(${activeCat.id})">✏️ ${t('menu.editCategory')}</button>`
+    ? `<button type="button" class="link-btn" onclick="openCategoryModal(${activeCat.id})"><i class="ti ti-pencil" aria-hidden="true"></i> ${t('menu.editCategory')}</button>`
     : '';
   tools.style.display = activeCat ? '' : 'none';
 
@@ -3748,7 +4507,7 @@ function renderMenu() {
       const low = stockStatus(stock) !== 'ok';
       tags.push(`<span class="menu-tag stock ${low ? 'low' : ''}">${stockDisplayQty(stock.stock_grams, stock.unit).toLocaleString(appLang === 'uz' ? 'uz-UZ' : 'ru-RU')} ${stockUnitLabel(stock.unit)}</span>`);
     }
-    return `<div class="menu-card edit ${item.active ? '' : 'is-hidden'}" onclick="openDishModal(${item.id})">
+    return `<div class="menu-card edit ${item.active ? '' : 'is-hidden'}" style="--cat:${catColorOf(item)}" onclick="openDishModal(${item.id})">
       <div class="menu-card-name">${esc(item.name)}</div>
       ${tags.length ? `<div class="menu-card-tags">${tags.join('')}</div>` : ''}
       <div class="menu-card-price">${fmt(item.price)}</div>
@@ -4000,7 +4759,7 @@ function renderSetup() {
 
   // Шаг 3 — готово, объясняем, как продавать
   showSetupModal(`${setupProgress(3)}
-    <div class="setup-done"><b>🎉</b><div class="modal-title" style="margin:0;">${t('setup.s3Title')}</div>
+    <div class="setup-done"><b class="setup-done-icon"><i class="ti ti-circle-check" aria-hidden="true"></i></b><div class="modal-title" style="margin:0;">${t('setup.s3Title')}</div>
       <div class="muted-text" style="font-size:14px;">${t('setup.s3Count').replace('{items}', s.savedItems).replace('{cats}', s.savedCats)}</div></div>
     <div class="setup-explain">
       <strong>${t('setup.s3How')}</strong>
@@ -4117,29 +4876,43 @@ function renderStock() {
     ].join(' ').toLowerCase();
     return haystack.includes(stockSearch);
   });
+  renderStockSchedule();
+  const empty = !list.length;
+  // Пустой склад: вместо таблиц — одно понятное приглашение заполнить
+  ['stock-metrics', 'stock-search-wrap', 'stock-history-card'].forEach(id => {
+    document.getElementById(id).style.display = empty ? 'none' : '';
+  });
+  document.getElementById('stock-actions').style.display = empty ? 'none' : '';
+  if (empty) {
+    document.getElementById('stock-list').innerHTML = `<div class="menu-empty stock-empty">
+      <strong>${t('inv.emptyTitle')}</strong>
+      <p>${t('inv.emptyText')}</p>
+      <div><button class="btn btn-primary" onclick="openStockBulkModal()">${t('inv.fillStock')}</button></div>
+    </div>`;
+    return;
+  }
   document.getElementById('stock-metrics').innerHTML = `
     <div class="metric"><div class="metric-label">${t('stock.totalItems')}</div><div class="metric-value">${list.length}</div></div>
     <div class="metric"><div class="metric-label">${t('stock.lowItems')}</div><div class="metric-value amber">${low}</div></div>
     <div class="metric"><div class="metric-label">${t('stock.emptyItems')}</div><div class="metric-value red">${out}</div></div>`;
-  document.getElementById('stock-tbody').innerHTML = filtered.length ? filtered.map(ing => {
+  // Карточки вместо таблицы: на телефоне читаются без прокрутки вбок
+  document.getElementById('stock-list').innerHTML = filtered.length ? filtered.map(ing => {
     const s = stockStatus(ing);
-    const pct = Math.min(100, Math.round(ing.stock_grams / (ing.min_grams * 4) * 100));
-    const col = s==='ok'?'#3FAE6A':s==='low'?'#E29A12':'#C0392B';
     const badge = s==='ok'?'badge-green':s==='low'?'badge-amber':'badge-red';
     const label = s==='ok'?t('stock.normal'):s==='low'?t('stock.low'):t('stock.empty');
-    return `<tr>
-      <td><strong>${esc(ing.name)}</strong></td>
-      <td><span class="badge badge-gray">${stockCategoryLabel(ing.category)}</span></td>
-      <td>${stockDisplayQty(ing.stock_grams, ing.unit).toLocaleString(appLang === 'uz' ? 'uz-UZ' : 'ru-RU')}</td>
-      <td>${stockUnitLabel(ing.unit)}</td>
-      <td class="muted-text">${stockDisplayQty(ing.min_grams, ing.unit).toLocaleString(appLang === 'uz' ? 'uz-UZ' : 'ru-RU')}</td>
-      <td><span class="badge ${badge}">${label}</span></td>
-      <td><button class="btn btn-secondary btn-sm" onclick="openIncomeModal(${ing.id})">${t('stock.incomeAction')}</button></td>
-      <td style="text-align:right;white-space:nowrap;display:flex;gap:4px;justify-content:flex-end;">
-        <button class="btn btn-icon btn-sm" onclick="openIngModal(${ing.id})">✏️</button>
-        <button class="btn btn-icon btn-sm" onclick="deleteIng(${ing.id})">🗑️</button>
-      </td>
-    </tr>`;}).join('') : `<tr><td colspan="8" class="empty-state">${t('stock.notFound')}</td></tr>`;
+    return `<div class="stock-card ${s}">
+      <div class="stock-card-top">
+        <strong>${esc(ing.name)}</strong>
+        <span class="badge ${badge}">${label}</span>
+      </div>
+      <div class="stock-card-qty">${stockQtyText(ing.stock_grams, ing.unit)}</div>
+      <div class="stock-card-min muted-text">${t('inv.warnWhenLess')} ${stockQtyText(ing.min_grams, ing.unit)}</div>
+      <div class="stock-card-actions">
+        <button class="btn btn-secondary btn-sm" onclick="openIncomeModal(${ing.id})"><i class="ti ti-plus" aria-hidden="true"></i>${t('stock.incomeAction')}</button>
+        <button class="btn btn-icon btn-sm" onclick="openIngModal(${ing.id})" aria-label="${t('stock.editItem')}"><i class="ti ti-pencil" aria-hidden="true"></i></button>
+        <button class="btn btn-icon btn-sm" onclick="deleteIng(${ing.id})" aria-label="${t('common.delete')}"><i class="ti ti-trash" aria-hidden="true"></i></button>
+      </div>
+    </div>`;}).join('') : `<div class="empty-state">${t('stock.notFound')}</div>`;
   renderStockIncomes();
   reloadStockIncomes().then(renderStockIncomes).catch(err => {
     const tbody = document.getElementById('stock-incomes-tbody');
@@ -4151,38 +4924,48 @@ async function deleteIng(id) {
   try { await api('/stock/'+id, { method:'DELETE' }); await reloadStock(); renderStock(); }
   catch(err){ toast(err.message); }
 }
+// Один товар: название, единица (шт / кг / л), сколько есть сейчас, когда предупредить
 function openIngModal(id) {
   const ing = id ? getIng(id) : null;
-  const unit = ing?.unit || (hasFeature('stock_weight') ? 'g' : 'pcs');
-  const category = ing?.category || 'kitchen';
+  const unit = ing?.unit || 'pcs';
   showModal(`<div class="modal-title">${id ? t('stock.editItem') : t('stock.newItem')}</div>
-    <div class="field"><label>${t('stock.name')}</label><input type="text" id="if-name" value="${ing?esc(ing.name):''}" placeholder="${t('stock.name')}" data-i18n-placeholder="stock.name"></div>
+    <div class="field"><label>${t('stock.name')}</label><input type="text" id="if-name" value="${ing?esc(ing.name):''}" placeholder="${t('inv.namePlaceholder')}"></div>
+    <div class="field"><label>${t('stock.storageUnit')}</label><select id="if-unit">${stockUnitOptions(unit)}</select></div>
     <div class="field-row">
-      <div class="field"><label>${t('stock.category')}</label><select id="if-category">${stockCategoryOptions(category)}</select></div>
-      <div class="field"><label>${t('stock.storageUnit')}</label><select id="if-unit">${stockUnitOptions(unit)}</select></div>
+      <div class="field"><label>${t('inv.haveNow')}</label><input type="text" inputmode="decimal" id="if-stock" value="${ing ? stockDisplayQty(ing.stock_grams, unit) : ''}" placeholder="0"></div>
+      <div class="field"><label>${t('inv.warnWhenLess')}</label><input type="text" inputmode="decimal" id="if-min" value="${ing ? stockDisplayQty(ing.min_grams, unit) : ''}" placeholder="${t('inv.minAuto')}"></div>
     </div>
-    ${id ? `<div class="field-row">
-      <div class="field"><label>${t('stock.balance')}</label><input type="number" id="if-stock" step="0.001" value="${stockDisplayQty(ing.stock_grams, unit)}" placeholder="${t('stock.quantity')}" data-i18n-placeholder="stock.quantity"></div>
-      <div class="field"><label>${t('stock.minBalance')}</label><input type="number" id="if-min" step="0.001" value="${stockDisplayQty(ing.min_grams, unit)}" placeholder="${t('stock.minimum')}" data-i18n-placeholder="stock.minimum"></div>
-    </div>` : `<div class="field"><label>${t('stock.minBalance')}</label><input type="number" id="if-min" step="0.001" value="${hasFeature('stock_weight') ? 300 : 5}" placeholder="${t('stock.minimum')}" data-i18n-placeholder="stock.minimum"></div>`}
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal()">${t('common.cancel')}</button>
       <button class="btn btn-primary" onclick="saveIng(${id||0})">${t('stock.saveItem')}</button>
     </div>`);
 }
+// «2,5» и «2.5» — одно и то же; пустое поле — NaN
+function parseQty(value) {
+  const s = String(value ?? '').replace(/\s/g, '').replace(',', '.');
+  return s === '' ? NaN : Number(s);
+}
+function defaultMinBase(unit) { return unit === 'pcs' ? 5 : 1000; }
 async function saveIng(id) {
   const name = document.getElementById('if-name').value.trim();
-  const category = document.getElementById('if-category').value;
   const unit = document.getElementById('if-unit').value;
-  const stockInput = document.getElementById('if-stock');
-  const stock_grams = stockInput ? stockInputToBase(+stockInput.value || 0, unit) : 0;
-  const min_grams = stockInputToBase(+document.getElementById('if-min').value || 0, unit) || (unit === 'pcs' ? 5 : 300);
-  if (!name) return;
+  const stock_grams = stockInputToBase(parseQty(document.getElementById('if-stock').value) || 0, unit);
+  const minRaw = document.getElementById('if-min').value.trim();
+  const min_grams = minRaw === '' ? defaultMinBase(unit) : stockInputToBase(parseQty(minRaw) || 0, unit);
+  if (!name) { toast(t('inv.needName')); return; }
   try {
-    if (id) await api('/stock/'+id, { method:'PUT', body:{ name, category, unit, stock_grams, min_grams } });
-    else await api('/stock', { method:'POST', body:{ name, category, unit, min_grams } });
-    await reloadStock(); closeModal(); renderStock(); toast(t('stock.itemSaved'));
+    if (id) await api('/stock/'+id, { method:'PUT', body:{ name, unit, stock_grams, min_grams } });
+    else await api('/stock', { method:'POST', body:{ name, unit, stock_grams, min_grams } });
+    await reloadStock(); await refreshVenue(); closeModal(); renderStock(); toast(t('stock.itemSaved'));
   } catch(err) { toast(err.message); }
+}
+// Свежие данные точки (график пересчёта) после действий со складом
+async function refreshVenue() {
+  try {
+    const me = await api('/auth/me');
+    venueInfo = me.venue;
+    try { localStorage.setItem('qp_venue', JSON.stringify(venueInfo)); } catch {}
+  } catch {}
 }
 function openIncomeModal(id = null) {
   const list = stockItemsForPlan();
@@ -4248,10 +5031,18 @@ function stockCategoryOptions(selected='kitchen') {
     .map(c => `<option value="${c}"${c===selected?' selected':''}>${stockCategoryLabel(c)}</option>`)
     .join('');
 }
-function stockUnitOptions(selected='g') {
-  return (hasFeature('stock_weight') ? ['pcs','g','kg','ml','l'] : ['pcs'])
+// Для простоты три единицы: штуки, килограммы, литры. Старые товары в граммах и мл тоже показываются
+function stockUnitOptions(selected='pcs') {
+  const units = ['pcs','kg','l'];
+  if (selected && !units.includes(selected)) units.push(selected);
+  return units
     .map(u => `<option value="${u}"${u===selected?' selected':''}>${stockUnitLabel(u)}</option>`)
     .join('');
+}
+function stockQtyText(value, unit) {
+  const locale = appLang === 'uz' ? 'uz-UZ' : 'ru-RU';
+  const n = stockDisplayQty(value, unit);
+  return `${n.toLocaleString(locale, { maximumFractionDigits: 3 })} ${stockUnitLabel(unit)}`;
 }
 function stockDisplayQty(value, unit) {
   const n = Number(value) || 0;
@@ -4280,6 +5071,273 @@ function renderStockIncomes() {
         </tr>`;
       }).join('')
     : `<tr><td colspan="7" class="empty-state">${t('stock.noData')}</td></tr>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// ЗАПОЛНЕНИЕ СКЛАДА И ПЕРЕСЧЁТ (ИНВЕНТАРИЗАЦИЯ)
+// Без техкарт: точка вносит всё, что есть, а потом раз в N дней пересчитывает
+// склад и вписывает новые остатки. Касса напоминает, когда пора.
+// ═══════════════════════════════════════════════════════════
+const INVENTORY_PERIODS = [
+  { days: 3, key: 'inv.every3' },
+  { days: 7, key: 'inv.every7' },
+  { days: 14, key: 'inv.every14' },
+  { days: 30, key: 'inv.every30' },
+  { days: 0, key: 'inv.never' },
+];
+let stockBulkRows = [];
+
+function inventoryInfo() {
+  const every = venueInfo?.inventory_every_days;
+  const last = venueInfo?.last_inventory_at ? new Date(venueInfo.last_inventory_at) : null;
+  const info = { every: every ?? null, last, next: null, due: false, daysAgo: null };
+  if (last) info.daysAgo = Math.max(0, Math.floor((Date.now() - last.getTime()) / 86400000));
+  if (every > 0 && last) {
+    info.next = new Date(last.getTime() + every * 86400000);
+    info.due = Date.now() >= info.next.getTime();
+  }
+  return info;
+}
+function shortDate(d) {
+  return d ? d.toLocaleDateString(appLang === 'uz' ? 'uz-UZ' : 'ru-RU', { day: '2-digit', month: '2-digit' }) : '—';
+}
+
+// Карточка «Как часто пересчитывать склад» на странице склада
+function renderStockSchedule() {
+  const el = document.getElementById('stock-schedule');
+  if (!el) return;
+  if (!ingredients.length) { el.innerHTML = ''; return; }
+  const info = inventoryInfo();
+  const status = info.due
+    ? `<span class="inv-due"><i class="ti ti-alert-triangle" aria-hidden="true"></i> ${t('inv.dueNow')}</span>`
+    : info.next
+      ? `${t('inv.last')}: <b>${shortDate(info.last)}</b> · ${t('inv.next')}: <b>${shortDate(info.next)}</b>`
+      : info.every === 0
+        ? t('inv.noReminders')
+        : t('inv.chooseHint');
+  el.innerHTML = `<div class="card inv-card ${info.due ? 'due' : ''} ${info.every === null ? 'unset' : ''}">
+    <div class="inv-card-head">
+      <div><div class="card-title" style="margin-bottom:4px;">${t('inv.scheduleTitle')}</div><div class="muted-text inv-status">${status}</div></div>
+      ${info.due ? `<button class="btn btn-primary" onclick="openInventoryModal()"><i class="ti ti-list-check" aria-hidden="true"></i>${t('inv.recountNow')}</button>` : ''}
+    </div>
+    <div class="inv-periods">${INVENTORY_PERIODS.map(p =>
+      `<button type="button" class="cat-tab ${info.every === p.days ? 'active' : ''}" onclick="setInventoryPeriod(${p.days})">${t(p.key)}</button>`
+    ).join('')}</div>
+  </div>`;
+}
+async function setInventoryPeriod(days) {
+  try {
+    const saved = await api('/stock/inventory-settings', { method: 'PUT', body: { every_days: days } });
+    venueInfo = { ...venueInfo, ...saved };
+    try { localStorage.setItem('qp_venue', JSON.stringify(venueInfo)); } catch {}
+    renderStockSchedule();
+    renderInventoryReminder();
+    renderGuide();
+    toast(t('inv.periodSaved'));
+  } catch (err) { toast(err.message); }
+}
+
+// Напоминание на экране кассы (только владельцу и администратору)
+function renderInventoryReminder() {
+  const el = document.getElementById('inventory-reminder');
+  if (!el) return;
+  const info = inventoryInfo();
+  if (!info.due || !['owner','admin'].includes(currentUser?.role) || viewMode) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="inv-reminder">
+    <span><b><i class="ti ti-box" aria-hidden="true"></i> ${t('inv.dueNow')}</b><small>${t('inv.lastDaysAgo').replace('{n}', info.daysAgo)}</small></span>
+    <button class="btn btn-primary btn-sm" onclick="showPage('stock'); openInventoryModal();">${t('inv.recountNow')}</button>
+  </div>`;
+}
+
+// Заполнить склад: несколько товаров за раз (название, сколько есть, шт/кг/л)
+function openStockBulkModal() {
+  stockBulkRows = Array.from({ length: 4 }, () => ({ name: '', qty: '', unit: 'pcs' }));
+  renderStockBulk();
+}
+function renderStockBulk() {
+  showModal(`<div class="modal-title">${t('inv.bulkTitle')}</div>
+    <p class="muted-text" style="font-size:13px;line-height:1.5;margin-bottom:12px;">${t('inv.bulkText')}</p>
+    <div class="bulk-head muted-text"><span>${t('stock.name')}</span><span>${t('inv.haveNow')}</span><span></span></div>
+    <div id="bulk-rows">${stockBulkRows.map((r, i) => `<div class="bulk-row">
+      <input type="text" value="${esc(r.name)}" placeholder="${t(['inv.ex1','inv.ex2','inv.ex3','inv.ex4'][i % 4])}" oninput="stockBulkRows[${i}].name=this.value">
+      <input type="text" inputmode="decimal" value="${esc(r.qty)}" placeholder="0" oninput="stockBulkRows[${i}].qty=this.value">
+      <select onchange="stockBulkRows[${i}].unit=this.value">${['pcs','kg','l'].map(u => `<option value="${u}"${u===r.unit?' selected':''}>${stockUnitLabel(u)}</option>`).join('')}</select>
+    </div>`).join('')}</div>
+    <button type="button" class="link-btn" onclick="stockBulkRows.push({name:'',qty:'',unit:'pcs'}); renderStockBulk(); setTimeout(()=>{const l=document.querySelectorAll('#bulk-rows .bulk-row input[type=text]'); l[l.length-1]?.focus();},0);">+ ${t('inv.addRow')}</button>
+    <div class="setup-error" id="bulk-error"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">${t('common.cancel')}</button>
+      <button class="btn btn-primary" id="bulk-save" onclick="saveStockBulk()">${t('inv.saveItems')}</button>
+    </div>`);
+  document.getElementById('modal-body').classList.add('modal-wide');
+}
+async function saveStockBulk() {
+  const items = stockBulkRows
+    .map(r => ({ name: r.name.trim(), quantity: String(r.qty).trim() === '' ? 0 : parseQty(r.qty), unit: r.unit }))
+    .filter(r => r.name);
+  const err = document.getElementById('bulk-error');
+  if (!items.length) { err.textContent = t('inv.needOne'); err.classList.add('show'); return; }
+  const bad = items.find(r => !Number.isFinite(r.quantity) || r.quantity < 0);
+  if (bad) { err.textContent = t('inv.badQty').replace('{name}', bad.name); err.classList.add('show'); return; }
+  const btn = document.getElementById('bulk-save');
+  btn.disabled = true;
+  try {
+    await api('/stock/bulk', { method: 'POST', body: { items } });
+    await Promise.all([reloadStock(), refreshVenue()]);
+    closeModal();
+    renderStock();
+    renderGuide();
+    toast(t('inv.itemsAdded').replace('{n}', items.length));
+    // Сразу предлагаем выбрать, как часто пересчитывать — это последний шаг путеводителя
+    if (inventoryInfo().every === null) setTimeout(() => document.getElementById('stock-schedule')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 200);
+  } catch (e) {
+    err.textContent = e.message; err.classList.add('show');
+    btn.disabled = false;
+  }
+}
+
+// Пересчёт склада: все товары списком, в каждом — сколько есть на самом деле
+function openInventoryModal() {
+  const list = stockItemsForPlan();
+  if (!list.length) { openStockBulkModal(); return; }
+  showModal(`<div class="modal-title">${t('inv.recountTitle')}</div>
+    <p class="muted-text" style="font-size:13px;line-height:1.5;margin-bottom:12px;">${t('inv.recountText')}</p>
+    <div class="inv-rows">${list.map(ing => `<label class="inv-row">
+      <span><b>${esc(ing.name)}</b><small class="muted-text">${t('inv.wasInSystem')}: ${stockQtyText(ing.stock_grams, ing.unit)}</small></span>
+      <span class="inv-input"><input type="text" inputmode="decimal" data-id="${ing.id}" data-unit="${ing.unit}" value="${stockDisplayQty(ing.stock_grams, ing.unit)}" onfocus="this.select()"><em>${stockUnitLabel(ing.unit)}</em></span>
+    </label>`).join('')}</div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">${t('common.cancel')}</button>
+      <button class="btn btn-primary" id="inv-save" onclick="saveInventory()">${t('inv.saveRecount')}</button>
+    </div>`);
+  document.getElementById('modal-body').classList.add('modal-wide');
+}
+async function saveInventory() {
+  const inputs = [...document.querySelectorAll('.inv-rows input[data-id]')];
+  const bad = inputs.find(i => !(parseQty(i.value) >= 0));
+  if (bad) { bad.focus(); toast(t('inv.fillAll')); return; }
+  const items = inputs.map(i => ({ id: +i.dataset.id, stock_grams: stockInputToBase(parseQty(i.value), i.dataset.unit) }));
+  const btn = document.getElementById('inv-save');
+  btn.disabled = true;
+  try {
+    const r = await api('/stock/inventory', { method: 'POST', body: { items } });
+    venueInfo = { ...venueInfo, inventory_every_days: r.inventory_every_days, last_inventory_at: r.last_inventory_at };
+    try { localStorage.setItem('qp_venue', JSON.stringify(venueInfo)); } catch {}
+    await reloadStock();
+    closeModal();
+    renderStock();
+    renderInventoryReminder();
+    toast(t('inv.recountSaved'));
+  } catch (e) {
+    toast(e.message);
+    btn.disabled = false;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// ПУТЕВОДИТЕЛЬ ДЛЯ НОВОГО КЛИЕНТА
+// Пять шагов по порядку. Шаг считается сделанным по настоящим данным
+// (есть меню, есть сотрудник, был заказ...), поэтому ничего не надо отмечать руками.
+// Полная карточка — в «Кассе», на остальных страницах — строка «следующий шаг».
+// ═══════════════════════════════════════════════════════════
+let staffLoadedForGuide = false;
+let guideExpanded = null; // null — по умолчанию: на телефоне свёрнут, на компьютере раскрыт
+
+function guideKey(name) { return `vz_guide_${name}_${venueInfo?.id || 0}`; }
+function guideFlag(name) { try { return localStorage.getItem(guideKey(name)) === '1'; } catch { return false; } }
+function setGuideFlag(name) { try { localStorage.setItem(guideKey(name), '1'); } catch {} }
+
+function guideSteps() {
+  return [
+    { id: 'menu', done: menuItems.length > 0, title: t('guide.menuTitle'), text: t('guide.menuText'),
+      action: t('guide.menuBtn'), run: () => { showPage('menu'); openSetupWizard(); } },
+    { id: 'staff', done: staff.length > 1 || guideFlag('solo'), title: t('guide.staffTitle'), text: t('guide.staffText'),
+      action: t('guide.staffBtn'), run: () => { showPage('staff'); openStaffModal(null); },
+      skip: t('guide.staffSkip'), onSkip: () => { setGuideFlag('solo'); renderGuide(); } },
+    { id: 'sale', done: orders.length > 0, title: t('guide.saleTitle'), text: t('guide.saleText'),
+      action: t('guide.saleBtn'), run: guideStartSale },
+    { id: 'stock', done: ingredients.length > 0, title: t('guide.stockTitle'), text: t('guide.stockText'),
+      action: t('guide.stockBtn'), run: () => { showPage('stock'); openStockBulkModal(); } },
+    { id: 'schedule', done: venueInfo?.inventory_every_days !== null && venueInfo?.inventory_every_days !== undefined,
+      title: t('guide.scheduleTitle'), text: t('guide.scheduleText'),
+      action: t('guide.scheduleBtn'), run: () => { showPage('stock'); setTimeout(() => document.getElementById('stock-schedule')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100); } },
+  ];
+}
+async function guideStartSale() {
+  showPage('pos');
+  if (!(currentShift && !currentShift.closed_at)) await toggleShift();
+  toast(t('guide.saleToast'));
+}
+function runGuideStep(id) { guideSteps().find(s => s.id === id)?.run(); }
+function skipGuideStep(id) { guideSteps().find(s => s.id === id)?.onSkip?.(); }
+function toggleGuide() {
+  guideExpanded = !guideIsExpanded();
+  renderGuide();
+}
+function guideIsExpanded() {
+  // На телефоне (и вертикально, и горизонтально) по умолчанию свёрнут: видно только текущий шаг
+  return guideExpanded ?? !window.matchMedia('(max-width: 640px), (max-height: 500px)').matches;
+}
+function hideGuide() { setGuideFlag('hidden'); renderGuide(); }
+function showGuideAgain() {
+  try { localStorage.removeItem(guideKey('hidden')); } catch {}
+  guideExpanded = true;
+  showPage('pos');
+}
+
+function renderGuide() {
+  const block = document.getElementById('guide-block');
+  const slots = document.querySelectorAll('.guide-slot');
+  const clear = () => { if (block) block.innerHTML = ''; slots.forEach(s => s.innerHTML = ''); };
+  if (!block || viewMode || currentUser?.role !== 'owner' || guideFlag('hidden')) { clear(); return; }
+  // Список сотрудников нужен, чтобы понять, сделан ли шаг «Сотрудники»
+  if (!staffLoadedForGuide) {
+    staffLoadedForGuide = true;
+    reloadStaff().then(renderGuide).catch(() => {});
+  }
+  const steps = guideSteps();
+  const doneCount = steps.filter(s => s.done).length;
+  const current = steps.find(s => !s.done);
+  const pct = Math.round(doneCount / steps.length * 100);
+
+  if (!current) {
+    block.innerHTML = `<div class="guide-card done">
+      <div class="guide-head"><div><b><i class="ti ti-circle-check" aria-hidden="true"></i> ${t('guide.allDone')}</b><span class="muted-text">${t('guide.allDoneText')}</span></div>
+      <button class="btn btn-secondary btn-sm" onclick="hideGuide()">${t('guide.close')}</button></div>
+    </div>`;
+    slots.forEach(s => s.innerHTML = '');
+    return;
+  }
+
+  const expanded = guideIsExpanded();
+  const stepNo = steps.indexOf(current) + 1;
+  const actionBtns = s => `<div class="guide-actions">
+      <button class="btn btn-primary" onclick="runGuideStep('${s.id}')">${s.action}</button>
+      ${s.skip ? `<button class="btn btn-secondary" onclick="skipGuideStep('${s.id}')">${s.skip}</button>` : ''}
+    </div>`;
+  block.innerHTML = `<div class="guide-card ${expanded ? 'open' : ''}">
+    <div class="guide-head" onclick="toggleGuide()">
+      <div><b>${t('guide.title')}</b><span class="muted-text">${t('guide.progress').replace('{done}', doneCount).replace('{all}', steps.length)}</span></div>
+      <span class="guide-toggle">${expanded ? '▴' : '▾'}</span>
+    </div>
+    <div class="guide-bar"><i style="width:${pct}%"></i></div>
+    ${expanded ? `<ol class="guide-steps">${steps.map((s, i) => `<li class="${s.done ? 'done' : s === current ? 'current' : ''}">
+        <span class="guide-num">${s.done ? '✓' : i + 1}</span>
+        <div><b>${s.title}</b>${s === current ? `<p>${s.text}</p>${actionBtns(s)}` : ''}</div>
+      </li>`).join('')}</ol>
+      <button type="button" class="link-btn guide-hide" onclick="hideGuide()">${t('guide.hide')}</button>`
+    : `<div class="guide-current">
+        <div><span class="muted-text">${t('guide.step')} ${stepNo}:</span> <b>${current.title}</b></div>
+        ${actionBtns(current)}
+      </div>`}
+  </div>`;
+  // На других страницах — только «следующий шаг», чтобы человек не потерялся
+  slots.forEach(s => {
+    s.innerHTML = `<div class="guide-strip">
+      <span><span class="muted-text">${t('guide.nextStep')} ${stepNo}/${steps.length}:</span> <b>${current.title}</b></span>
+      <button class="btn btn-primary btn-sm" onclick="runGuideStep('${current.id}')">${current.action}</button>
+    </div>`;
+  });
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -4602,8 +5660,8 @@ async function renderStaff() {
     <td><span class="badge ${roleBadge[s.role]}">${roleMap[s.role]}</span></td>
     <td><span class="badge ${s.active?'badge-green':'badge-gray'}">${s.active?t('staff.active'):t('staff.inactive')}</span></td>
     <td style="text-align:right;display:flex;gap:4px;justify-content:flex-end;">
-      <button class="btn btn-icon btn-sm" onclick="openStaffModal(${s.id})">✏️</button>
-      <button class="btn btn-icon btn-sm" onclick="deleteStaff(${s.id})">🗑️</button>
+      <button class="btn btn-icon btn-sm" onclick="openStaffModal(${s.id})" aria-label="${t('common.edit')}"><i class="ti ti-pencil" aria-hidden="true"></i></button>
+      <button class="btn btn-icon btn-sm" onclick="deleteStaff(${s.id})" aria-label="${t('common.delete')}"><i class="ti ti-trash" aria-hidden="true"></i></button>
     </td>
   </tr>`).join('') : `<tr><td colspan="5" class="empty-state">${t('staff.noStaff')}</td></tr>`;
 }
@@ -4647,7 +5705,7 @@ async function saveStaff(id) {
     if (!id || pin) body.pin = pin;
     if (id) await api('/orders/staff/'+id, { method:'PUT', body });
     else await api('/orders/staff', { method:'POST', body });
-    closeModal(); renderStaff(); toast(t('staff.staffSaved'));
+    closeModal(); await renderStaff(); renderGuide(); toast(t('staff.staffSaved'));
   } catch(err) { toast(err.message); }
 }
 
@@ -4724,9 +5782,7 @@ async function renderAnalytics() {
   // На «Старте» аналитики нет: показываем только последние чеки, чтобы их можно было отменить.
   const full = hasFeature('analytics');
   document.getElementById('analytics-stats').style.display = full ? 'contents' : 'none';
-  document.getElementById('analytics-upsell').innerHTML = !full && currentUser?.role === 'owner'
-    ? `<div class="plan-upsell" style="margin-top:0;"><strong>⭐ ${t('upgrade.analytics')}</strong><span>${t('upgrade.analyticsText')}. ${t('upgrade.onBusiness')}</span><button class="btn btn-secondary btn-sm" onclick="openUpgradeModal()">${t('upgrade.more')}</button></div>`
-    : '';
+  document.getElementById('analytics-upsell').innerHTML = '';
   let stats = null;
   try {
     if (full) [orders, stats] = await Promise.all([api('/orders'), api('/orders/analytics')]);
@@ -4772,9 +5828,9 @@ function renderOrdersTable() {
         const cancelled = o.status === 'cancelled';
         const statusLabel = cancelled ? t('order.cancelled') : t('common.success');
         const statusBadge = cancelled ? 'badge-red' : 'badge-green';
-        const cancelBtn = `<button class="btn btn-secondary btn-sm" onclick="printOrderReceipt(${o.id})" title="${t('print.button')}">🖨 ${t('print.button')}</button>`
+        const cancelBtn = `<button class="btn btn-secondary btn-sm" onclick="printOrderReceipt(${o.id})" title="${t('print.button')}"><i class="ti ti-printer" aria-hidden="true"></i>${t('print.button')}</button>`
           + (canCancelOrder(o) ? ` <button class="btn btn-danger btn-sm" onclick="openCancelOrderModal(${o.id})">${t('order.cancel')}</button>` : '');
-        return `<tr class="${cancelled?'order-cancelled':''}"><td>#${o.id}</td><td class="muted-text" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${itemsStr}</td><td style="font-weight:600;">${fmt(o.total)}</td><td>${payLabel}</td><td><span class="badge ${statusBadge}">${statusLabel}</span></td><td>${esc(o.client_name||'—')}</td><td class="muted-text">${time}</td><td style="text-align:right;">${cancelBtn}</td></tr>`;
+        return `<tr class="${cancelled?'order-cancelled':''}"><td><b>№${esc(o.order_no || o.id)}</b></td><td class="muted-text" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${itemsStr}</td><td style="font-weight:600;">${fmt(o.total)}</td><td>${payLabel}</td><td><span class="badge ${statusBadge}">${statusLabel}</span></td><td>${esc(o.client_name||'—')}</td><td class="muted-text">${time}</td><td style="text-align:right;">${cancelBtn}</td></tr>`;
       }).join('')
     : `<tr><td colspan="8" class="empty-state" style="padding:24px;">${t('analytics.noOrders')} — ${t('analytics.firstOrderHint')}</td></tr>`;
 }
@@ -4817,6 +5873,9 @@ function buildReceiptModel(order, extra = {}) {
     header: venueInfo?.receipt_header || '',
     footer: venueInfo?.receipt_footer || '',
     number: order.id,
+    orderNo: order.order_no || null,
+    received: order.cash_received != null ? +order.cash_received : null,
+    change: order.cash_received != null ? Math.max(0, +order.cash_received - orderCashAmount(order)) : 0,
     date: order.created_at ? new Date(order.created_at) : new Date(),
     cashier: order.staff_name || extra.cashier || '',
     client: order.client_name || extra.client || '',
@@ -4842,6 +5901,7 @@ function renderReceiptHtml(m) {
     ${m.venueName ? `<div class="rc-title">${esc(m.venueName)}</div>` : ''}
     ${m.header ? `<div class="rc-text">${esc(m.header)}</div>` : ''}
     ${line}
+    ${m.orderNo ? `<div class="rc-order-no">${t('print.orderNo')} ${esc(m.orderNo)}</div>${line}` : ''}
     ${row(m.number ? `<b>${t('print.receiptNo')}${esc(m.number)}</b>` : '', esc(date))}
     ${m.cashier ? row(t('print.cashier'), esc(m.cashier)) : ''}
     ${m.client ? row(t('print.client'), esc(m.client)) : ''}
@@ -4855,6 +5915,7 @@ function renderReceiptHtml(m) {
     ${m.payMethod === 'mixed'
       ? row(t('print.cash'), fmt(m.cash)) + row(t('print.card'), fmt(m.card))
       : row(payLabel, fmt(m.total))}
+    ${m.received != null ? row(t('print.received'), fmt(m.received)) + row(t('print.change'), fmt(m.change)) : ''}
     ${m.bonus > 0 ? row(t('print.bonus'), fmt(m.bonus)) : ''}
     ${m.cancelled ? `<div class="rc-cancelled">${t('print.cancelled')}</div>` : ''}
     ${m.footer ? line + `<div class="rc-text">${esc(m.footer)}</div>` : ''}
@@ -5198,7 +6259,7 @@ function renderSettings() {
   const open = currentShift && !currentShift.closed_at;
   const shiftRevenue = dailySummary?.total || 0;
   const btn = document.getElementById('shift-toggle-btn');
-  btn.textContent = open ? '⛔ ' + t('shift.close') : '✅ ' + t('shift.open');
+  btn.innerHTML = open ? '<i class="ti ti-lock" aria-hidden="true"></i>' + esc(t('shift.close')) : '<i class="ti ti-lock-open" aria-hidden="true"></i>' + esc(t('shift.open'));
   btn.className = 'btn ' + (open ? 'btn-danger' : 'btn-primary');
   document.getElementById('shift-settings-status').innerHTML = `${t('settings.status')}: <strong style="color:var(${open?'--success':'--muted'})">${open?t('shift.openedShort'):t('shift.closedShort')}</strong>${open?'<br>'+t('settings.shiftRevenue')+': <strong>'+fmt(shiftRevenue)+'</strong>':''}`;
   document.querySelector('#appearance-card .card-title').textContent = t('settings.appearance');
@@ -5211,14 +6272,13 @@ function renderSettings() {
   const statusMap = {trial:t('settings.statusTrial'),active:t('settings.statusActive'),expired:t('settings.statusExpired'),blocked:t('settings.statusBlocked')};
   const locale = appLang === 'uz' ? 'uz-UZ' : 'ru-RU';
   const expires = accountInfo?.expires_at ? new Date(accountInfo.expires_at).toLocaleDateString(locale) : '—';
-  const upsell = !hasFeature('recipes') && currentUser?.role === 'owner'
-    ? `<div class="plan-upsell"><strong>⭐ ${t('upgrade.title')}</strong><span>${t('upgrade.short')}</span><button class="btn btn-secondary btn-sm" onclick="openUpgradeModal()">${t('upgrade.more')}</button></div>`
-    : '';
+  const upsell = ''; // других тарифов с дополнительными разделами сейчас нет
   document.getElementById('account-info').innerHTML = `
     ${t('settings.venue')}: <strong>${esc(venueInfo?.name || '—')}</strong><br>
     ${t('settings.plan')}: <strong>${esc(planMap[accountInfo?.plan] || accountInfo?.plan || '—')}</strong><br>
     ${t('settings.status')}: <strong>${esc(statusMap[accountInfo?.status] || accountInfo?.status || '—')}</strong><br>
     ${t('settings.accessUntil')}: <strong>${expires}</strong>${upsell}
+    ${currentUser?.role === 'owner' && guideFlag('hidden') ? `<div style="margin-top:8px;"><button type="button" class="link-btn" onclick="showGuideAgain()"><i class="ti ti-map-2" aria-hidden="true"></i> ${t('guide.showAgain')}</button></div>` : ''}
     ${hasSupport() ? `<div class="support-note" style="margin-top:12px;">${t('support.title')}</div>${supportButtons()}` : ''}`;
 
   if (hasFeature('finance')) {

@@ -14,27 +14,32 @@
 
 const PAID_FEATURES = ['analytics', 'recipes', 'stock_weight', 'finance', 'clients'];
 
+// 2026-11: касса упрощена до пяти разделов — Касса, Меню, Склад, Сотрудники, Настройки.
+// Склад в штуках, килограммах и литрах есть у всех. Аналитика, техкарты, финансы и клиенты
+// выключены на всех тарифах (код остался): чтобы вернуть раздел, добавьте его в features тарифа.
+const BASE_FEATURES = ['stock_weight'];
+
 const PLANS = {
   start: {
     id: 'start',
     name: 'Старт',
     price: 300000,
     currency: 'UZS',
-    features: [],
+    features: [...BASE_FEATURES],
   },
   business: {
     id: 'business',
     name: 'Бизнес',
     price: 479000,
     currency: 'UZS',
-    features: [...PAID_FEATURES],
+    features: [...BASE_FEATURES],
   },
   network: {
     id: 'network',
     name: 'Сеть',
     price: null,
     currency: 'UZS',
-    features: [...PAID_FEATURES],
+    features: [...BASE_FEATURES],
   },
 };
 
