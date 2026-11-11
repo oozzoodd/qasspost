@@ -419,12 +419,28 @@ router.get('/expenses/summary', requireFeature('finance'), async (req, res) => {
 // GET /orders — история заказов (последние 50)
 router.get('/', async (req, res) => {
   const r = await pool.query(
-    `SELECT o.*, c.name as client_name FROM orders o
+    `SELECT o.*, c.name as client_name, s.name as staff_name FROM orders o
      LEFT JOIN clients c ON c.id = o.client_id AND c.venue_id = o.venue_id
+     LEFT JOIN staff s ON s.id = o.staff_id AND s.venue_id = o.venue_id
      WHERE o.venue_id = $1 ORDER BY o.created_at DESC LIMIT 50`,
     [req.user.venueId]
   );
   res.json(r.rows);
+});
+
+// PUT /orders/receipt-settings — текст сверху и снизу печатного чека (общий для всех касс точки)
+router.put('/receipt-settings', requireRole('owner', 'admin'), async (req, res) => {
+  const clean = value => {
+    const text = String(value ?? '').replace(/\r/g, '').trim();
+    return text ? text.slice(0, 300) : null;
+  };
+  const r = await pool.query(
+    `UPDATE venues SET receipt_header = $1, receipt_footer = $2
+     WHERE id = $3 RETURNING receipt_header, receipt_footer`,
+    [clean(req.body?.receipt_header), clean(req.body?.receipt_footer), req.user.venueId]
+  );
+  if (!r.rows.length) return res.status(404).json({ error: 'Точка не найдена' });
+  res.json(r.rows[0]);
 });
 
 router.get('/today-summary', async (req, res) => {

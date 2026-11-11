@@ -284,8 +284,7 @@
     }
 
     .pos-layout { display: grid; grid-template-columns: 1fr 300px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--card); min-height: 520px; }
-    .pos-mobile-header, .pos-mobile-backdrop { display: none; }
-    .pos-mobile-order-meta { font-size: 11px; color: #777; font-weight: 500; }
+    .pos-mobile-header, .pos-mobile-backdrop, .pos-order-bar, .pos-cart-close, .shift-details, .shift-bar-chevron { display: none; }
     .mobile-bottom-nav { display: none; }
     .pos-left { padding: 14px; background: #FAFAF8; }
     .pos-right { border-left: 1px solid #E8E8E3; display: flex; flex-direction: column; }
@@ -663,7 +662,7 @@
         width: 100%;
         max-width: 100%;
         margin: 0;
-        padding: 8px 8px calc(156px + env(safe-area-inset-bottom));
+        padding: 8px 8px calc(140px + env(safe-area-inset-bottom));
         gap: 8px;
         overflow-x: hidden;
       }
@@ -674,7 +673,7 @@
         top: 0;
         z-index: 80;
         display: grid;
-        grid-template-columns: auto minmax(0, 1fr) auto;
+        grid-template-columns: 44px minmax(0, 1fr) 44px;
         align-items: center;
         gap: 8px;
         padding: 8px;
@@ -686,6 +685,7 @@
       }
       .pos-mobile-title { font-size: 16px; font-weight: 700; text-align: center; }
       .pos-mobile-header .btn { min-width: 0; max-width: 112px; min-height: 40px; padding: 8px 10px; }
+      .pos-mobile-menu-btn { width: 44px; height: 44px; justify-content: center; padding: 0 !important; font-size: 20px; }
 
       .pos-mobile-backdrop {
         position: fixed;
@@ -711,7 +711,7 @@
       .pos-left { width: 100% !important; max-width: 100% !important; padding: 0; background: transparent; }
       .cat-tabs {
         position: sticky;
-        top: 57px;
+        top: 61px;
         z-index: 70;
         flex-wrap: nowrap;
         overflow-x: auto;
@@ -720,7 +720,9 @@
         margin: 0 0 8px;
         padding: 8px 0;
         background: var(--bg);
+        scrollbar-width: none;
       }
+      .cat-tabs::-webkit-scrollbar { display: none; }
       .cat-tab { flex: 0 0 auto; padding: 8px 13px; font-size: 13px; }
       .menu-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
       .menu-card { min-height: 76px; padding: 12px; }
@@ -757,26 +759,95 @@
       .pay-btn { min-height: 48px; font-size: 14px; }
       #checkout-btn { min-height: 48px; font-size: 15px; }
 
-      .daily-cash-bar {
-        position: fixed;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: calc(58px + env(safe-area-inset-bottom)) !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        z-index: 90;
-        margin: 0;
-        border-radius: 0;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+      /* Тёмная полоса выручки на телефоне не нужна: итоги смены — по нажатию на зелёную строку */
+      .daily-cash-bar { display: none !important; }
+      .shift-bar.open { cursor: pointer; flex-wrap: wrap; gap: 4px 10px; }
+      .shift-bar-chevron { display: inline-block; margin-left: 4px; transition: transform 0.15s; }
+      .app.shift-details-open .shift-bar-chevron { transform: rotate(180deg); }
+      .app.shift-details-open .shift-details {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 6px;
-        padding: 9px 10px;
+        width: 100%;
+        padding-top: 8px;
+        margin-top: 4px;
+        border-top: 1px solid currentColor;
+        border-top-color: color-mix(in srgb, currentColor 25%, transparent);
       }
-      .daily-cash-label { font-size: 10px; }
-      .daily-cash-value { font-size: 12px; }
-    }
+      .shift-details span { display: grid; gap: 1px; font-size: 11px; opacity: 0.85; }
+      .shift-details b { font-size: 13px; opacity: 1; }
 
-    @media (max-width: 380px) {
-      .daily-cash-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      /* Большая кнопка заказа внизу экрана, над нижним меню */
+      .app:has(#page-pos.active) .pos-order-bar.has-items { display: flex; }
+      .pos-order-bar {
+        position: fixed;
+        left: 10px;
+        right: 10px;
+        bottom: calc(64px + env(safe-area-inset-bottom));
+        z-index: 100;
+        align-items: center;
+        gap: 10px;
+        min-height: 56px;
+        padding: 8px 16px 8px 10px;
+        border: none;
+        border-radius: 16px;
+        background: var(--primary);
+        color: #fff;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+        box-shadow: 0 10px 24px rgba(255,106,69,0.35);
+        animation: order-bar-in 0.18s ease-out;
+      }
+      .pos-order-bar:active { transform: scale(0.98); }
+      @keyframes order-bar-in { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } }
+      .pos-order-bar-count {
+        min-width: 32px;
+        height: 32px;
+        padding: 0 8px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.22);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        font-weight: 800;
+      }
+      .pos-order-bar-label { flex: 1; font-size: 16px; font-weight: 700; }
+      .pos-order-bar-total { font-size: 17px; font-weight: 800; white-space: nowrap; }
+      .pos-order-bar-arrow { font-size: 26px; line-height: 1; margin-left: 2px; }
+      .app.mobile-cart-open .pos-order-bar { display: none !important; }
+
+      /* Заказ выезжает снизу: ручка сверху, крестик, крупный список */
+      .pos-right::before {
+        content: '';
+        position: absolute;
+        top: 8px;
+        left: 50%;
+        width: 40px;
+        height: 4px;
+        margin-left: -20px;
+        border-radius: 2px;
+        background: var(--border);
+      }
+      .pos-cart-header { position: relative; padding: 22px 56px 12px 16px; }
+      .pos-cart-close {
+        display: flex;
+        position: absolute;
+        top: 14px;
+        right: 12px;
+        width: 36px;
+        height: 36px;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        border-radius: 50%;
+        background: var(--soft);
+        color: var(--text);
+        font-size: 16px;
+        cursor: pointer;
+      }
+      .pos-cart-body { max-height: 38dvh; }
     }
 
     /* ── THEME + POLISH OVERRIDES ───────────────────────────── */
@@ -1080,6 +1151,90 @@
       .pay-btn { min-height: 54px; }
       #checkout-btn { min-height: 56px; font-size: 17px; }
     }
+    /* ── РАЗДЕЛ «МЕНЮ» (как экран кассы) и мастер первого запуска ── */
+    #menu-cat-tabs { margin-bottom: 0; }
+    #menu-cat-tools { margin: -8px 0 -6px; }
+    .link-btn { border: none; background: none; padding: 4px 0; color: var(--accent); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+    .cat-tab.add-tab { border-style: dashed; color: var(--muted); background: transparent; }
+    .menu-card.edit { cursor: pointer; }
+    .menu-card.edit:hover { border-color: var(--primary); }
+    .menu-card.is-hidden { opacity: 0.55; }
+    .menu-card-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .menu-tag { font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: var(--soft); color: var(--muted); }
+    .menu-tag.stock { background: var(--success-soft); color: var(--success); }
+    .menu-tag.stock.low { background: var(--warning-soft); color: var(--warning); }
+    .menu-card.add-card { border: 2px dashed var(--border); background: transparent; align-items: center; justify-content: center; color: var(--muted); font-weight: 800; font-size: 16px; }
+    .menu-card.add-card:hover { border-color: var(--primary); color: var(--accent); }
+    .menu-hint { display: flex; align-items: center; gap: 16px; padding: 14px 16px; border-radius: 14px; background: var(--warning-soft); line-height: 1.5; }
+    .menu-hint div { flex: 1; display: grid; gap: 2px; font-size: 13px; }
+    .menu-hint span { color: var(--muted); }
+    .menu-empty { display: grid; justify-items: center; gap: 10px; text-align: center; padding: 40px 20px; border: 2px dashed var(--border); border-radius: 18px; }
+    .menu-empty strong { font-size: 18px; }
+    .menu-empty p { color: var(--muted); max-width: 46ch; font-size: 14px; line-height: 1.5; }
+    .menu-empty div { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+    .chip-pick { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip-pick .cat-tab { min-height: 40px; padding: 8px 14px; font-size: 14px; }
+    .new-cat-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-top: 8px; }
+    .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 14px; margin-bottom: 13px; border-radius: 12px; background: var(--soft); cursor: pointer; }
+    .switch-row span { display: grid; gap: 2px; font-size: 14px; }
+    .switch-row small { color: var(--muted); font-size: 12px; line-height: 1.4; }
+    .switch-row input { width: 22px; height: 22px; accent-color: var(--primary); flex-shrink: 0; }
+    .modal.modal-wide { width: 560px; }
+    .setup-progress { display: flex; gap: 6px; margin-bottom: 16px; }
+    .setup-progress i { flex: 1; height: 5px; border-radius: 3px; background: var(--border); }
+    .setup-progress i.on { background: var(--primary); }
+    .setup-step { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+    .setup-explain { display: grid; gap: 10px; padding: 14px; margin: 4px 0 16px; border-radius: 14px; background: var(--soft); font-size: 13px; line-height: 1.55; }
+    .setup-demo { display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none; }
+    .setup-demo .cat-tab { min-height: 32px; padding: 5px 12px; font-size: 13px; }
+    .setup-demo-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; pointer-events: none; }
+    .setup-demo-cards div { padding: 8px; border-radius: 10px; background: var(--card); border: 1px solid var(--border); font-size: 12px; font-weight: 700; display: grid; gap: 2px; }
+    .setup-demo-cards span { color: var(--accent); }
+    .setup-group { margin-bottom: 16px; }
+    .setup-group h4 { font-size: 14px; margin-bottom: 8px; }
+    .setup-row { display: grid; grid-template-columns: minmax(0, 1fr) 130px; gap: 8px; margin-bottom: 8px; }
+    .setup-row input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--input); color: var(--text); font-size: 15px; outline: none; }
+    .setup-row input:focus { border-color: var(--primary); }
+    .setup-done { text-align: center; display: grid; gap: 8px; margin-bottom: 8px; }
+    .setup-done b { font-size: 42px; }
+    .setup-howto { margin: 6px 0 4px 20px; display: grid; gap: 6px; font-size: 14px; line-height: 1.5; }
+    .setup-error { color: var(--danger); font-size: 13px; font-weight: 600; margin-top: 8px; display: none; }
+    .setup-error.show { display: block; }
+    @media (max-width: 640px) {
+      .modal.modal-wide { width: calc(100vw - 24px); }
+      .setup-row { grid-template-columns: minmax(0, 1fr) 104px; }
+      .menu-hint { flex-direction: column; align-items: stretch; }
+    }
+
+    /* ── Печать чека на термопринтер 58/80 мм ── */
+    .print-settings-texts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }
+    .print-settings-texts textarea { width: 100%; resize: vertical; min-height: 64px; }
+    .print-settings-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .print-hint { font-size: 12px; line-height: 1.5; }
+    .print-hint code { background: var(--soft); padding: 1px 5px; border-radius: 5px; }
+    @media (max-width: 640px) { .print-settings-texts { grid-template-columns: 1fr; } }
+
+    #print-receipt { display: none; }
+    .rc { color: #000; background: #fff; font-family: Arial, 'Helvetica Neue', sans-serif; font-size: 12px; line-height: 1.35; padding: 2mm 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .rc.w58 { width: 48mm; margin: 0 auto; font-size: 11px; }
+    .rc.w80 { width: 72mm; margin: 0 auto; }
+    .rc-center { text-align: center; }
+    .rc-title { font-size: 1.45em; font-weight: 800; text-align: center; word-break: break-word; }
+    .rc-text { text-align: center; white-space: pre-line; word-break: break-word; }
+    .rc-line { border-top: 1px dashed #000; margin: 5px 0; }
+    .rc-row { display: flex; justify-content: space-between; gap: 6px; }
+    .rc-row > :last-child { text-align: right; white-space: nowrap; }
+    .rc-item { margin-bottom: 3px; }
+    .rc-item-name { font-weight: 600; word-break: break-word; }
+    .rc-total { font-size: 1.35em; font-weight: 800; }
+    .rc-cancelled { border: 2px solid #000; text-align: center; font-weight: 800; padding: 3px; margin: 5px 0; }
+    .rc-small { font-size: 0.85em; }
+
+    @media print {
+      html.printing-receipt, html.printing-receipt body { height: auto !important; min-height: 0 !important; overflow: visible !important; background: #fff !important; }
+      body.printing-receipt > *:not(#print-receipt) { display: none !important; }
+      body.printing-receipt #print-receipt { display: block !important; }
+    }
   </style>
 </head>
 <body data-theme="light">
@@ -1177,13 +1332,17 @@
     <div class="page active" id="page-pos">
       <div class="pos-mobile-backdrop" onclick="closeMobilePanels()"></div>
       <div class="pos-mobile-header">
-        <button class="btn btn-secondary btn-sm" onclick="toggleMobileNav()" data-i18n="pos.mobileMenu">Меню</button>
+        <button class="btn btn-secondary btn-sm pos-mobile-menu-btn" onclick="toggleMobileNav()" aria-label="Меню" data-i18n-aria-label="pos.mobileMenu">☰</button>
         <div class="pos-mobile-title" data-i18n="pos.title">Касса</div>
-        <button class="btn btn-secondary btn-sm" onclick="toggleMobileCart()">
-          <span data-i18n="pos.order">Заказ</span>
-              <span class="pos-mobile-order-meta"><span id="mobile-cart-count">0</span> · <span id="mobile-cart-total">0</span></span>
-        </button>
+        <span aria-hidden="true"></span>
       </div>
+      <!-- Телефон: заказ — большая полоса внизу, появляется, когда в заказе есть блюда -->
+      <button type="button" class="pos-order-bar" id="pos-order-bar" onclick="toggleMobileCart()">
+        <span class="pos-order-bar-count" id="mobile-cart-count">0</span>
+        <span class="pos-order-bar-label" data-i18n="pos.order">Заказ</span>
+        <span class="pos-order-bar-total" id="mobile-cart-total">0</span>
+        <span class="pos-order-bar-arrow" aria-hidden="true">›</span>
+      </button>
       <div class="page-header">
         <div class="page-title" data-i18n="pos.title">Касса</div>
       </div>
@@ -1197,6 +1356,7 @@
           <div class="pos-cart-header">
             <div class="pos-cart-title" data-i18n="pos.currentOrder">Текущий заказ</div>
             <div class="pos-cart-num" id="cart-client-name"></div>
+            <button type="button" class="pos-cart-close" onclick="closeMobilePanels()" aria-label="Закрыть">✕</button>
           </div>
           <div class="pos-cart-body" id="cart-body">
             <div class="cart-empty" data-i18n="pos.addItems">Добавьте позиции из меню</div>
@@ -1235,28 +1395,13 @@
     <!-- МЕНЮ -->
     <div class="page" id="page-menu">
       <div class="page-header">
-        <div class="page-title" data-i18n="menu.title">Редактор меню</div>
-        <button class="btn btn-primary" onclick="openMenuModal(null)" data-i18n="menu.addDish">+ Добавить блюдо</button>
+        <div class="page-title" data-i18n="menu.title">Меню</div>
+        <button class="btn btn-secondary" id="menu-setup-btn" onclick="openSetupWizard()" data-i18n="setup.openBtn">Заполнить по шагам</button>
       </div>
-      <div style="display:grid;grid-template-columns:180px 1fr;gap:14px;">
-        <div class="card" style="padding:12px;">
-          <div class="subtle-label" style="margin-bottom:8px;" data-i18n="menu.categories">КАТЕГОРИИ</div>
-          <div id="menu-cats-list"></div>
-          <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px;justify-content:center;" onclick="addMenuCat()" data-i18n="menu.addCategory">+ Добавить</button>
-        </div>
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-            <div style="font-size:14px;font-weight:600;" id="menu-cat-title" data-i18n="menu.allDishes">Все блюда</div>
-            <div class="muted-text" style="font-size:12px;" id="menu-count-label"></div>
-          </div>
-          <div class="table-wrap">
-            <table id="menu-table">
-              <thead><tr><th data-i18n="menu.dish">Товар / Блюдо</th><th data-i18n="menu.price">Цена</th><th data-i18n="menu.category">Категория</th><th data-i18n="menu.itemType">Тип товара</th><th data-i18n="menu.status">Статус</th><th></th></tr></thead>
-              <tbody id="menu-tbody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+      <div id="menu-hint"></div>
+      <div class="cat-tabs" id="menu-cat-tabs"></div>
+      <div id="menu-cat-tools"></div>
+      <div class="menu-grid" id="menu-edit-grid"></div>
     </div>
 
     <!-- СКЛАД -->
@@ -1442,6 +1587,34 @@
             <button type="button" id="lang-uz-btn" onclick="setLang('uz')" data-i18n="settings.uzbek">O‘zbekcha</button>
           </div>
         </div>
+      </div>
+      <div class="card appearance-card" id="print-card">
+        <div class="card-title" data-i18n="print.title">Печать чеков</div>
+        <div class="appearance-row">
+          <div class="appearance-label" data-i18n="print.autoLabel">Печатать чек после оплаты</div>
+          <div class="segmented-control" role="group">
+            <button type="button" id="print-on-btn" onclick="setPrintSetting('enabled', true)" data-i18n="print.on">Вкл</button>
+            <button type="button" id="print-off-btn" onclick="setPrintSetting('enabled', false)" data-i18n="print.off">Выкл</button>
+          </div>
+        </div>
+        <div class="appearance-row">
+          <div class="appearance-label" data-i18n="print.width">Ширина ленты</div>
+          <div class="segmented-control" role="group">
+            <button type="button" id="print-w58-btn" onclick="setPrintSetting('width', 58)">58 мм</button>
+            <button type="button" id="print-w80-btn" onclick="setPrintSetting('width', 80)">80 мм</button>
+          </div>
+        </div>
+        <div id="print-texts">
+          <div class="print-settings-texts">
+            <div class="field"><label data-i18n="print.header">Текст сверху чека</label><textarea id="print-header" maxlength="300" rows="3" placeholder="Адрес, телефон" data-i18n-placeholder="print.headerPlaceholder"></textarea></div>
+            <div class="field"><label data-i18n="print.footer">Текст снизу чека</label><textarea id="print-footer" maxlength="300" rows="3" placeholder="Спасибо за покупку!" data-i18n-placeholder="print.footerPlaceholder"></textarea></div>
+          </div>
+        </div>
+        <div class="print-settings-actions">
+          <button class="btn btn-primary" id="print-save-btn" onclick="saveReceiptTexts()" data-i18n="print.save">Сохранить текст чека</button>
+          <button class="btn btn-secondary" onclick="printTestReceipt()" data-i18n="print.test">Пробная печать</button>
+        </div>
+        <div class="muted-text print-hint" id="print-hint"></div>
       </div>
       <div class="card" id="expenses-card">
         <div class="card-title" data-i18n="settings.expenses">Расходы</div>
@@ -1662,7 +1835,7 @@ const I18N = {
     'welcome.step1': 'Добавьте блюда в разделе «Меню»',
     'welcome.step2': 'Откройте смену',
     'welcome.step3': 'Принимайте заказы на экране «Касса»',
-    'welcome.start': 'Добавить меню',
+    'welcome.start': 'Заполнить меню',
     'view.banner': 'Режим просмотра',
     'view.readonly': 'изменения отключены',
     'view.exit': 'Выйти',
@@ -1672,6 +1845,73 @@ const I18N = {
     'nav.staff': 'Сотрудники',
     'nav.analytics': 'Аналитика',
     'nav.orders': 'Чеки',
+    'menuHint.title': 'Как устроено меню',
+    'menuHint.text': 'Сверху — категории, это кнопки на экране кассы. Ниже — блюда. Нажмите на карточку, чтобы изменить цену или убрать блюдо с кассы.',
+    'menuHint.ok': 'Понятно',
+    'menuEmpty.title': 'Меню пока пустое',
+    'menuEmpty.text': 'Заполните его по шагам — займёт пару минут. Или добавьте первое блюдо вручную.',
+    'menu.noCategory': 'Без категории',
+    'menu.addCategoryChip': '+ категория',
+    'menu.editCategory': 'Переименовать или удалить категорию',
+    'menu.categoryNamePh': 'Например, Напитки',
+    'dish.addCard': '+ Блюдо',
+    'dish.addOne': '+ Добавить блюдо',
+    'dish.new': 'Новое блюдо',
+    'dish.edit': 'Блюдо',
+    'dish.name': 'Название',
+    'dish.namePh': 'Например, Лаваш классик',
+    'dish.price': 'Цена, сум',
+    'dish.category': 'Категория',
+    'dish.trackStock': 'Считать остаток',
+    'dish.trackStockHint': 'Для готового товара: кола, вода, сок. При каждой продаже остаток уменьшается на 1.',
+    'dish.inStock': 'Сколько сейчас есть, шт',
+    'dish.stockLinked': 'Остаток на складе',
+    'dish.stockLinkedHint': 'Этот товар считается в граммах или литрах — остаток меняется в разделе «Остатки».',
+    'dish.recipeHint': 'Чтобы ингредиенты списывались со склада, заполните состав блюда в разделе «Тех.карты».',
+    'dish.showOnPos': 'Показывать на кассе',
+    'dish.showOnPosHint': 'Выключите, если блюда временно нет. Удалять не нужно.',
+    'dish.delete': 'Удалить',
+    'dish.needName': 'Впишите название блюда',
+    'dish.needPrice': 'Впишите цену числом, например 25000',
+    'category.new': 'Новая категория',
+    'category.edit': 'Категория',
+    'category.name': 'Название категории',
+    'category.explain': 'Категории — это кнопки сверху на экране кассы. По ним кассир быстро находит блюдо.',
+    'category.delete': 'Удалить категорию',
+    'category.saved': 'Категория сохранена',
+    'category.deleteConfirm': 'Удалить категорию?',
+    'category.deleteConfirmItems': 'Удалить категорию? Блюда из неё ({n}) останутся в меню, но без категории.',
+    'common.add': 'Добавить',
+    'setup.openBtn': 'Заполнить по шагам',
+    'setup.stepOf': 'Шаг {n} из 3',
+    'setup.s1Title': 'Что вы продаёте?',
+    'setup.s1Explain': 'Выберите категории — это кнопки сверху на экране кассы. По ним кассир за секунду находит нужное блюдо.',
+    'setup.s1Pick': 'Нажмите на подходящие',
+    'setup.s1Own': 'Нет нужной? Впишите свою',
+    'setup.later': 'Позже',
+    'setup.next': 'Дальше',
+    'setup.back': 'Назад',
+    'setup.needCat': 'Выберите хотя бы одну категорию',
+    'setup.s2Title': 'Блюда и цены',
+    'setup.s2Explain': 'Впишите блюда и цену в сумах. Не обязательно всё сразу: остальное легко добавить потом в разделе «Меню». На кассе это будут вот такие карточки:',
+    'setup.demoDish2': 'Бургер',
+    'setup.demoDish3': 'Кола 0.5',
+    'setup.pricePh': 'Цена',
+    'setup.namePh': 'Название блюда',
+    'setup.addRow': '+ ещё блюдо',
+    'setup.save': 'Сохранить меню',
+    'setup.needName': 'В категории «{cat}» у одной цены нет названия блюда',
+    'setup.needPrice': 'Впишите цену для «{dish}» числом, например 25000',
+    'setup.needDish': 'Впишите хотя бы одно блюдо с ценой',
+    'setup.s3Title': 'Меню готово',
+    'setup.s3Count': 'Блюд: {items}, категорий: {cats}',
+    'setup.s3How': 'Как продавать',
+    'setup.s3Step1': 'Откройте смену — один раз в начале дня.',
+    'setup.s3Step2': 'Нажимайте на блюда — они попадают в чек справа.',
+    'setup.s3Step3': 'Выберите «Наличные» или «Карта» и нажмите «Оформить заказ».',
+    'setup.s3Edit': 'Изменить цену или добавить блюдо можно в разделе «Меню»: нажмите на карточку блюда.',
+    'setup.seeMenu': 'Посмотреть меню',
+    'setup.startSelling': 'Открыть смену и продавать',
     'support.title': 'Связаться с нами',
     'support.telegram': 'Написать в Telegram',
     'support.call': 'Позвонить',
@@ -1904,7 +2144,7 @@ const I18N = {
     'finance.loading': 'Загрузка...',
     'finance.noShifts': 'Смен за период нет',
     'finance.selectStartDate': 'Выберите дату начала',
-    'menu.title': 'Редактор меню',
+    'menu.title': 'Меню',
     'menu.addDish': '+ Добавить товар',
     'menu.categories': 'КАТЕГОРИИ',
     'menu.addCategory': '+ Добавить',
@@ -2045,7 +2285,35 @@ const I18N = {
     'analytics.firstOrderHint': 'оформите первый на кассе',
     'analytics.cashShort': 'Нал.',
     'analytics.cancelledOrders': 'Отменённые чеки',
-    'analytics.cancelledAmount': 'Сумма отменённых'
+    'analytics.cancelledAmount': 'Сумма отменённых',
+    'print.title': 'Печать чеков',
+    'print.autoLabel': 'Печатать чек после оплаты',
+    'print.on': 'Вкл',
+    'print.off': 'Выкл',
+    'print.width': 'Ширина ленты',
+    'print.header': 'Текст сверху чека',
+    'print.headerPlaceholder': 'Адрес, телефон',
+    'print.footer': 'Текст снизу чека',
+    'print.footerPlaceholder': 'Спасибо за покупку!',
+    'print.save': 'Сохранить текст чека',
+    'print.saved': 'Текст чека сохранён',
+    'print.test': 'Пробная печать',
+    'print.testTitle': 'ПРОБНЫЙ ЧЕК',
+    'print.testItem1': 'Бургер',
+    'print.testItem2': 'Кола 0,5',
+    'print.button': 'Печать',
+    'print.receiptNo': 'Чек №',
+    'print.cashier': 'Кассир',
+    'print.client': 'Клиент',
+    'print.total': 'ИТОГО',
+    'print.cash': 'Наличные',
+    'print.card': 'Карта',
+    'print.mixed': 'Смешанная оплата',
+    'print.bonus': 'Начислено бонусов',
+    'print.cancelled': 'ЧЕК ОТМЕНЁН',
+    'print.error': 'Не удалось напечатать чек',
+    'print.hintOff': 'Сейчас чек после оплаты не печатается. Включите, если к этой кассе подключён принтер чеков. Настройка запоминается на этом устройстве.',
+    'print.hintOn': 'Чек отправляется в окно печати браузера — один раз выберите там свой принтер чеков. Чтобы чек печатался сразу, без окна, сделайте принтер чеков основным и запускайте Chrome с параметром <code>--kiosk-printing</code>. Настройка запоминается на этом устройстве.'
   },
   uz: {
     'nav.pos': 'Kassa',
@@ -2092,6 +2360,73 @@ const I18N = {
     'nav.staff': 'Xodimlar',
     'nav.analytics': 'Analitika',
     'nav.orders': 'Cheklar',
+    'menuHint.title': 'Menyu qanday tuzilgan',
+    'menuHint.text': 'Yuqorida — kategoriyalar, ular kassa ekranidagi tugmalar. Pastda — taomlar. Narxni o‘zgartirish yoki taomni kassadan olish uchun kartani bosing.',
+    'menuHint.ok': 'Tushunarli',
+    'menuEmpty.title': 'Menyu hozircha bo‘sh',
+    'menuEmpty.text': 'Uni bosqichma-bosqich to‘ldiring — bir necha daqiqa oladi. Yoki birinchi taomni qo‘lda qo‘shing.',
+    'menu.noCategory': 'Kategoriyasiz',
+    'menu.addCategoryChip': '+ kategoriya',
+    'menu.editCategory': 'Kategoriyani o‘zgartirish yoki o‘chirish',
+    'menu.categoryNamePh': 'Masalan, Ichimliklar',
+    'dish.addCard': '+ Taom',
+    'dish.addOne': '+ Taom qo‘shish',
+    'dish.new': 'Yangi taom',
+    'dish.edit': 'Taom',
+    'dish.name': 'Nomi',
+    'dish.namePh': 'Masalan, Lavash klassik',
+    'dish.price': 'Narxi, so‘m',
+    'dish.category': 'Kategoriya',
+    'dish.trackStock': 'Qoldiqni hisoblash',
+    'dish.trackStockHint': 'Tayyor tovar uchun: kola, suv, sharbat. Har sotuvda qoldiq 1 taga kamayadi.',
+    'dish.inStock': 'Hozir nechta bor, dona',
+    'dish.stockLinked': 'Ombordagi qoldiq',
+    'dish.stockLinkedHint': 'Bu tovar gramm yoki litrda hisoblanadi — qoldiq «Qoldiqlar» bo‘limida o‘zgartiriladi.',
+    'dish.recipeHint': 'Ingredientlar ombordan chiqishi uchun taom tarkibini «Tex. kartalar» bo‘limida to‘ldiring.',
+    'dish.showOnPos': 'Kassada ko‘rsatish',
+    'dish.showOnPosHint': 'Taom vaqtincha bo‘lmasa, o‘chirib qo‘ying. O‘chirib tashlash shart emas.',
+    'dish.delete': 'O‘chirish',
+    'dish.needName': 'Taom nomini yozing',
+    'dish.needPrice': 'Narxni son bilan yozing, masalan 25000',
+    'category.new': 'Yangi kategoriya',
+    'category.edit': 'Kategoriya',
+    'category.name': 'Kategoriya nomi',
+    'category.explain': 'Kategoriyalar — kassa ekranining yuqorisidagi tugmalar. Ular orqali kassir taomni tez topadi.',
+    'category.delete': 'Kategoriyani o‘chirish',
+    'category.saved': 'Kategoriya saqlandi',
+    'category.deleteConfirm': 'Kategoriyani o‘chirasizmi?',
+    'category.deleteConfirmItems': 'Kategoriyani o‘chirasizmi? Undagi taomlar ({n}) menyuda qoladi, lekin kategoriyasiz.',
+    'common.add': 'Qo‘shish',
+    'setup.openBtn': 'Bosqichma-bosqich to‘ldirish',
+    'setup.stepOf': '{n}-qadam, jami 3',
+    'setup.s1Title': 'Nima sotasiz?',
+    'setup.s1Explain': 'Kategoriyalarni tanlang — ular kassa ekranining yuqorisidagi tugmalar. Ular orqali kassir kerakli taomni bir soniyada topadi.',
+    'setup.s1Pick': 'Mosini bosing',
+    'setup.s1Own': 'Keraklisi yo‘qmi? O‘zingiz yozing',
+    'setup.later': 'Keyinroq',
+    'setup.next': 'Keyingisi',
+    'setup.back': 'Orqaga',
+    'setup.needCat': 'Kamida bitta kategoriya tanlang',
+    'setup.s2Title': 'Taomlar va narxlar',
+    'setup.s2Explain': 'Taomlarni va narxini so‘mda yozing. Hammasini birdan shart emas: qolganini keyin «Menyu» bo‘limida qo‘shish oson. Kassada ular mana shunday kartalar bo‘ladi:',
+    'setup.demoDish2': 'Burger',
+    'setup.demoDish3': 'Kola 0.5',
+    'setup.pricePh': 'Narx',
+    'setup.namePh': 'Taom nomi',
+    'setup.addRow': '+ yana taom',
+    'setup.save': 'Menyuni saqlash',
+    'setup.needName': '«{cat}» kategoriyasida bitta narxning taom nomi yo‘q',
+    'setup.needPrice': '«{dish}» uchun narxni son bilan yozing, masalan 25000',
+    'setup.needDish': 'Kamida bitta taomni narxi bilan yozing',
+    'setup.s3Title': 'Menyu tayyor',
+    'setup.s3Count': 'Taomlar: {items}, kategoriyalar: {cats}',
+    'setup.s3How': 'Qanday sotiladi',
+    'setup.s3Step1': 'Smenani oching — kun boshida bir marta.',
+    'setup.s3Step2': 'Taomlarni bosing — ular o‘ngdagi chekka tushadi.',
+    'setup.s3Step3': '«Naqd» yoki «Karta»ni tanlang va «Buyurtmani rasmiylashtirish»ni bosing.',
+    'setup.s3Edit': 'Narxni o‘zgartirish yoki taom qo‘shish «Menyu» bo‘limida: taom kartasini bosing.',
+    'setup.seeMenu': 'Menyuni ko‘rish',
+    'setup.startSelling': 'Smenani ochib sotish',
     'support.title': 'Biz bilan bog‘lanish',
     'support.telegram': 'Telegramda yozish',
     'support.call': 'Qo‘ng‘iroq qilish',
@@ -2324,7 +2659,7 @@ const I18N = {
     'finance.loading': 'Yuklanmoqda...',
     'finance.noShifts': 'Bu davrda smenalar yo‘q',
     'finance.selectStartDate': 'Boshlanish sanasini tanlang',
-    'menu.title': 'Menyu muharriri',
+    'menu.title': 'Menyu',
     'menu.addDish': '+ Mahsulot qo‘shish',
     'menu.categories': 'KATEGORIYALAR',
     'menu.addCategory': '+ Qo‘shish',
@@ -2465,7 +2800,35 @@ const I18N = {
     'analytics.firstOrderHint': 'birinchi buyurtmani kassada rasmiylashtiring',
     'analytics.cashShort': 'Naqd',
     'analytics.cancelledOrders': 'Bekor qilingan cheklar',
-    'analytics.cancelledAmount': 'Bekor qilingan summa'
+    'analytics.cancelledAmount': 'Bekor qilingan summa',
+    'print.title': 'Chek chop etish',
+    'print.autoLabel': 'To‘lovdan keyin chekni chop etish',
+    'print.on': 'Yoniq',
+    'print.off': 'O‘chiq',
+    'print.width': 'Lenta kengligi',
+    'print.header': 'Chek tepasidagi matn',
+    'print.headerPlaceholder': 'Manzil, telefon',
+    'print.footer': 'Chek pastidagi matn',
+    'print.footerPlaceholder': 'Xaridingiz uchun rahmat!',
+    'print.save': 'Chek matnini saqlash',
+    'print.saved': 'Chek matni saqlandi',
+    'print.test': 'Sinov uchun chop etish',
+    'print.testTitle': 'SINOV CHEKI',
+    'print.testItem1': 'Burger',
+    'print.testItem2': 'Kola 0,5',
+    'print.button': 'Chop etish',
+    'print.receiptNo': 'Chek №',
+    'print.cashier': 'Kassir',
+    'print.client': 'Mijoz',
+    'print.total': 'JAMI',
+    'print.cash': 'Naqd',
+    'print.card': 'Karta',
+    'print.mixed': 'Aralash to‘lov',
+    'print.bonus': 'Bonus qo‘shildi',
+    'print.cancelled': 'CHEK BEKOR QILINGAN',
+    'print.error': 'Chekni chop etib bo‘lmadi',
+    'print.hintOff': 'Hozir to‘lovdan keyin chek chop etilmaydi. Agar bu kassaga chek printeri ulangan bo‘lsa, yoqing. Sozlama shu qurilmada saqlanadi.',
+    'print.hintOn': 'Chek brauzerning chop etish oynasiga yuboriladi — u yerda bir marta chek printeringizni tanlang. Chek oynasiz darhol chiqishi uchun chek printerini asosiy qiling va Chrome’ni <code>--kiosk-printing</code> parametri bilan ishga tushiring. Sozlama shu qurilmada saqlanadi.'
   }
 };
 
@@ -2736,7 +3099,7 @@ async function startApp({ silentAuthRestore = false } = {}) {
     showScreen('app');
     nav('pos', document.querySelector('.nav-item'));
     showViewBanner();
-    showWelcomeIfNew();
+    if (!showWelcomeIfNew()) maybeOpenSetup();
   } catch (err) {
     if (viewMode) { leaveViewMode(err.message); return; }
       if (err.message !== t('auth.subscriptionExpired')) {
@@ -2809,9 +3172,9 @@ async function loadSupport() {
   renderExpiredSupport();
 }
 function hasSupport() { return Boolean(SUPPORT.phone || SUPPORT.telegram); }
-function supportButtons() {
+function supportButtons(quiet = false) {
   const items = [];
-  if (SUPPORT.telegram) items.push(`<a class="btn btn-primary" href="https://t.me/${encodeURIComponent(SUPPORT.telegram)}" target="_blank" rel="noopener">✈️ ${t('support.telegram')}</a>`);
+  if (SUPPORT.telegram) items.push(`<a class="btn ${quiet ? 'btn-secondary' : 'btn-primary'}" href="https://t.me/${encodeURIComponent(SUPPORT.telegram)}" target="_blank" rel="noopener">✈️ ${t('support.telegram')}</a>`);
   if (SUPPORT.phone) items.push(`<a class="btn btn-secondary" href="tel:${esc(SUPPORT.phone)}">📞 ${t('support.call')}: ${esc(SUPPORT.phone)}</a>`);
   return items.length ? `<div class="support-box">${items.join('')}</div>` : '';
 }
@@ -2836,11 +3199,11 @@ function openUpgradeModal() {
 // После регистрации на сайте: показываем PIN владельца (он нужен при каждом входе) и первые шаги
 function showWelcomeIfNew() {
   const raw = sessionStorage.getItem('vz_welcome');
-  if (!raw) return;
+  if (!raw) return false;
   sessionStorage.removeItem('vz_welcome');
   let data;
-  try { data = JSON.parse(raw); } catch { return; }
-  if (!data || !/^\d{4}$/.test(String(data.pin))) return;
+  try { data = JSON.parse(raw); } catch { return false; }
+  if (!data || !/^\d{4}$/.test(String(data.pin))) return false;
   showModal(`<div class="modal-title">🎉 ${t('welcome.title')}</div>
     <p style="font-size:13px;line-height:1.6;">${t('welcome.text')}</p>
     <div class="welcome-pin"><span>${t('welcome.pinLabel')}</span><strong>${esc(data.pin)}</strong></div>
@@ -2850,10 +3213,11 @@ function showWelcomeIfNew() {
       <li>${t('welcome.step2')}</li>
       <li>${t('welcome.step3')}</li>
     </ol>
-    ${hasSupport() ? `<p class="support-note" style="margin-top:12px;">${t('support.welcome')}</p>${supportButtons()}` : ''}
+    ${hasSupport() ? `<p class="support-note" style="margin-top:12px;">${t('support.welcome')}</p>${supportButtons(true)}` : ''}
     <div class="modal-footer">
-      <button class="btn btn-primary" onclick="closeModal();showPage('menu')">${t('welcome.start')}</button>
+      <button class="btn btn-primary" onclick="openSetupWizard()">${t('welcome.start')}</button>
     </div>`);
+  return true;
 }
 
 function showViewBanner() {
@@ -2910,7 +3274,12 @@ function setMobileNavActive(page) {
 // ═══════════════════════════════════════════════════════════
 // MODAL
 // ═══════════════════════════════════════════════════════════
-function showModal(html) { document.getElementById('modal-body').innerHTML = html; document.getElementById('modal-bg').classList.add('open'); }
+function showModal(html) {
+  const body = document.getElementById('modal-body');
+  body.classList.remove('modal-wide');
+  body.innerHTML = html;
+  document.getElementById('modal-bg').classList.add('open');
+}
 function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
 document.getElementById('modal-bg').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
 document.addEventListener('click', e => {
@@ -2944,10 +3313,16 @@ function renderShiftBar() {
   const el = document.getElementById('shift-bar-block');
   const open = currentShift && !currentShift.closed_at;
   const shiftRevenue = dailySummary?.total || 0;
-  el.innerHTML = `<div class="shift-bar ${open ? 'open' : 'closed'}">
+  // На телефоне строка смены раскрывается: наличные, карта, сколько заказов
+  el.innerHTML = `<div class="shift-bar ${open ? 'open' : 'closed'}" ${open ? 'onclick="toggleShiftDetails()"' : ''}>
     <span>${open ? '✅ ' + t('shift.opened') : '⛔ ' + t('pos.shiftClosed') + ' — ' + t('pos.salesUnavailable')}</span>
     ${open
-      ? '<span style="font-weight:600;">' + t('settings.shiftRevenue') + ': ' + fmt(shiftRevenue) + '</span>'
+      ? '<span style="font-weight:600;">' + t('settings.shiftRevenue') + ': ' + fmt(shiftRevenue) + '<span class="shift-bar-chevron">▾</span></span>'
+        + `<div class="shift-details">
+            <span>${t('pos.cash')}<b>${fmt(dailySummary?.cash || 0)}</b></span>
+            <span>${t('pos.card')}<b>${fmt(dailySummary?.card || 0)}</b></span>
+            <span>${t('cashBar.orders')}<b>${dailySummary?.orders_count || 0}</b></span>
+          </div>`
       : '<button class="btn btn-primary btn-sm" onclick="toggleShift()">' + t('shift.open') + '</button>'}
   </div>`;
 }
@@ -3121,6 +3496,12 @@ function updateMobileCartButton(count, total) {
   const totalEl = document.getElementById('mobile-cart-total');
   if (countEl) countEl.textContent = count;
   if (totalEl) totalEl.textContent = fmt(total);
+  document.getElementById('pos-order-bar')?.classList.toggle('has-items', count > 0);
+  // Заказ опустел (убрали последнее блюдо или оплатили) — прячем выезжающую панель
+  if (!count) document.getElementById('app')?.classList.remove('mobile-cart-open');
+}
+function toggleShiftDetails() {
+  document.getElementById('app')?.classList.toggle('shift-details-open');
 }
 function renderPosMenu() {
   const items = (activePoscat === 'all' ? menuItems : menuItems.filter(i => catNameOf(i) === activePoscat)).filter(i => i.active);
@@ -3267,6 +3648,15 @@ async function checkout() {
       }
     });
     toast('✅ ' + t('pos.orderCreated') + '! ' + fmt(order.total));
+    // Чек печатается после оплаты, если на этом устройстве включена печать.
+    // Ошибка печати не мешает продаже — заказ уже сохранён.
+    const clientName = cartClientId ? clients.find(c => Number(c.id) === Number(cartClientId))?.name : '';
+    const receipt = printSettings.enabled
+      ? buildReceiptModel(order, { cashier: currentUser?.name || '', client: clientName || '' })
+      : null;
+    cart = {}; cartClientId = null;
+    renderPos();
+    if (receipt) printReceiptModel(receipt);
     ingredients = await api('/stock');
     currentShift = await api('/orders/shift/current');
     dailySummary = await api('/orders/shift/summary');
@@ -3283,7 +3673,7 @@ async function checkout() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// MENU
+// MENU — выглядит как экран кассы: категории сверху, блюда карточками
 // ═══════════════════════════════════════════════════════════
 async function reloadMenu() {
   const data = await api('/menu');
@@ -3294,117 +3684,413 @@ async function reloadMenu() {
 function menuItemType(item) {
   return item?.item_type === 'stock_item' ? 'stock_item' : 'dish';
 }
-function menuItemTypeLabel(item) {
-  return menuTypeName(menuItemType(item));
+function categoryExists(id) { return menuCatsData.some(c => c.id === id); }
+function stockOfItem(item) {
+  return menuItemType(item) === 'stock_item' ? getIng(+item.stock_ingredient_id) : null;
 }
-// На простом тарифе техкарт нет, поэтому типы называются проще
-function menuTypeName(type) {
-  if (!hasFeature('recipes')) return type === 'stock_item' ? t('menu.typeStockItemSimple') : t('menu.typeDishSimple');
-  return type === 'stock_item' ? t('menu.typeStockItem') : t('menu.typeDish');
-}
-function menuStockIngredientOptions(selectedId) {
-  return stockItemsForPlan().map(ing =>
-    `<option value="${ing.id}"${Number(selectedId)===Number(ing.id)?' selected':''}>${esc(ing.name)} (${stockUnitLabel(ing.unit)})</option>`
-  ).join('');
-}
-function toggleMenuItemTypeFields() {
-  const type = document.getElementById('mf-item-type')?.value || 'dish';
-  const fields = document.getElementById('mf-stock-fields');
-  const hint = document.getElementById('mf-type-hint');
-  if (fields) fields.style.display = type === 'stock_item' ? 'grid' : 'none';
-  if (hint) {
-    if (type !== 'stock_item') hint.textContent = hasFeature('recipes') ? t('menu.dishHint') : t('menu.dishHintSimple');
-    else hint.textContent = stockItemsForPlan().length ? t('menu.stockItemHint') : t('menu.noStockItemsHint');
-  }
-}
-function renderMenu() {
-  document.getElementById('menu-cats-list').innerHTML = ['all',...menuCatsData.map(c=>c.id)].map((c) => {
-    const isAll = c === 'all';
-    const name = isAll ? t('menu.allDishes') : menuCatsData.find(x=>x.id===c)?.name;
-    const active = activeMenuCat === c;
-    return `<div class="menu-cat-item ${active ? 'active' : ''}" onclick="setMenuCat('${c}')">${esc(name)}</div>`;
-  }).join('');
 
-  const items = activeMenuCat === 'all' ? menuItems : menuItems.filter(i => i.category_id === activeMenuCat);
-  const catTitle = activeMenuCat === 'all' ? t('menu.allDishes') : (menuCatsData.find(c=>c.id===activeMenuCat)?.name || '');
-  document.getElementById('menu-cat-title').textContent = catTitle;
-  document.getElementById('menu-count-label').textContent = items.length + ' ' + t('menu.positions');
-  document.getElementById('menu-tbody').innerHTML = items.length ? items.map(item => `<tr>
-    <td><strong>${esc(item.name)}</strong></td>
-    <td>${fmt(item.price)}</td>
-    <td>${esc(catNameOf(item))}</td>
-    <td><span class="badge ${menuItemType(item)==='stock_item'?'badge-blue':'badge-gray'}">${menuItemTypeLabel(item)}</span></td>
-    <td><span class="badge ${item.active?'badge-green':'badge-gray'}">${item.active?t('menu.active'):t('menu.hidden')}</span></td>
-    <td style="text-align:right;white-space:nowrap;display:flex;gap:4px;justify-content:flex-end;">
-      <button class="btn btn-icon btn-sm" onclick="toggleMenuItem(${item.id})" title="${item.active?t('menu.hide'):t('menu.show')}">${item.active?'👁️':'🚫'}</button>
-      <button class="btn btn-icon btn-sm" onclick="openMenuModal(${item.id})">✏️</button>
-      <button class="btn btn-icon btn-sm" onclick="deleteMenuItem(${item.id})">🗑️</button>
-    </td>
-  </tr>`).join('') : `<tr><td colspan="6" class="empty-state">${t('menu.noDishes')}</td></tr>`;
-}
-function setMenuCat(c) { activeMenuCat = c === 'all' ? 'all' : +c; renderMenu(); }
-async function toggleMenuItem(id) {
-  const item = getItem(id);
-  try { await api('/menu/items/'+id, { method:'PUT', body:{ active: !item.active } }); await reloadMenu(); renderMenu(); }
-  catch(err){ toast(err.message); }
-}
-async function deleteMenuItem(id) {
-  if (!confirm(t('menu.deleteConfirm'))) return;
-  try { await api('/menu/items/'+id, { method:'DELETE' }); await reloadMenu(); renderMenu(); toast(t('menu.dishDeleted')); }
-  catch(err){ toast(err.message); }
-}
-async function addMenuCat() {
-  const n = prompt(t('menu.categoryName') + ':');
-  if (!n || !n.trim()) return;
-  try { await api('/menu/categories', { method:'POST', body:{ name:n.trim() } }); await reloadMenu(); renderMenu(); toast(t('menu.categoryAdded')); }
-  catch(err){ toast(err.message); }
-}
-function openMenuModal(id) {
-  const item = id ? getItem(id) : null;
-  const catOpts = menuCatsData.map(c => `<option value="${c.id}"${item&&item.category_id===c.id?' selected':''}>${esc(c.name)}</option>`).join('');
-  const type = menuItemType(item);
-  showModal(`<div class="modal-title">${id ? t('menu.editDish') : t('menu.newDish')}</div>
-    <div class="field"><label>${t('menu.name')}</label><input type="text" id="mf-name" value="${item?esc(item.name):''}" placeholder="${t('menu.name')}" data-i18n-placeholder="menu.name"></div>
-    <div class="field-row">
-      <div class="field"><label>${t('menu.price')} (${t('common.currency')})</label><input type="number" id="mf-price" value="${item?item.price:''}" placeholder="${t('menu.price')}" data-i18n-placeholder="menu.price"></div>
-      <div class="field"><label>${t('menu.category')}</label><select id="mf-cat">${catOpts}</select></div>
-    </div>
-    <div class="field">
-      <label>${t('menu.itemType')}</label>
-      <select id="mf-item-type" onchange="toggleMenuItemTypeFields()">
-        <option value="dish"${type==='dish'?' selected':''}>${menuTypeName('dish')}</option>
-        <option value="stock_item"${type==='stock_item'?' selected':''}>${menuTypeName('stock_item')}</option>
-      </select>
-      <div class="muted-text" id="mf-type-hint" style="font-size:12px;margin-top:6px;"></div>
-    </div>
-    <div class="field-row" id="mf-stock-fields">
-      <div class="field"><label>${t('menu.stockIngredient')}</label><select id="mf-stock-ingredient">${menuStockIngredientOptions(item?.stock_ingredient_id)}</select></div>
-      <div class="field"><label>${t('menu.stockQty')}</label><input type="number" id="mf-stock-qty" step="0.001" min="0.001" value="${item?.stock_qty || 1}"></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal()">${t('common.cancel')}</button>
-      <button class="btn btn-primary" onclick="saveMenuItem(${id||0})">${t('menu.saveDish')}</button>
-    </div>`);
-  toggleMenuItemTypeFields();
-}
-async function saveMenuItem(id) {
-  const name = document.getElementById('mf-name').value.trim();
-  const price = +document.getElementById('mf-price').value || 0;
-  const category_id = +document.getElementById('mf-cat').value;
-  const item_type = document.getElementById('mf-item-type').value;
-  const stock_ingredient_id = item_type === 'stock_item' ? +document.getElementById('mf-stock-ingredient').value : null;
-  const stock_qty = item_type === 'stock_item' ? +document.getElementById('mf-stock-qty').value : 1;
-  if (!name) return;
-  if (item_type === 'stock_item' && (!stock_ingredient_id || !Number.isFinite(stock_qty) || stock_qty <= 0)) {
-    toast(t('common.invalid'));
+function menuHintSeen() { try { return localStorage.getItem('vz_menu_hint') === '1'; } catch { return true; } }
+function hideMenuHint() { try { localStorage.setItem('vz_menu_hint', '1'); } catch {} renderMenu(); }
+
+function renderMenu() {
+  const hint = document.getElementById('menu-hint');
+  hint.innerHTML = menuHintSeen() || !menuItems.length ? '' : `<div class="menu-hint">
+      <div><strong>${t('menuHint.title')}</strong><span>${t('menuHint.text')}</span></div>
+      <button class="btn btn-secondary btn-sm" onclick="hideMenuHint()">${t('menuHint.ok')}</button>
+    </div>`;
+
+  const tabs = document.getElementById('menu-cat-tabs');
+  const tools = document.getElementById('menu-cat-tools');
+  const grid = document.getElementById('menu-edit-grid');
+  // В пустом меню та же кнопка есть крупно в середине — сверху не дублируем
+  document.getElementById('menu-setup-btn').style.display = menuItems.length ? '' : 'none';
+
+  // Совсем пустое меню: приглашаем пройти мастер
+  if (!menuItems.length) {
+    tabs.innerHTML = '';
+    tools.innerHTML = '';
+    grid.innerHTML = `<div class="menu-empty" style="grid-column:1/-1;">
+      <strong>${t('menuEmpty.title')}</strong>
+      <p>${t('menuEmpty.text')}</p>
+      <div>
+        <button class="btn btn-primary" onclick="openSetupWizard()">${t('setup.openBtn')}</button>
+        <button class="btn btn-secondary" onclick="openDishModal(0)">${t('dish.addOne')}</button>
+      </div>
+    </div>`;
     return;
   }
-  const body = { name, price, category_id, item_type, stock_ingredient_id, stock_qty };
+
+  const uncategorized = menuItems.filter(i => !i.category_id || !categoryExists(i.category_id));
+  if (activeMenuCat !== 'all' && activeMenuCat !== 'none' && !categoryExists(activeMenuCat)) activeMenuCat = 'all';
+  if (activeMenuCat === 'none' && !uncategorized.length) activeMenuCat = 'all';
+
+  const tab = (key, label) => `<button type="button" class="cat-tab ${activeMenuCat === key ? 'active' : ''}" onclick="setMenuCat('${key}')">${esc(label)}</button>`;
+  tabs.innerHTML = tab('all', t('pos.all'))
+    + menuCatsData.map(c => tab(c.id, c.name)).join('')
+    + (uncategorized.length ? tab('none', t('menu.noCategory')) : '')
+    + `<button type="button" class="cat-tab add-tab" onclick="openCategoryModal(0)">${t('menu.addCategoryChip')}</button>`;
+
+  const activeCat = menuCatsData.find(c => c.id === activeMenuCat);
+  tools.innerHTML = activeCat
+    ? `<button type="button" class="link-btn" onclick="openCategoryModal(${activeCat.id})">✏️ ${t('menu.editCategory')}</button>`
+    : '';
+  tools.style.display = activeCat ? '' : 'none';
+
+  const items = activeMenuCat === 'all' ? menuItems
+    : activeMenuCat === 'none' ? uncategorized
+    : menuItems.filter(i => i.category_id === activeMenuCat);
+
+  grid.innerHTML = items.map(item => {
+    const stock = stockOfItem(item);
+    const tags = [];
+    if (!item.active) tags.push(`<span class="menu-tag">${t('menu.hidden')}</span>`);
+    if (stock) {
+      const low = stockStatus(stock) !== 'ok';
+      tags.push(`<span class="menu-tag stock ${low ? 'low' : ''}">${stockDisplayQty(stock.stock_grams, stock.unit).toLocaleString(appLang === 'uz' ? 'uz-UZ' : 'ru-RU')} ${stockUnitLabel(stock.unit)}</span>`);
+    }
+    return `<div class="menu-card edit ${item.active ? '' : 'is-hidden'}" onclick="openDishModal(${item.id})">
+      <div class="menu-card-name">${esc(item.name)}</div>
+      ${tags.length ? `<div class="menu-card-tags">${tags.join('')}</div>` : ''}
+      <div class="menu-card-price">${fmt(item.price)}</div>
+    </div>`;
+  }).join('') + `<div class="menu-card add-card" onclick="openDishModal(0)">${t('dish.addCard')}</div>`;
+}
+function setMenuCat(c) { activeMenuCat = (c === 'all' || c === 'none') ? c : +c; renderMenu(); }
+
+// ── Окно блюда: название, цена, категория, остаток ──
+let dishCategoryId = null;
+function dishCategoryChips() {
+  return menuCatsData.map(c =>
+    `<button type="button" class="cat-tab ${dishCategoryId === c.id ? 'active' : ''}" onclick="pickDishCategory(${c.id})">${esc(c.name)}</button>`).join('')
+    + `<button type="button" class="cat-tab add-tab" onclick="toggleNewCategoryRow()">${t('menu.addCategoryChip')}</button>`;
+}
+function pickDishCategory(id) {
+  dishCategoryId = dishCategoryId === id ? null : id;
+  document.getElementById('df-cats').innerHTML = dishCategoryChips();
+}
+function toggleNewCategoryRow() {
+  const row = document.getElementById('df-newcat');
+  row.style.display = row.style.display === 'none' ? 'grid' : 'none';
+  if (row.style.display !== 'none') document.getElementById('df-newcat-name').focus();
+}
+async function addCategoryFromDish() {
+  const input = document.getElementById('df-newcat-name');
+  const name = input.value.trim();
+  if (!name) { input.focus(); return; }
   try {
-    if (id) await api('/menu/items/'+id, { method:'PUT', body });
-    else await api('/menu/items', { method:'POST', body });
-    await reloadMenu(); closeModal(); renderMenu(); toast(t('menu.dishSaved'));
-  } catch(err) { toast(err.message); }
+    const cat = await api('/menu/categories', { method: 'POST', body: { name } });
+    await reloadMenu();
+    dishCategoryId = cat.id;
+    input.value = '';
+    document.getElementById('df-newcat').style.display = 'none';
+    document.getElementById('df-cats').innerHTML = dishCategoryChips();
+  } catch (err) { toast(err.message); }
+}
+function toggleDishStock() {
+  document.getElementById('df-stock-wrap').style.display = document.getElementById('df-track').checked ? '' : 'none';
+}
+function openDishModal(id) {
+  const item = id ? getItem(id) : null;
+  dishCategoryId = item ? (categoryExists(item.category_id) ? item.category_id : null)
+    : (typeof activeMenuCat === 'number' ? activeMenuCat : (menuCatsData[0]?.id ?? null));
+  const stock = item ? stockOfItem(item) : null;
+  const tracks = Boolean(item && menuItemType(item) === 'stock_item');
+  const stockEditable = !stock || stock.unit === 'pcs';
+  showModal(`<div class="modal-title">${item ? t('dish.edit') : t('dish.new')}</div>
+    <div class="field"><label for="df-name">${t('dish.name')}</label><input type="text" id="df-name" maxlength="120" placeholder="${t('dish.namePh')}"></div>
+    <div class="field"><label for="df-price">${t('dish.price')}</label><input type="number" id="df-price" inputmode="numeric" min="0" step="500" placeholder="25000"></div>
+    <div class="field"><label>${t('dish.category')}</label>
+      <div class="chip-pick" id="df-cats">${dishCategoryChips()}</div>
+      <div class="new-cat-row" id="df-newcat" style="display:none;">
+        <input type="text" id="df-newcat-name" maxlength="120" placeholder="${t('menu.categoryNamePh')}" class="inline-control" style="font-size:14px;padding:10px 12px;">
+        <button type="button" class="btn btn-secondary" onclick="addCategoryFromDish()">${t('common.add')}</button>
+      </div>
+    </div>
+    <label class="switch-row" for="df-track"><span><strong>${t('dish.trackStock')}</strong><small>${t('dish.trackStockHint')}</small></span><input type="checkbox" id="df-track" ${tracks ? 'checked' : ''} onchange="toggleDishStock()"></label>
+    <div class="field" id="df-stock-wrap" style="${tracks ? '' : 'display:none;'}">
+      <label for="df-stock">${stock && !stockEditable ? t('dish.stockLinked') : t('dish.inStock')}</label>
+      <input type="number" id="df-stock" inputmode="numeric" min="0" step="1" placeholder="24" ${stockEditable ? '' : 'disabled'}>
+      ${stock && !stockEditable ? `<div class="muted-text" style="font-size:12px;margin-top:6px;">${t('dish.stockLinkedHint')}</div>` : ''}
+    </div>
+    ${item && hasFeature('recipes') && !tracks ? `<p class="muted-text" style="font-size:12px;margin:-4px 0 12px;">${t('dish.recipeHint')}</p>` : ''}
+    ${item ? `<label class="switch-row" for="df-active"><span><strong>${t('dish.showOnPos')}</strong><small>${t('dish.showOnPosHint')}</small></span><input type="checkbox" id="df-active" ${item.active ? 'checked' : ''}></label>` : ''}
+    <div class="modal-footer">
+      ${item ? `<button class="btn btn-danger" style="margin-right:auto;" onclick="deleteDish(${item.id})">${t('dish.delete')}</button>` : ''}
+      <button class="btn btn-secondary" onclick="closeModal()">${t('common.cancel')}</button>
+      <button class="btn btn-primary" onclick="saveDish(${item ? item.id : 0})">${t('common.save')}</button>
+    </div>`);
+  // Значения ставим отдельно — так в названии могут быть любые символы
+  document.getElementById('df-name').value = item ? item.name : '';
+  document.getElementById('df-price').value = item ? item.price : '';
+  if (stock) document.getElementById('df-stock').value = Math.round(stockDisplayQty(stock.stock_grams, stock.unit));
+  document.getElementById('df-newcat-name').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addCategoryFromDish(); } });
+  if (!item) setTimeout(() => document.getElementById('df-name')?.focus(), 50);
+}
+async function saveDish(id) {
+  const name = document.getElementById('df-name').value.trim();
+  const priceRaw = document.getElementById('df-price').value.trim();
+  const price = Number(priceRaw);
+  if (!name) { toast(t('dish.needName')); document.getElementById('df-name').focus(); return; }
+  if (priceRaw === '' || !Number.isInteger(price) || price < 0) { toast(t('dish.needPrice')); document.getElementById('df-price').focus(); return; }
+  const track = document.getElementById('df-track').checked;
+  const stockInput = document.getElementById('df-stock');
+  const body = { name, price, category_id: dishCategoryId, track_stock: track };
+  if (track && !stockInput.disabled && stockInput.value.trim() !== '') body.stock_count = Number(stockInput.value);
+  const activeEl = document.getElementById('df-active');
+  if (activeEl) body.active = activeEl.checked;
+  try {
+    if (id) await api('/menu/items/' + id, { method: 'PUT', body });
+    else await api('/menu/items', { method: 'POST', body });
+    await Promise.all([reloadMenu(), reloadStock()]);
+    closeModal();
+    renderMenu();
+    toast(t('menu.dishSaved'));
+  } catch (err) { toast(err.message); }
+}
+async function deleteDish(id) {
+  if (!confirm(t('menu.deleteConfirm'))) return;
+  try {
+    await api('/menu/items/' + id, { method: 'DELETE' });
+    await reloadMenu();
+    closeModal();
+    renderMenu();
+    toast(t('menu.dishDeleted'));
+  } catch (err) { toast(err.message); }
+}
+
+// ── Окно категории: создать, переименовать, удалить ──
+function openCategoryModal(id) {
+  const cat = id ? menuCatsData.find(c => c.id === id) : null;
+  const count = cat ? menuItems.filter(i => i.category_id === cat.id).length : 0;
+  showModal(`<div class="modal-title">${cat ? t('category.edit') : t('category.new')}</div>
+    <p class="muted-text" style="font-size:13px;line-height:1.5;margin-bottom:12px;">${t('category.explain')}</p>
+    <div class="field"><label for="cf-name">${t('category.name')}</label><input type="text" id="cf-name" maxlength="120" placeholder="${t('menu.categoryNamePh')}"></div>
+    <div class="modal-footer">
+      ${cat ? `<button class="btn btn-danger" style="margin-right:auto;" onclick="deleteCategory(${cat.id}, ${count})">${t('category.delete')}</button>` : ''}
+      <button class="btn btn-secondary" onclick="closeModal()">${t('common.cancel')}</button>
+      <button class="btn btn-primary" onclick="saveCategory(${cat ? cat.id : 0})">${t('common.save')}</button>
+    </div>`);
+  const input = document.getElementById('cf-name');
+  input.value = cat ? cat.name : '';
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); saveCategory(cat ? cat.id : 0); } });
+  setTimeout(() => input.focus(), 50);
+}
+async function saveCategory(id) {
+  const name = document.getElementById('cf-name').value.trim();
+  if (!name) { document.getElementById('cf-name').focus(); return; }
+  try {
+    const cat = id
+      ? await api('/menu/categories/' + id, { method: 'PUT', body: { name } })
+      : await api('/menu/categories', { method: 'POST', body: { name } });
+    await reloadMenu();
+    activeMenuCat = cat.id;
+    closeModal();
+    renderMenu();
+    toast(id ? t('category.saved') : t('menu.categoryAdded'));
+  } catch (err) { toast(err.message); }
+}
+async function deleteCategory(id, count) {
+  if (!confirm(count ? t('category.deleteConfirmItems').replace('{n}', count) : t('category.deleteConfirm'))) return;
+  try {
+    await api('/menu/categories/' + id, { method: 'DELETE' });
+    await reloadMenu();
+    activeMenuCat = 'all';
+    closeModal();
+    renderMenu();
+  } catch (err) { toast(err.message); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// МАСТЕР ПЕРВОГО ЗАПУСКА: категории → блюда и цены → готово
+// ═══════════════════════════════════════════════════════════
+const SETUP_SUGGEST = {
+  ru: ['Лаваш', 'Шаурма', 'Бургеры', 'Хот-доги', 'Пицца', 'Картошка', 'Напитки', 'Кофе', 'Десерты'],
+  uz: ['Lavash', 'Shaurma', 'Burgerlar', 'Xot-doglar', 'Pitsa', 'Kartoshka', 'Ichimliklar', 'Qahva', 'Desertlar'],
+};
+let setupState = null;
+
+function setupDoneKey() { return 'vz_setup_seen_' + (venueInfo?.id || ''); }
+function markSetupSeen() { try { localStorage.setItem(setupDoneKey(), '1'); } catch {} }
+function setupSeen() { try { return localStorage.getItem(setupDoneKey()) === '1'; } catch { return true; } }
+
+// Пустое меню у владельца — мастер открывается сам (один раз на этом устройстве)
+function maybeOpenSetup() {
+  if (viewMode || currentUser?.role !== 'owner' || menuItems.length || setupSeen()) return;
+  openSetupWizard();
+}
+
+function openSetupWizard() {
+  setupState = { step: 1, cats: [] };
+  renderSetup();
+}
+function showSetupModal(html) {
+  showModal(html);
+  document.getElementById('modal-body').classList.add('modal-wide');
+}
+function closeSetup() {
+  markSetupSeen();
+  document.getElementById('modal-body').classList.remove('modal-wide');
+  closeModal();
+}
+function setupProgress(step) {
+  return `<div class="setup-progress">${[1, 2, 3].map(n => `<i class="${n <= step ? 'on' : ''}"></i>`).join('')}</div>
+    <div class="setup-step">${t('setup.stepOf').replace('{n}', step)}</div>`;
+}
+
+function renderSetup() {
+  const s = setupState;
+  if (s.step === 1) {
+    const chosen = new Set(s.cats.map(c => c.name.toLowerCase()));
+    const suggest = (SETUP_SUGGEST[appLang] || SETUP_SUGGEST.ru);
+    const own = s.cats.filter(c => !suggest.some(x => x.toLowerCase() === c.name.toLowerCase()));
+    showSetupModal(`${setupProgress(1)}
+      <div class="modal-title">${t('setup.s1Title')}</div>
+      <div class="setup-explain">
+        <div>${t('setup.s1Explain')}</div>
+        <div class="setup-demo"><span class="cat-tab active">${esc(suggest[0])}</span><span class="cat-tab">${esc(suggest[2])}</span><span class="cat-tab">${esc(suggest[6])}</span></div>
+      </div>
+      <div class="field"><label>${t('setup.s1Pick')}</label>
+        <div class="chip-pick">
+          ${suggest.map((name, i) => `<button type="button" class="cat-tab ${chosen.has(name.toLowerCase()) ? 'active' : ''}" onclick="toggleSetupCat(${i})">${esc(name)}</button>`).join('')}
+          ${own.map(c => `<button type="button" class="cat-tab active" onclick="removeSetupCat('${encodeURIComponent(c.name)}')">${esc(c.name)} ✕</button>`).join('')}
+        </div>
+      </div>
+      <div class="field"><label for="setup-own">${t('setup.s1Own')}</label>
+        <div class="new-cat-row" style="margin-top:0;">
+          <input type="text" id="setup-own" maxlength="120" placeholder="${t('menu.categoryNamePh')}" class="inline-control" style="font-size:14px;padding:10px 12px;">
+          <button type="button" class="btn btn-secondary" onclick="addSetupOwnCat()">${t('common.add')}</button>
+        </div>
+      </div>
+      <div class="setup-error" id="setup-error"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" style="margin-right:auto;" onclick="closeSetup()">${t('setup.later')}</button>
+        <button class="btn btn-primary" onclick="setupNext()">${t('setup.next')}</button>
+      </div>`);
+    document.getElementById('setup-own').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addSetupOwnCat(); } });
+    return;
+  }
+
+  if (s.step === 2) {
+    showSetupModal(`${setupProgress(2)}
+      <div class="modal-title">${t('setup.s2Title')}</div>
+      <div class="setup-explain">
+        <div>${t('setup.s2Explain')}</div>
+        <div class="setup-demo-cards"><div>${esc((SETUP_SUGGEST[appLang] || SETUP_SUGGEST.ru)[0])} <span>28 000</span></div><div>${t('setup.demoDish2')} <span>32 000</span></div><div>${t('setup.demoDish3')} <span>10 000</span></div></div>
+      </div>
+      ${s.cats.map((cat, ci) => `<div class="setup-group">
+        <h4>${esc(cat.name)}</h4>
+        ${cat.items.map((it, ii) => `<div class="setup-row">
+          <input type="text" maxlength="120" placeholder="${t('setup.namePh')}" data-ci="${ci}" data-ii="${ii}" data-f="name" oninput="setupInput(this)">
+          <input type="number" inputmode="numeric" min="0" step="500" placeholder="${t('setup.pricePh')}" data-ci="${ci}" data-ii="${ii}" data-f="price" oninput="setupInput(this)">
+        </div>`).join('')}
+        <button type="button" class="link-btn" onclick="addSetupRow(${ci})">${t('setup.addRow')}</button>
+      </div>`).join('')}
+      <div class="setup-error" id="setup-error"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" style="margin-right:auto;" onclick="setupBack()">${t('setup.back')}</button>
+        <button class="btn btn-primary" id="setup-save" onclick="saveSetup()">${t('setup.save')}</button>
+      </div>`);
+    // Значения ставим отдельно, чтобы любые символы в названиях не ломали разметку
+    document.querySelectorAll('#modal-body [data-f]').forEach(el => {
+      const it = s.cats[+el.dataset.ci].items[+el.dataset.ii];
+      el.value = it[el.dataset.f] ?? '';
+    });
+    return;
+  }
+
+  // Шаг 3 — готово, объясняем, как продавать
+  showSetupModal(`${setupProgress(3)}
+    <div class="setup-done"><b>🎉</b><div class="modal-title" style="margin:0;">${t('setup.s3Title')}</div>
+      <div class="muted-text" style="font-size:14px;">${t('setup.s3Count').replace('{items}', s.savedItems).replace('{cats}', s.savedCats)}</div></div>
+    <div class="setup-explain">
+      <strong>${t('setup.s3How')}</strong>
+      <ol class="setup-howto"><li>${t('setup.s3Step1')}</li><li>${t('setup.s3Step2')}</li><li>${t('setup.s3Step3')}</li></ol>
+      <div class="muted-text">${t('setup.s3Edit')}</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" style="margin-right:auto;" onclick="closeSetup();showPage('menu')">${t('setup.seeMenu')}</button>
+      <button class="btn btn-primary" onclick="finishSetupAndSell()">${t('setup.startSelling')}</button>
+    </div>`);
+}
+
+function setupError(text) {
+  const el = document.getElementById('setup-error');
+  if (!el) return;
+  el.textContent = text || '';
+  el.classList.toggle('show', Boolean(text));
+}
+function toggleSetupCat(index) {
+  const name = (SETUP_SUGGEST[appLang] || SETUP_SUGGEST.ru)[index];
+  const at = setupState.cats.findIndex(c => c.name.toLowerCase() === name.toLowerCase());
+  if (at >= 0) setupState.cats.splice(at, 1);
+  else setupState.cats.push({ name, items: [{ name: '', price: '' }, { name: '', price: '' }] });
+  renderSetup();
+}
+function removeSetupCat(encoded) {
+  const name = decodeURIComponent(encoded);
+  setupState.cats = setupState.cats.filter(c => c.name !== name);
+  renderSetup();
+}
+function addSetupOwnCat() {
+  const input = document.getElementById('setup-own');
+  const name = input.value.trim();
+  if (!name) { input.focus(); return; }
+  if (!setupState.cats.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+    setupState.cats.push({ name, items: [{ name: '', price: '' }, { name: '', price: '' }] });
+  }
+  renderSetup();
+}
+function setupNext() {
+  if (!setupState.cats.length) { setupError(t('setup.needCat')); return; }
+  setupState.step = 2;
+  renderSetup();
+}
+function setupBack() { setupState.step = 1; renderSetup(); }
+function setupInput(el) {
+  setupState.cats[+el.dataset.ci].items[+el.dataset.ii][el.dataset.f] = el.value;
+  setupError('');
+}
+function addSetupRow(ci) {
+  setupState.cats[ci].items.push({ name: '', price: '' });
+  renderSetup();
+  const inputs = document.querySelectorAll(`#modal-body input[data-ci="${ci}"][data-f="name"]`);
+  inputs[inputs.length - 1]?.focus();
+}
+async function saveSetup() {
+  const cats = [];
+  for (const cat of setupState.cats) {
+    const items = [];
+    for (const it of cat.items) {
+      const name = String(it.name || '').trim();
+      const priceRaw = String(it.price ?? '').trim();
+      if (!name && !priceRaw) continue;
+      const price = Number(priceRaw);
+      if (!name) { setupError(t('setup.needName').replace('{cat}', cat.name)); return; }
+      if (priceRaw === '' || !Number.isInteger(price) || price < 0) { setupError(t('setup.needPrice').replace('{dish}', name)); return; }
+      items.push({ name, price });
+    }
+    if (items.length) cats.push({ name: cat.name, items });
+  }
+  if (!cats.length) { setupError(t('setup.needDish')); return; }
+  const btn = document.getElementById('setup-save');
+  btn.disabled = true;
+  try {
+    const r = await api('/menu/setup', { method: 'POST', body: { categories: cats } });
+    await reloadMenu();
+    setupState.savedItems = r.items;
+    setupState.savedCats = r.categories;
+    setupState.step = 3;
+    markSetupSeen();
+    renderSetup();
+  } catch (err) {
+    setupError(err.message);
+    btn.disabled = false;
+  }
+}
+async function finishSetupAndSell() {
+  closeSetup();
+  if (!(currentShift && !currentShift.closed_at)) await toggleShift();
+  showPage('pos');
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -4086,10 +4772,191 @@ function renderOrdersTable() {
         const cancelled = o.status === 'cancelled';
         const statusLabel = cancelled ? t('order.cancelled') : t('common.success');
         const statusBadge = cancelled ? 'badge-red' : 'badge-green';
-        const cancelBtn = canCancelOrder(o) ? `<button class="btn btn-danger btn-sm" onclick="openCancelOrderModal(${o.id})">${t('order.cancel')}</button>` : '';
+        const cancelBtn = `<button class="btn btn-secondary btn-sm" onclick="printOrderReceipt(${o.id})" title="${t('print.button')}">🖨 ${t('print.button')}</button>`
+          + (canCancelOrder(o) ? ` <button class="btn btn-danger btn-sm" onclick="openCancelOrderModal(${o.id})">${t('order.cancel')}</button>` : '');
         return `<tr class="${cancelled?'order-cancelled':''}"><td>#${o.id}</td><td class="muted-text" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${itemsStr}</td><td style="font-weight:600;">${fmt(o.total)}</td><td>${payLabel}</td><td><span class="badge ${statusBadge}">${statusLabel}</span></td><td>${esc(o.client_name||'—')}</td><td class="muted-text">${time}</td><td style="text-align:right;">${cancelBtn}</td></tr>`;
       }).join('')
     : `<tr><td colspan="8" class="empty-state" style="padding:24px;">${t('analytics.noOrders')} — ${t('analytics.firstOrderHint')}</td></tr>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// ПЕЧАТЬ ЧЕКОВ
+// Заказ → модель чека → адаптер печати. Сейчас один адаптер — окно печати браузера
+// (работает с любым термопринтером 58/80 мм, на Windows и Android, без установки программ).
+// Позже сюда можно добавить печать напрямую (QZ Tray, ESC/POS), не трогая кассу.
+// ═══════════════════════════════════════════════════════════
+const PRINT_DEFAULTS = { enabled: false, width: 80 };
+function loadPrintSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('vz_print') || '{}');
+    return {
+      enabled: saved.enabled === true,
+      width: saved.width === 58 ? 58 : 80,
+    };
+  } catch { return { ...PRINT_DEFAULTS }; }
+}
+let printSettings = loadPrintSettings();
+
+function setPrintSetting(key, value) {
+  printSettings = { ...printSettings, [key]: value };
+  try { localStorage.setItem('vz_print', JSON.stringify(printSettings)); } catch {}
+  renderPrintSettings();
+}
+
+// Всё, что нужно напечатать, в одном месте — адаптеру не важно, откуда заказ
+function buildReceiptModel(order, extra = {}) {
+  const items = (order.items_json || []).map(i => ({
+    name: i.name,
+    qty: +i.qty || 0,
+    price: +i.price || 0,
+    sum: (+i.price || 0) * (+i.qty || 0),
+  }));
+  return {
+    title: extra.title || '',
+    venueName: venueInfo?.name || '',
+    header: venueInfo?.receipt_header || '',
+    footer: venueInfo?.receipt_footer || '',
+    number: order.id,
+    date: order.created_at ? new Date(order.created_at) : new Date(),
+    cashier: order.staff_name || extra.cashier || '',
+    client: order.client_name || extra.client || '',
+    items,
+    total: +order.total || items.reduce((s, i) => s + i.sum, 0),
+    payMethod: order.pay_method,
+    cash: orderCashAmount(order),
+    card: orderCardAmount(order),
+    bonus: +order.bonus_earned || 0,
+    cancelled: order.status === 'cancelled',
+    width: printSettings.width,
+  };
+}
+
+function renderReceiptHtml(m) {
+  const locale = appLang === 'uz' ? 'uz-UZ' : 'ru-RU';
+  const date = m.date.toLocaleString(locale, { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  const row = (left, right, cls = '') => `<div class="rc-row ${cls}"><span>${left}</span><span>${right}</span></div>`;
+  const line = '<div class="rc-line"></div>';
+  const payLabel = m.payMethod === 'cash' ? t('print.cash') : m.payMethod === 'card' ? t('print.card') : t('print.mixed');
+  return `<div class="rc w${m.width}">
+    ${m.title ? `<div class="rc-center rc-small"><b>${esc(m.title)}</b></div>` : ''}
+    ${m.venueName ? `<div class="rc-title">${esc(m.venueName)}</div>` : ''}
+    ${m.header ? `<div class="rc-text">${esc(m.header)}</div>` : ''}
+    ${line}
+    ${row(m.number ? `<b>${t('print.receiptNo')}${esc(m.number)}</b>` : '', esc(date))}
+    ${m.cashier ? row(t('print.cashier'), esc(m.cashier)) : ''}
+    ${m.client ? row(t('print.client'), esc(m.client)) : ''}
+    ${line}
+    ${m.items.map(i => `<div class="rc-item">
+      <div class="rc-item-name">${esc(i.name)}</div>
+      ${row(`${i.qty} × ${fmt(i.price)}`, fmt(i.sum))}
+    </div>`).join('')}
+    ${line}
+    ${row(t('print.total'), fmt(m.total), 'rc-total')}
+    ${m.payMethod === 'mixed'
+      ? row(t('print.cash'), fmt(m.cash)) + row(t('print.card'), fmt(m.card))
+      : row(payLabel, fmt(m.total))}
+    ${m.bonus > 0 ? row(t('print.bonus'), fmt(m.bonus)) : ''}
+    ${m.cancelled ? `<div class="rc-cancelled">${t('print.cancelled')}</div>` : ''}
+    ${m.footer ? line + `<div class="rc-text">${esc(m.footer)}</div>` : ''}
+    <div class="rc-center rc-small" style="margin-top:6px;">vzlyot.post</div>
+  </div>`;
+}
+
+const PRINT_ADAPTERS = {
+  // Печать через окно браузера: чек кладётся в скрытый блок, на время печати
+  // остальная страница прячется (стили @media print), затем блок очищается
+  browser(model) {
+    let area = document.getElementById('print-receipt');
+    if (!area) {
+      area = document.createElement('div');
+      area.id = 'print-receipt';
+      document.body.appendChild(area);
+    }
+    area.innerHTML = renderReceiptHtml(model);
+    let pageStyle = document.getElementById('print-page-style');
+    if (!pageStyle) {
+      pageStyle = document.createElement('style');
+      pageStyle.id = 'print-page-style';
+      document.head.appendChild(pageStyle);
+    }
+    // Длину страницы задаёт драйвер принтера (рулон), мы только убираем поля
+    pageStyle.textContent = '@page { margin: 0; }';
+    document.documentElement.classList.add('printing-receipt');
+    document.body.classList.add('printing-receipt');
+    const cleanup = () => {
+      document.documentElement.classList.remove('printing-receipt');
+      document.body.classList.remove('printing-receipt');
+      area.innerHTML = '';
+      pageStyle.textContent = '';
+    };
+    // Убираем только после печати: на Android окно печати открывается не сразу.
+    // Если afterprint не придёт, ничего страшного — на экране блок не виден.
+    window.addEventListener('afterprint', cleanup, { once: true });
+    window.print();
+  },
+};
+
+function printReceiptModel(model) {
+  try {
+    PRINT_ADAPTERS.browser(model);
+  } catch (err) {
+    console.error(err);
+    toast(t('print.error'));
+  }
+}
+
+function printOrderReceipt(id) {
+  const order = orders.find(o => Number(o.id) === Number(id));
+  if (order) printReceiptModel(buildReceiptModel(order));
+}
+
+function printTestReceipt() {
+  printReceiptModel(buildReceiptModel({
+    id: 0,
+    created_at: new Date().toISOString(),
+    pay_method: 'cash',
+    total: 47000,
+    items_json: [
+      { name: t('print.testItem1'), qty: 2, price: 18000 },
+      { name: t('print.testItem2'), qty: 1, price: 11000 },
+    ],
+  }, { title: t('print.testTitle'), cashier: currentUser?.name || '' }));
+}
+
+function renderPrintSettings() {
+  const card = document.getElementById('print-card');
+  if (!card) return;
+  document.getElementById('print-on-btn').classList.toggle('active', printSettings.enabled);
+  document.getElementById('print-off-btn').classList.toggle('active', !printSettings.enabled);
+  document.getElementById('print-w58-btn').classList.toggle('active', printSettings.width === 58);
+  document.getElementById('print-w80-btn').classList.toggle('active', printSettings.width === 80);
+  // Текст на чеке общий для всей точки — меняют только владелец и администратор
+  const canEdit = ['owner','admin'].includes(currentUser?.role) && !viewMode;
+  document.getElementById('print-texts').style.display = canEdit ? '' : 'none';
+  document.getElementById('print-save-btn').style.display = canEdit ? '' : 'none';
+  const header = document.getElementById('print-header');
+  const footer = document.getElementById('print-footer');
+  if (document.activeElement !== header) header.value = venueInfo?.receipt_header || '';
+  if (document.activeElement !== footer) footer.value = venueInfo?.receipt_footer || '';
+  document.getElementById('print-hint').innerHTML = t(printSettings.enabled ? 'print.hintOn' : 'print.hintOff');
+}
+
+async function saveReceiptTexts() {
+  try {
+    const saved = await api('/orders/receipt-settings', {
+      method: 'PUT',
+      body: {
+        receipt_header: document.getElementById('print-header').value,
+        receipt_footer: document.getElementById('print-footer').value,
+      },
+    });
+    venueInfo = { ...venueInfo, ...saved };
+    try { localStorage.setItem('qp_venue', JSON.stringify(venueInfo)); } catch {}
+    renderPrintSettings();
+    toast(t('print.saved'));
+  } catch (err) {
+    toast(t('common.error') + ': ' + err.message);
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -4338,8 +5205,9 @@ function renderSettings() {
   document.querySelector('#expenses-card .card-title').textContent = t('settings.expenses');
   document.querySelector('#shift-history-card .card-title').textContent = t('settings.shiftHistory');
   syncAppearanceControls();
+  renderPrintSettings();
 
-  const planMap = {start:t('settings.planStart'),business:t('settings.planBusiness'),network:t('settings.planNetwork')};
+  const planMap ={start:t('settings.planStart'),business:t('settings.planBusiness'),network:t('settings.planNetwork')};
   const statusMap = {trial:t('settings.statusTrial'),active:t('settings.statusActive'),expired:t('settings.statusExpired'),blocked:t('settings.statusBlocked')};
   const locale = appLang === 'uz' ? 'uz-UZ' : 'ru-RU';
   const expires = accountInfo?.expires_at ? new Date(accountInfo.expires_at).toLocaleDateString(locale) : '—';

@@ -128,7 +128,10 @@ router.post('/login', async (req, res) => {
 router.get('/me', requireAuth, async (req, res) => {
   const { accountId, venueId, staffId } = req.user;
   const accRes = await pool.query('SELECT * FROM accounts WHERE id = $1', [accountId]);
-  const venueRes = await pool.query('SELECT id, name FROM venues WHERE id = $1 AND account_id = $2', [venueId, accountId]);
+  const venueRes = await pool.query(
+    'SELECT id, name, receipt_header, receipt_footer FROM venues WHERE id = $1 AND account_id = $2',
+    [venueId, accountId]
+  );
   const staffRes = staffId
     ? await pool.query('SELECT id, name, role FROM staff WHERE id = $1 AND venue_id = $2', [staffId, venueId])
     : { rows: [] };
